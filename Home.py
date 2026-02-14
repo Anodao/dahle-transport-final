@@ -34,10 +34,20 @@ st.markdown("""
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
     /* --- HEADER & SIDEBAR KNOP FIX --- */
-    header[data-testid="stHeader"] { background: transparent !important; }
+    /* DE FIX: pointer-events toegevoegd zodat je door de balk heen klikt! */
+    header[data-testid="stHeader"] { 
+        background: transparent !important; 
+        pointer-events: none !important; 
+    }
     div[data-testid="stDecoration"] { display: none; }
     div[data-testid="stToolbar"] { display: none; }
-    button[kind="header"] { color: #000 !important; margin-top: 5px; }
+    
+    /* Zorg dat de sidebar knop WEL klikbaar blijft */
+    button[kind="header"] { 
+        color: #000 !important; 
+        margin-top: 5px; 
+        pointer-events: auto !important; 
+    }
     footer { visibility: hidden; }
     
     /* --- NAVBAR STYLING --- */
@@ -59,22 +69,20 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     
-    .nav-logo { display: flex; justify-content: flex-start; padding-left: 40px; align-items: center; }
+    .nav-logo { display: flex; justify-content: flex-start; padding-left: 40px; }
     
-    /* --- FIX: KLIKBAAR GEBIED EXACT EVEN GROOT ALS LOGO --- */
+    /* LOGO LINK & HOVER EFFECT */
     .nav-logo a { 
-        display: inline-block; /* Maakt de link een massief blok */
-        height: 48px; /* Zelfde hoogte als het logo */
+        display: flex; 
+        align-items: center; 
         text-decoration: none; 
-        cursor: pointer;
     }
     .nav-logo img { 
-        height: 100%; /* Plaatje vult de link nu perfect 100% op */
+        height: 48px; 
         width: auto;
-        display: block;
         transition: transform 0.2s ease-in-out; 
+        cursor: pointer; 
     }
-    /* Als we ergens op het blok hoveren, wordt het plaatje groter */
     .nav-logo a:hover img { transform: scale(1.05); } 
     
     .nav-links { 
