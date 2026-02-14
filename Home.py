@@ -20,7 +20,7 @@ if 'selected_type' not in st.session_state:
 if 'temp_order' not in st.session_state:
     st.session_state.temp_order = {}
 
-# --- CSS STYLING (EXACT ZOALS DE FOTO, IN HET ENGELS) ---
+# --- CSS STYLING (EXACT ZOALS DE FOTO, IN HET ENGELS, ZONDER STREEP) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -43,12 +43,11 @@ st.markdown("""
         top: 0; 
         left: 0; 
         width: 100%; 
-        height: 90px; /* Iets subtielere hoogte, zoals op de foto */
+        height: 90px;
         background-color: white; 
         z-index: 999;
         border-bottom: 1px solid #eaeaea; 
         
-        /* GRID maakt perfecte centrering mogelijk */
         display: grid; 
         grid-template-columns: 1fr auto 1fr; 
         align-items: center;
@@ -60,15 +59,15 @@ st.markdown("""
     .nav-logo {
         display: flex;
         justify-content: flex-start;
-        padding-left: 40px; /* Ruimte voor de Streamlit sidebar knop */
+        padding-left: 40px;
     }
-    .nav-logo img { height: 48px; } /* Exacte verhouding met tekst */
+    .nav-logo img { height: 48px; }
     
     .nav-links { 
         display: flex; 
-        gap: 28px; /* Tussenruimte zoals op de foto */
+        gap: 28px;
         font-size: 15px; 
-        font-weight: 500; /* Net iets strakker/dunner */
+        font-weight: 500;
         color: #000000; 
     }
     .nav-links span { cursor: pointer; transition: color 0.2s; }
@@ -78,12 +77,13 @@ st.markdown("""
         display: flex;
         justify-content: flex-end; 
     }
+    /* HIER IS DE AANPASSING: */
     .cta-btn { 
-        background-color: #894b9d; /* Exacte Dahle Paars van je foto */
+        background-color: #894b9d;
         color: white !important; 
-        padding: 10px 24px; /* Plattere pilvorm zoals de foto */
+        padding: 10px 24px;
         border-radius: 50px; 
-        text-decoration: none; 
+        text-decoration: none !important; /* <-- !important toegevoegd om streep te forceren weg te halen */
         font-weight: 600; 
         font-size: 13px;
         letter-spacing: 0.5px;
