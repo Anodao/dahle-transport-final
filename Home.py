@@ -35,7 +35,7 @@ st.markdown("""
     button[kind="header"] { color: #000 !important; margin-top: 5px; }
     footer { visibility: hidden; }
     
-    /* --- NAVBAR STYLING (EXACT ZOALS DE FOTO) --- */
+    /* --- NAVBAR STYLING (EXACTLY LIKE THE PHOTO) --- */
     .block-container { padding-top: 150px; }
 
     .navbar {
@@ -47,22 +47,22 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
     
-    /* Verdeel de navbar in 3 gelijke blokken voor perfecte centrering */
+    /* Divide the navbar into 3 equal blocks for perfect centering */
     .nav-logo {
         flex: 1;
         display: flex;
         justify-content: flex-start;
-        padding-left: 50px; /* Ruimte voor de Streamlit sidebar knop */
+        padding-left: 50px; /* Room for the Streamlit sidebar button */
     }
     .nav-logo img { height: 60px; } 
     
     .nav-links { 
-        flex: 2; /* Neemt de middelste ruimte in */
+        flex: 2; /* Takes up the middle space */
         display: flex; 
-        justify-content: center; /* Forceert de tekst naar het midden */
+        justify-content: center; /* Forces the text to the absolute center */
         gap: 35px; 
         font-size: 16px; 
-        font-weight: 700; /* Iets dikker (bold), zoals op de foto */
+        font-weight: 700; /* Bold, like on the photo */
         color: #000; 
     }
     .nav-links span { cursor: pointer; transition: 0.2s; }
@@ -71,10 +71,10 @@ st.markdown("""
     .nav-cta {
         flex: 1;
         display: flex;
-        justify-content: flex-end; /* Forceert de knop helemaal naar rechts */
+        justify-content: flex-end; /* Forces the button all the way to the right */
     }
     .cta-btn { 
-        background-color: #8c4b99; /* De paarse kleur van Dahle */
+        background-color: #8c4b99; /* Dahle Purple */
         color: white; 
         padding: 14px 30px; 
         border-radius: 30px; 
@@ -110,21 +110,21 @@ st.markdown("""
             <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
         </div>
         <div class="nav-links">
-            <span>Hjem</span>
-            <span>Om oss</span>
-            <span>Tjenester</span>
-            <span>Galleri</span>
-            <span>Kontakt</span>
+            <span>Home</span>
+            <span>About Us</span>
+            <span>Services</span>
+            <span>Gallery</span>
+            <span>Contact</span>
         </div>
         <div class="nav-cta">
-            <a class="cta-btn">TA KONTAKT</a>
+            <a class="cta-btn">CONTACT US</a>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
 
 # =========================================================
-# DE WEBSITE LOGICA
+# THE WEBSITE LOGIC
 # =========================================================
 
 col_spacer_L, col_main, col_spacer_R = st.columns([1, 3, 1])
@@ -132,7 +132,7 @@ col_spacer_L, col_main, col_spacer_R = st.columns([1, 3, 1])
 with col_main:
     st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>📦 Create new shipment</h2>", unsafe_allow_html=True)
 
-    # STAP 1: KEUZE
+    # STEP 1: CHOOSE
     if st.session_state.step == 1:
         st.write("Select the type of goods you want to ship:")
         st.write("")
@@ -156,7 +156,7 @@ with col_main:
                 st.session_state.step = 2
                 st.rerun()
 
-    # STAP 2: DETAILS
+    # STEP 2: DETAILS
     elif st.session_state.step == 2:
         st.info(f"Shipping Type: {st.session_state.selected_type}")
         with st.form("shipment_form"):
@@ -196,4 +196,4 @@ with col_main:
 
 # Sidebar info
 st.sidebar.markdown("### ⚙️ Menu")
-st.sidebar.info("Schakel hierboven tussen **Home** (Klant) en **Planner** (Intern).")
+st.sidebar.info("Use this menu to switch between **Home** (Customer) and **Planner** (Internal).")
