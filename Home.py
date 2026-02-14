@@ -23,25 +23,19 @@ if 'temp_order' not in st.session_state:
 # --- CSS STYLING ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
     /* --- HEADER & SIDEBAR KNOP FIX --- */
-    header[data-testid="stHeader"] {
-        background: transparent !important;
-    }
+    header[data-testid="stHeader"] { background: transparent !important; }
     div[data-testid="stDecoration"] { display: none; }
     div[data-testid="stToolbar"] { display: none; }
     
     /* Maak het sidebar pijltje ZWART en goed zichtbaar */
-    button[kind="header"] {
-        color: #333 !important;
-        margin-top: 5px; 
-    }
-    
+    button[kind="header"] { color: #000 !important; margin-top: 5px; }
     footer { visibility: hidden; }
     
-    /* --- NAVBAR STYLING --- */
+    /* --- NAVBAR STYLING (EXACT ZOALS DE FOTO) --- */
     .block-container { padding-top: 150px; }
 
     .navbar {
@@ -49,37 +43,49 @@ st.markdown("""
         background-color: white; z-index: 999;
         border-bottom: 1px solid #eaeaea; 
         display: flex; align-items: center; justify-content: space-between;
-        padding: 0 50px;
+        padding: 0 40px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.03);
     }
     
-    .logo-img { height: 60px; margin-left: 50px; } 
-    
-    /* De tekst linkjes */
-    .nav-links { 
-        font-size: 15px; 
-        font-weight: 600; 
-        color: #333; 
-        display: flex; 
-        gap: 30px; 
-        margin-right: 40px;
-        align-items: center;
+    /* Verdeel de navbar in 3 gelijke blokken voor perfecte centrering */
+    .nav-logo {
+        flex: 1;
+        display: flex;
+        justify-content: flex-start;
+        padding-left: 50px; /* Ruimte voor de Streamlit sidebar knop */
     }
+    .nav-logo img { height: 60px; } 
     
+    .nav-links { 
+        flex: 2; /* Neemt de middelste ruimte in */
+        display: flex; 
+        justify-content: center; /* Forceert de tekst naar het midden */
+        gap: 35px; 
+        font-size: 16px; 
+        font-weight: 700; /* Iets dikker (bold), zoals op de foto */
+        color: #000; 
+    }
     .nav-links span { cursor: pointer; transition: 0.2s; }
     .nav-links span:hover { color: #9b59b6; }
 
-    /* De paarse knop */
+    .nav-cta {
+        flex: 1;
+        display: flex;
+        justify-content: flex-end; /* Forceert de knop helemaal naar rechts */
+    }
     .cta-btn { 
-        background-color: #9b59b6; 
+        background-color: #8c4b99; /* De paarse kleur van Dahle */
         color: white; 
-        padding: 12px 28px; 
-        border-radius: 25px; 
+        padding: 14px 30px; 
+        border-radius: 30px; 
         text-decoration: none; 
         font-weight: bold; 
         font-size: 14px;
-        box-shadow: 0 4px 6px rgba(155, 89, 182, 0.2);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        cursor: pointer;
+        transition: 0.2s;
     }
+    .cta-btn:hover { background-color: #7a3c87; }
 
     /* --- CARDS --- */
     .option-card {
@@ -100,28 +106,30 @@ st.markdown("""
     </style>
     
     <div class="navbar">
-        <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" class="logo-img">
+        <div class="nav-logo">
+            <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
+        </div>
         <div class="nav-links">
-            <span>Home</span>
-            <span>About Us</span>
-            <span>Services</span>
-            <span>Gallery</span>
-            <span>Contact</span>
-            <a class="cta-btn">CONTACT US</a>
+            <span>Hjem</span>
+            <span>Om oss</span>
+            <span>Tjenester</span>
+            <span>Galleri</span>
+            <span>Kontakt</span>
+        </div>
+        <div class="nav-cta">
+            <a class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
 """, unsafe_allow_html=True)
 
 
 # =========================================================
-# DE WEBSITE LOGICA (NU ALLES PERFECT GECENTERD)
+# DE WEBSITE LOGICA
 # =========================================================
 
-# We maken 3 kolommen: Leeg (1 deel) | Inhoud (3 delen) | Leeg (1 deel)
 col_spacer_L, col_main, col_spacer_R = st.columns([1, 3, 1])
 
 with col_main:
-    # De titel staat nu ook IN het gecentreerde blok
     st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>📦 Create new shipment</h2>", unsafe_allow_html=True)
 
     # STAP 1: KEUZE
