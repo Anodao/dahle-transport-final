@@ -31,7 +31,7 @@ if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 if 'show_error' not in st.session_state: st.session_state.show_error = False
 
-# --- CSS STYLING & NAVBAR HTML ---
+# --- CSS STYLING GLOBAL ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -161,7 +161,7 @@ with col_main:
             transition: all 0.3s ease !important;
             background-color: #262626 !important;
             border: 2px solid #444 !important;
-            padding: 5px 15px !important;
+            padding: 25px !important; /* Iets meer padding voor een luchtiger gevoel */
             height: 100%;
         }
         
@@ -180,27 +180,18 @@ with col_main:
         
         /* 4. MAGIC TRICK: Maak de héle box klikbaar */
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after {
-            content: "";
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            cursor: pointer;
-            z-index: 10;
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10;
         }
         
         /* 5. Maak het vinkje zelf groot en stijl het als de titel van de kaart */
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] {
-            margin-bottom: 5px;
-            padding-top: 15px;
+            margin-bottom: 5px; padding-top: 0px;
         }
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] {
-            transform: scale(1.6);
-            margin-right: 15px;
-            border-color: #888;
+            transform: scale(1.6); margin-right: 15px; border-color: #888;
         }
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label p {
-            font-size: 20px !important;
-            font-weight: 700 !important;
-            color: white !important;
+            font-size: 20px !important; font-weight: 700 !important; color: white !important;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -210,10 +201,9 @@ with col_main:
         
         c1, c2, c3 = st.columns(3)
         
-        # KAART 1: Parcels
+        # KAART 1: Parcels (GEÜPDATETE FOOTER)
         with c1:
             with st.container(border=True):
-                # De checkbox fungeert als de grote titel, bovenaan!
                 st.checkbox("Parcels & Documents", key="chk_parcels")
                 st.markdown("""
                     <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 31.5kg</span>
@@ -221,13 +211,13 @@ with col_main:
                         <li>Light to medium weight shipments</li>
                         <li>B2B/B2C</li>
                     </ul>
-                    <div style="font-size: 12px; color: #888; background: #2f2f2f; padding: 15px; border-radius: 8px;">
+                    <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
                         Commonly shipped items:
-                        <div style="font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;">✉️ 📦 📚</div>
+                        <div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">✉️ 📦 📚</div>
                     </div>
                 """, unsafe_allow_html=True)
 
-        # KAART 2: Freight
+        # KAART 2: Freight (GEÜPDATETE FOOTER)
         with c2:
             with st.container(border=True):
                 st.checkbox("Cargo & Freight", key="chk_freight")
@@ -237,13 +227,13 @@ with col_main:
                         <li>Heavier shipments using pallets or containers</li>
                         <li>B2B</li>
                     </ul>
-                    <div style="font-size: 12px; color: #888; background: #2f2f2f; padding: 15px; border-radius: 8px;">
+                    <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
                         Commonly shipped items:
-                        <div style="font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;">🚛 🏗️</div>
+                        <div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">🚛 🏗️</div>
                     </div>
                 """, unsafe_allow_html=True)
 
-        # KAART 3: Mail
+        # KAART 3: Mail (GEÜPDATETE FOOTER)
         with c3:
             with st.container(border=True):
                 st.checkbox("Mail & Marketing", key="chk_mail")
@@ -253,9 +243,9 @@ with col_main:
                         <li>Lightweight goods</li>
                         <li>International business mail (letters, brochures, books)</li>
                     </ul>
-                    <div style="font-size: 12px; color: #888; background: #2f2f2f; padding: 15px; border-radius: 8px;">
+                    <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
                         Commonly shipped items:
-                        <div style="font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;">📭 📄</div>
+                        <div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">📭 📄</div>
                     </div>
                 """, unsafe_allow_html=True)
 
