@@ -31,7 +31,6 @@ st.markdown("""
     div[data-testid="stDecoration"] { display: none; }
     div[data-testid="stToolbar"] { display: none; }
     
-    /* Maak het sidebar pijltje zwart */
     button[kind="header"] { color: #000 !important; margin-top: 5px; }
     footer { visibility: hidden; }
     
@@ -77,13 +76,12 @@ st.markdown("""
         display: flex;
         justify-content: flex-end; 
     }
-    /* HIER IS DE AANPASSING: */
     .cta-btn { 
         background-color: #894b9d;
         color: white !important; 
         padding: 10px 24px;
         border-radius: 50px; 
-        text-decoration: none !important; /* <-- !important toegevoegd om streep te forceren weg te halen */
+        text-decoration: none !important; 
         font-weight: 600; 
         font-size: 13px;
         letter-spacing: 0.5px;
@@ -199,8 +197,12 @@ with col_main:
                 st.session_state.step = 1
                 st.rerun()
 
-# Sidebar info
-st.sidebar.markdown("### ⚙️ Menu")
-st.sidebar.info("Use this menu to switch between **Home** (Customer) and **Planner** (Internal).")
-
-
+    # =========================================================
+    # DE DEMO KNOP NAAR DE PLANNER
+    # =========================================================
+    st.write("")
+    st.write("")
+    st.markdown("---")
+    
+    # Gebruik st.page_link voor de meest naadloze overgang in Streamlit
+    st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
