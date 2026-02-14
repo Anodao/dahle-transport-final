@@ -100,39 +100,23 @@ st.markdown("""
     div[data-baseweb="input"] input { color: white; }
     label { color: #ccc !important; font-weight: 600; }
     
-    /* --- NIEUW: GROTERE CHECKBOXES (Stap 1) --- */
-    /* Het vierkantje zelf vergroten */
-    div[data-testid="stCheckbox"] label span[role="checkbox"] {
-        transform: scale(1.5); 
-        margin-right: 10px;
-    }
-    /* De tekst ernaast ook iets groter en duidelijker */
-    div[data-testid="stCheckbox"] label p {
-        font-size: 16px !important;
-        font-weight: 600 !important;
-    }
-    /* Centreren in stap 1 */
+    /* --- GROTERE CHECKBOXES (Stap 1) --- */
+    div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.5); margin-right: 10px; }
+    div[data-testid="stCheckbox"] label p { font-size: 16px !important; font-weight: 600 !important; }
     div[data-testid="stCheckbox"] { display: flex; justify-content: center; margin-bottom: 20px;}
 
     /* --- STAP 2 SPECIFIEK --- */
-    /* Zorg dat de radio buttons en checkboxes in stap 2 weer normaal links uitlijnen */
     .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px;}
-    .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.0); } /* Normale grootte in stap 2 */
+    .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.0); } 
     .step2-panel div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
 
     /* STYLING VOOR DE 'X' KNOPJES */
-    /* We maken de knopjes in de 'close-col' klein en minimalistisch */
     div[data-testid="column"]:has(> div > div > div > div > .close-btn-marker) button {
-        background-color: transparent !important;
-        color: #aaa !important;
-        border: none !important;
-        padding: 0px !important;
-        font-size: 18px !important;
-        margin-top: -5px !important; /* Beetje omhoog smokkelen */
+        background-color: transparent !important; color: #aaa !important; border: none !important;
+        padding: 0px !important; font-size: 18px !important; margin-top: -5px !important; 
     }
     div[data-testid="column"]:has(> div > div > div > div > .close-btn-marker) button:hover {
-        color: red !important;
-        background-color: transparent !important;
+        color: red !important; background-color: transparent !important;
     }
     </style>
     
@@ -219,97 +203,91 @@ with col_main:
                     st.session_state.step = 2
                     st.rerun()
 
-    # --- STAP 2: DYNAMISCHE DETAILS (MET 'X' KNOP) ---
+    # --- STAP 2: DYNAMISCHE DETAILS (ZONDER ST.FORM) ---
     elif st.session_state.step == 2:
-        with st.form("shipment_form"):
-            st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
-            
-            # Check of er nog iets geselecteerd is. Zo niet, ga terug naar stap 1.
-            if not st.session_state.selected_types:
-                 st.session_state.step = 1
-                 st.rerun()
+        st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
+        
+        # Check of er nog iets geselecteerd is. Zo niet, ga terug naar stap 1.
+        if not st.session_state.selected_types:
+             st.session_state.step = 1
+             st.rerun()
 
-            aantal_geselecteerd = len(st.session_state.selected_types)
-            cols = st.columns(aantal_geselecteerd)
-            
-            # We itereren over een KOPIE van de lijst ([:]) omdat we items gaan verwijderen
-            for i, sel in enumerate(st.session_state.selected_types[:]):
-                with cols[i]:
-                    with st.container(border=True):
-                        # --- DE 'X' KNOP LOGICA ---
-                        # Maak 2 kolommen: eentje breed voor de titel, eentje smal voor de X
-                        c_title, c_close = st.columns([9, 1])
-                        with c_title:
-                             st.markdown(f"#### {sel}")
-                        with c_close:
-                            # Een marker voor onze CSS om dit knopje te vinden
-                            st.markdown('<span class="close-btn-marker"></span>', unsafe_allow_html=True)
-                            # De 'X' knop. Als erop geklikt wordt:
-                            if st.button("❌", key=f"btn_close_{sel}", help=f"Remove {sel}"):
-                                st.session_state.selected_types.remove(sel) # Verwijder uit lijst
-                                st.rerun() # Herlaad pagina direct
+        aantal_geselecteerd = len(st.session_state.selected_types)
+        cols = st.columns(aantal_geselecteerd)
+        
+        # We itereren over een KOPIE van de lijst ([:]) omdat we items gaan verwijderen
+        for i, sel in enumerate(st.session_state.selected_types[:]):
+            with cols[i]:
+                with st.container(border=True):
+                    # --- DE 'X' KNOP LOGICA ---
+                    c_title, c_close = st.columns([9, 1])
+                    with c_title:
+                         st.markdown(f"#### {sel}")
+                    with c_close:
+                        st.markdown('<span class="close-btn-marker"></span>', unsafe_allow_html=True)
+                        if st.button("❌", key=f"btn_close_{sel}", help=f"Remove {sel}"):
+                            st.session_state.selected_types.remove(sel)
+                            st.rerun() 
 
-                        # --- DE FORMULIER VELDEN ---
-                        if sel == "Parcels & Documents":
-                            st.text_input("Average Number of Shipments *", key="pd_avg")
-                            st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
-                            st.markdown("**Where do you ship? ***")
-                            st.checkbox("Domestic", key="pd_dom")
-                            st.checkbox("Pan-European", key="pd_pan")
-                            st.checkbox("Worldwide", key="pd_world")
-                            
-                        elif sel == "Cargo & Freight":
-                            st.radio("Shipping Type *", ["One-off", "Recurring Shipment"], horizontal=True, key="cf_type")
-                            st.markdown("**Load Type ***")
-                            st.checkbox("Pallet", key="cf_pal")
-                            st.checkbox("Full Container/Truck Load", key="cf_full")
-                            st.checkbox("Loose Cargo", key="cf_lc")
-                            st.text_input("Avg. Shipments per Year *", key="cf_avg")
-                            st.markdown("**Where do you ship? ***")
-                            st.checkbox("Domestic", key="cf_dom")
-                            st.checkbox("Pan-European", key="cf_pan")
-                            st.checkbox("Worldwide", key="cf_world")
-                            
-                        elif sel == "Mail & Direct Marketing":
-                            st.text_input("Average Number of Shipments *", key="mdm_avg")
-                            st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
-                            st.markdown("**Where do you ship? ***")
-                            st.checkbox("Pan-European", key="mdm_pan")
-                            st.checkbox("Worldwide", key="mdm_world")
-                            st.caption("International shipments only.")
-                            
-            st.markdown("</div>", unsafe_allow_html=True)
+                    # --- DE VELDEN ---
+                    if sel == "Parcels & Documents":
+                        st.text_input("Average Number of Shipments *", key="pd_avg")
+                        st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
+                        st.markdown("**Where do you ship? ***")
+                        st.checkbox("Domestic", key="pd_dom")
+                        st.checkbox("Pan-European", key="pd_pan")
+                        st.checkbox("Worldwide", key="pd_world")
+                        
+                    elif sel == "Cargo & Freight":
+                        st.radio("Shipping Type *", ["One-off", "Recurring Shipment"], horizontal=True, key="cf_type")
+                        st.markdown("**Load Type ***")
+                        st.checkbox("Pallet", key="cf_pal")
+                        st.checkbox("Full Container/Truck Load", key="cf_full")
+                        st.checkbox("Loose Cargo", key="cf_lc")
+                        st.text_input("Avg. Shipments per Year *", key="cf_avg")
+                        st.markdown("**Where do you ship? ***")
+                        st.checkbox("Domestic", key="cf_dom")
+                        st.checkbox("Pan-European", key="cf_pan")
+                        st.checkbox("Worldwide", key="cf_world")
+                        
+                    elif sel == "Mail & Direct Marketing":
+                        st.text_input("Average Number of Shipments *", key="mdm_avg")
+                        st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
+                        st.markdown("**Where do you ship? ***")
+                        st.checkbox("Pan-European", key="mdm_pan")
+                        st.checkbox("Worldwide", key="mdm_world")
+                        st.caption("International shipments only.")
+                        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        st.markdown("---")
+        st.markdown("### General Contact Details")
+        c_form1, c_form2 = st.columns(2)
+        with c_form1:
+            company = st.text_input("Company Name *", key="company_name")
+            email = st.text_input("Email *", key="email_address")
+        with c_form2:
+            route = st.text_input("Route (e.g. Oslo -> Bergen) *", key="route_info")
+            weight = st.number_input("Total Est. Weight (kg)", min_value=1, key="weight_info")
+        
+        st.markdown("---")
+        c_back, c_next = st.columns([1, 4])
+        
+        if c_back.button("← Back"):
+            st.session_state.step = 1
+            st.rerun()
             
-            st.markdown("---")
-            st.markdown("### General Contact Details")
-            c_form1, c_form2 = st.columns(2)
-            with c_form1:
-                company = st.text_input("Company Name *")
-                email = st.text_input("Email *")
-            with c_form2:
-                route = st.text_input("Route (e.g. Oslo -> Bergen) *")
-                weight = st.number_input("Total Est. Weight (kg)", min_value=1)
-            
-            st.markdown("---")
-            c_back, c_next = st.columns([1, 4])
-            back = c_back.form_submit_button("← Back")
-            submit = c_next.form_submit_button("Continue to Review →")
-            
-            if back:
-                st.session_state.step = 1
+        if c_next.button("Continue to Review →"):
+            if not company or not email or not route:
+                st.error("⚠️ Please fill in all General Contact Details before continuing.")
+            else:
+                st.session_state.temp_order = {
+                    "company": company, "email": email,
+                    "route": route, "weight": weight, 
+                    "types": st.session_state.selected_types
+                }
+                st.session_state.step = 3
                 st.rerun()
-            
-            if submit:
-                if not company or not email or not route:
-                    st.error("⚠️ Please fill in all General Contact Details before continuing.")
-                else:
-                    st.session_state.temp_order = {
-                        "company": company, "email": email,
-                        "route": route, "weight": weight, 
-                        "types": st.session_state.selected_types
-                    }
-                    st.session_state.step = 3
-                    st.rerun()
 
     # --- STAP 3: REVIEW ---
     elif st.session_state.step == 3:
