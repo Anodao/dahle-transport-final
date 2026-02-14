@@ -10,6 +10,15 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- LOGO RESET TRUCJE ---
+# Als we op het logo klikken, wordt '?reset=true' aan de link toegevoegd.
+# Hier vangen we dat op en dwingen we de app terug naar Stap 1.
+if "reset" in st.query_params:
+    st.session_state.step = 1
+    st.session_state.selected_type = None
+    st.session_state.temp_order = {}
+    st.query_params.clear() # Wis het seintje zodat we niet vastlopen
+
 # --- SESSION STATE ---
 if 'orders' not in st.session_state:
     st.session_state.orders = []
@@ -58,10 +67,10 @@ st.markdown("""
     .nav-logo a { text-decoration: none; display: flex; align-items: center; }
     .nav-logo img { 
         height: 48px; 
-        transition: transform 0.2s ease-in-out; /* Zorgt voor soepele animatie */
+        transition: transform 0.2s ease-in-out; 
         cursor: pointer; 
     }
-    .nav-logo img:hover { transform: scale(1.05); } /* Logo wordt 5% groter bij hover */
+    .nav-logo img:hover { transform: scale(1.03); } /* Klein beetje groter bij hover */
     
     .nav-links { 
         display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; 
@@ -130,7 +139,7 @@ st.markdown("""
     
     <div class="navbar">
         <div class="nav-logo">
-            <a href="?home=1" target="_self" title="Go to Homepage">
+            <a href="?reset=true" target="_self" title="Go back to Step 1">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
             </a>
         </div>
