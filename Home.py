@@ -92,8 +92,13 @@ st.markdown("""
     .option-card:hover { border-color: #894b9d; background: #2e2e2e; transition: 0.3s;}
     
     /* --- BUTTONS & FORMS --- */
-    div.stButton > button { background: #894b9d; color: white; border: none; border-radius: 30px; padding: 12px 28px; width: 100%; font-weight: bold;}
-    div.stButton > button:hover { background: #723e83; color: white; }
+    div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] { 
+        background: #894b9d; color: white; border: none; border-radius: 30px; 
+        padding: 12px 28px; width: 100%; font-weight: bold;
+    }
+    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { 
+        background: #723e83; color: white; 
+    }
     
     /* FORMS GENERAL */
     div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
@@ -110,13 +115,18 @@ st.markdown("""
     .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.0); } 
     .step2-panel div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
 
-    /* STYLING VOOR DE 'X' KNOPJES */
-    div[data-testid="column"]:has(> div > div > div > div > .close-btn-marker) button {
-        background-color: transparent !important; color: #aaa !important; border: none !important;
-        padding: 0px !important; font-size: 18px !important; margin-top: -5px !important; 
+    /* --- FIX VOOR DE 'X' KNOPJES --- */
+    /* Zorg dat de tertiary buttons geen rare randen hebben en mooi uitlijnen */
+    .step2-panel button[kind="tertiary"] {
+        color: #888 !important; /* Grijze kleur, net als in je voorbeeld */
+        padding: 0px !important;
+        min-height: 0px !important;
+        margin-top: 15px !important; /* Lijnt hem mooi uit met de titel */
+        font-size: 16px !important;
     }
-    div[data-testid="column"]:has(> div > div > div > div > .close-btn-marker) button:hover {
-        color: red !important; background-color: transparent !important;
+    .step2-panel button[kind="tertiary"]:hover {
+        color: #ff4b4b !important; /* Rood bij hoveren */
+        background-color: transparent !important;
     }
     </style>
     
@@ -203,7 +213,7 @@ with col_main:
                     st.session_state.step = 2
                     st.rerun()
 
-    # --- STAP 2: DYNAMISCHE DETAILS (ZONDER ST.FORM) ---
+    # --- STAP 2: DYNAMISCHE DETAILS ---
     elif st.session_state.step == 2:
         st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
         
@@ -215,17 +225,16 @@ with col_main:
         aantal_geselecteerd = len(st.session_state.selected_types)
         cols = st.columns(aantal_geselecteerd)
         
-        # We itereren over een KOPIE van de lijst ([:]) omdat we items gaan verwijderen
         for i, sel in enumerate(st.session_state.selected_types[:]):
             with cols[i]:
                 with st.container(border=True):
-                    # --- DE 'X' KNOP LOGICA ---
-                    c_title, c_close = st.columns([9, 1])
+                    # --- DE GEFIXTE 'X' KNOP ---
+                    c_title, c_close = st.columns([8, 1])
                     with c_title:
                          st.markdown(f"#### {sel}")
                     with c_close:
-                        st.markdown('<span class="close-btn-marker"></span>', unsafe_allow_html=True)
-                        if st.button("❌", key=f"btn_close_{sel}", help=f"Remove {sel}"):
+                        # Door type="tertiary" te gebruiken verdwijnen de dikke randen!
+                        if st.button("✖", key=f"btn_close_{sel}", help=f"Remove {sel}", type="tertiary"):
                             st.session_state.selected_types.remove(sel)
                             st.rerun() 
 
