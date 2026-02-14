@@ -31,7 +31,7 @@ if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 if 'show_error' not in st.session_state: st.session_state.show_error = False
 
-# --- CSS STYLING GLOBAL ---
+# --- CSS STYLING & NAVBAR HTML ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -95,6 +95,20 @@ st.markdown("""
     div[data-baseweb="input"] input { color: white; }
     label { color: #ccc !important; font-weight: 600; }
     </style>
+    
+    <div class="navbar">
+        <div class="nav-logo">
+            <a href="?reset=true" target="_self" title="Go back to Step 1">
+                <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
+            </a>
+        </div>
+        <div class="nav-links">
+            <span>Home</span><span>About Us</span><span>Services</span><span>Gallery</span><span>Contact</span>
+        </div>
+        <div class="nav-cta">
+            <a class="cta-btn">CONTACT US</a>
+        </div>
+    </div>
 """, unsafe_allow_html=True)
 
 # =========================================================
@@ -311,7 +325,6 @@ with col_main:
                     with c_close:
                         if st.button("✖", key=f"btn_close_{sel}", help=f"Remove {sel}", type="tertiary"):
                             st.session_state.selected_types.remove(sel)
-                            # Zorg dat de kaart in stap 1 ook wordt uitgevinkt!
                             if sel == "Parcels & Documents": st.session_state.chk_parcels = False
                             if sel == "Cargo & Freight": st.session_state.chk_freight = False
                             if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
