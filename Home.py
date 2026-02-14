@@ -20,7 +20,7 @@ if 'selected_type' not in st.session_state:
 if 'temp_order' not in st.session_state:
     st.session_state.temp_order = {}
 
-# --- CSS STYLING (De Echte Dahle Look is terug) ---
+# --- CSS STYLING ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;800&display=swap');
@@ -41,7 +41,7 @@ st.markdown("""
     
     footer { visibility: hidden; }
     
-    /* --- NAVBAR STYLING (Precies zoals eerst) --- */
+    /* --- NAVBAR STYLING --- */
     .block-container { padding-top: 150px; }
 
     .navbar {
@@ -112,11 +112,18 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- DE WEBSITE LOGICA ---
-st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>📦 Create new shipment</h2>", unsafe_allow_html=True)
 
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
+# =========================================================
+# DE WEBSITE LOGICA (NU ALLES PERFECT GECENTERD)
+# =========================================================
+
+# We maken 3 kolommen: Leeg (1 deel) | Inhoud (3 delen) | Leeg (1 deel)
+col_spacer_L, col_main, col_spacer_R = st.columns([1, 3, 1])
+
+with col_main:
+    # De titel staat nu ook IN het gecentreerde blok
+    st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>📦 Create new shipment</h2>", unsafe_allow_html=True)
+
     # STAP 1: KEUZE
     if st.session_state.step == 1:
         st.write("Select the type of goods you want to ship:")
