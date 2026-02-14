@@ -11,13 +11,11 @@ st.set_page_config(
 )
 
 # --- LOGO RESET TRUCJE ---
-# Als we op het logo klikken, wordt '?reset=true' aan de link toegevoegd.
-# Hier vangen we dat op en dwingen we de app terug naar Stap 1.
 if "reset" in st.query_params:
     st.session_state.step = 1
     st.session_state.selected_type = None
     st.session_state.temp_order = {}
-    st.query_params.clear() # Wis het seintje zodat we niet vastlopen
+    st.query_params.clear()
 
 # --- SESSION STATE ---
 if 'orders' not in st.session_state:
@@ -61,16 +59,23 @@ st.markdown("""
         box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     
-    .nav-logo { display: flex; justify-content: flex-start; padding-left: 40px; }
+    .nav-logo { display: flex; justify-content: flex-start; padding-left: 40px; align-items: center; }
     
-    /* LOGO LINK & HOVER EFFECT */
-    .nav-logo a { text-decoration: none; display: flex; align-items: center; }
-    .nav-logo img { 
-        height: 48px; 
-        transition: transform 0.2s ease-in-out; 
-        cursor: pointer; 
+    /* --- FIX: KLIKBAAR GEBIED EXACT EVEN GROOT ALS LOGO --- */
+    .nav-logo a { 
+        display: inline-block; /* Maakt de link een massief blok */
+        height: 48px; /* Zelfde hoogte als het logo */
+        text-decoration: none; 
+        cursor: pointer;
     }
-    .nav-logo img:hover { transform: scale(1.03); } /* Klein beetje groter bij hover */
+    .nav-logo img { 
+        height: 100%; /* Plaatje vult de link nu perfect 100% op */
+        width: auto;
+        display: block;
+        transition: transform 0.2s ease-in-out; 
+    }
+    /* Als we ergens op het blok hoveren, wordt het plaatje groter */
+    .nav-logo a:hover img { transform: scale(1.05); } 
     
     .nav-links { 
         display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; 
