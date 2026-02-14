@@ -83,59 +83,18 @@ st.markdown("""
     .step-item.completed .step-label { color: #894b9d; }
     .line-completed { background-color: #894b9d; }
 
-    /* --- DE NIEUWE OPTION CARDS (EXACT ZOALS DE FOTO) --- */
-    .option-card {
-        background: #262626; border: 2px solid #444; border-radius: 12px;
-        padding: 30px 25px; text-align: left; min-height: 380px;
-        display: flex; flex-direction: column; justify-content: flex-start;
-        margin-bottom: 0px; transition: 0.3s;
-        pointer-events: none; /* Zorgt dat we door de kaart heen klikken op de onzichtbare checkbox */
-    }
-    .card-title { font-size: 18px; font-weight: 700; color: white; margin-bottom: 10px; margin-top: 0;}
-    .card-badge { 
-        display: inline-block; padding: 4px 12px; border: 1px solid #666; 
-        border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;
-    }
-    .card-list { font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; flex-grow: 1;}
-    .card-list li { margin-bottom: 8px; }
-    .card-footer { font-size: 12px; color: #888; text-align: left; background: #2f2f2f; padding: 15px; border-radius: 8px;}
-    .card-icons { font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;}
-
     /* --- ALGEMENE FORMS & BUTTONS --- */
     div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] { 
-        border: none; border-radius: 6px; padding: 10px 28px; font-weight: bold;
+        background: #894b9d !important; color: white !important; border: none; border-radius: 6px; 
+        padding: 10px 28px; width: 100%; font-weight: bold;
+    }
+    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { 
+        background: #723e83 !important; color: white !important; 
     }
     div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input { color: white; }
     label { color: #ccc !important; font-weight: 600; }
-
-    /* --- STAP 2: NORMAAL GEDRAG HERSTELLEN VOOR CHECKBOXES --- */
-    .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
-    .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;}
-    .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;}
-    .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
-
-    /* STYLING VOOR DE 'X' KNOPJES IN STAP 2 */
-    .step2-panel button[kind="tertiary"] {
-        color: #888 !important; padding: 0px !important; min-height: 0px !important;
-        margin-top: 15px !important; font-size: 16px !important;
-    }
-    .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
     </style>
-    
-    <div class="navbar">
-        <div class="nav-logo">
-            <a href="?reset=true" target="_self" title="Go back to Step 1">
-                <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
-            </a>
-        </div>
-        <div class="nav-links">
-            <span>Home</span><span>About Us</span><span>Services</span><span>Gallery</span><span>Contact</span>
-        </div>
-        <div class="nav-cta">
-            <a class="cta-btn">CONTACT US</a>
-        </div>
-    </div>
 """, unsafe_allow_html=True)
 
 # =========================================================
@@ -178,30 +137,56 @@ with col_main:
     # =========================================================
     if st.session_state.step == 1:
         
-        # MAGISCHE CSS: Zorgt ervoor dat in Stap 1 de hele kolom een knop wordt
+        # CSS speciaal voor de kaarten in Stap 1
         st.markdown("""
         <style>
-        div[data-testid="column"] { position: relative; }
-        div[data-testid="stCheckbox"] { 
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+        /* 1. De boxen opmaken als echte kaarten */
+        div[data-testid="stVerticalBlockBorderWrapper"] {
+            position: relative !important;
+            border-radius: 12px !important;
+            transition: all 0.3s ease !important;
+            background-color: #262626 !important;
+            border: 2px solid #444 !important;
+            padding: 5px 15px !important;
+            height: 100%;
         }
-        div[data-testid="stCheckbox"] label { 
-            width: 100%; height: 100%; cursor: pointer; display: block; 
-        }
-        div[data-testid="stCheckbox"] label p { display: none !important; }
         
-        /* Box in de hoek */
-        div[data-testid="stCheckbox"] label span[role="checkbox"] { 
-            position: absolute; top: 25px; right: 25px; transform: scale(1.6); 
-            background-color: transparent; border: 2px solid #555; border-radius: 4px; margin: 0;
+        /* 2. Hover effect (kaart komt iets omhoog) */
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover {
+            border-color: #894b9d !important;
+            background-color: #2e2e2e !important;
+            transform: translateY(-5px);
         }
-        /* Hover over de kolom licht de kaart op */
-        div[data-testid="column"]:hover .option-card {
-            border-color: #894b9d; background-color: #2e2e2e;
+        
+        /* 3. Als het vinkje aan staat, licht de héle box paars op! */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(input[type="checkbox"]:checked) {
+            border-color: #894b9d !important;
+            background-color: #2e2e2e !important;
         }
-        /* Hover licht ook het vinkje op */
-        div[data-testid="stCheckbox"]:hover label span[role="checkbox"] {
-            border-color: #894b9d;
+        
+        /* 4. MAGIC TRICK: Maak de héle box klikbaar */
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            cursor: pointer;
+            z-index: 10;
+        }
+        
+        /* 5. Maak het vinkje zelf groot en stijl het als de titel van de kaart */
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] {
+            margin-bottom: 5px;
+            padding-top: 15px;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] {
+            transform: scale(1.6);
+            margin-right: 15px;
+            border-color: #888;
+        }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label p {
+            font-size: 20px !important;
+            font-weight: 700 !important;
+            color: white !important;
         }
         </style>
         """, unsafe_allow_html=True)
@@ -213,85 +198,61 @@ with col_main:
         
         # KAART 1: Parcels
         with c1:
-            is_p = st.session_state.chk_parcels
-            b_css1 = "border-color: #894b9d; background-color: #2e2e2e;" if is_p else ""
-            st.markdown(f'''
-                <div class="option-card" style="{b_css1}">
-                    <h4 class="card-title">Parcels & Documents</h4>
-                    <span class="card-badge">Typically up to 31.5kg</span>
-                    <ul class="card-list">
+            with st.container(border=True):
+                # De checkbox fungeert als de grote titel, bovenaan!
+                st.checkbox("Parcels & Documents", key="chk_parcels")
+                st.markdown("""
+                    <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 31.5kg</span>
+                    <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
                         <li>Light to medium weight shipments</li>
                         <li>B2B/B2C</li>
                     </ul>
-                    <div class="card-footer">
+                    <div style="font-size: 12px; color: #888; background: #2f2f2f; padding: 15px; border-radius: 8px;">
                         Commonly shipped items:
-                        <div class="card-icons">✉️ 📦 📚</div>
+                        <div style="font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;">✉️ 📦 📚</div>
                     </div>
-                </div>
-            ''', unsafe_allow_html=True)
-            st.checkbox(" ", key="chk_parcels") # Onzichtbare tekst, CSS rekt dit uit
+                """, unsafe_allow_html=True)
 
         # KAART 2: Freight
         with c2:
-            is_f = st.session_state.chk_freight
-            b_css2 = "border-color: #894b9d; background-color: #2e2e2e;" if is_f else ""
-            st.markdown(f'''
-                <div class="option-card" style="{b_css2}">
-                    <h4 class="card-title">Cargo & Freight</h4>
-                    <span class="card-badge">Typically over 31.5kg+</span>
-                    <ul class="card-list">
+            with st.container(border=True):
+                st.checkbox("Cargo & Freight", key="chk_freight")
+                st.markdown("""
+                    <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically over 31.5kg+</span>
+                    <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
                         <li>Heavier shipments using pallets or containers</li>
                         <li>B2B</li>
                     </ul>
-                    <div class="card-footer">
+                    <div style="font-size: 12px; color: #888; background: #2f2f2f; padding: 15px; border-radius: 8px;">
                         Commonly shipped items:
-                        <div class="card-icons">🚛 🏗️</div>
+                        <div style="font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;">🚛 🏗️</div>
                     </div>
-                </div>
-            ''', unsafe_allow_html=True)
-            st.checkbox("  ", key="chk_freight")
+                """, unsafe_allow_html=True)
 
         # KAART 3: Mail
         with c3:
-            is_m = st.session_state.chk_mail
-            b_css3 = "border-color: #894b9d; background-color: #2e2e2e;" if is_m else ""
-            st.markdown(f'''
-                <div class="option-card" style="{b_css3}">
-                    <h4 class="card-title">Mail & Direct Marketing</h4>
-                    <span class="card-badge">Typically up to 2kg</span>
-                    <ul class="card-list">
+            with st.container(border=True):
+                st.checkbox("Mail & Marketing", key="chk_mail")
+                st.markdown("""
+                    <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 2kg</span>
+                    <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
                         <li>Lightweight goods</li>
                         <li>International business mail (letters, brochures, books)</li>
                     </ul>
-                    <div class="card-footer">
+                    <div style="font-size: 12px; color: #888; background: #2f2f2f; padding: 15px; border-radius: 8px;">
                         Commonly shipped items:
-                        <div class="card-icons">📭 📄</div>
+                        <div style="font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;">📭 📄</div>
                     </div>
-                </div>
-            ''', unsafe_allow_html=True)
-            st.checkbox("   ", key="chk_mail")
+                """, unsafe_allow_html=True)
 
         # --- FOUTMELDING & KNOP ---
         if st.session_state.show_error:
-            st.markdown("<p style='text-align: center; color: #ff4b4b; font-weight: bold; margin-top: 15px;'>❌ Please select at least one option.</p>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #ff4b4b; font-weight: bold; margin-top: 20px;'>❌ Please select at least one option.</p>", unsafe_allow_html=True)
         else:
-            st.write("") # Lege ruimte als er geen error is
+            st.write("") 
             
-        st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 10px;'>⏱ Typically takes less than 5 minutes.</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 15px;'>⏱ Typically takes less than 5 minutes.</p>", unsafe_allow_html=True)
         
-        # Dynamische knop kleur (Grijs als er niks is geselecteerd, paars als er wel iets is geselecteerd)
-        any_checked = st.session_state.chk_parcels or st.session_state.chk_freight or st.session_state.chk_mail
-        btn_bg = "#894b9d" if any_checked else "#a9a9a9"
-        btn_hover = "#723e83" if any_checked else "#a9a9a9"
-        
-        st.markdown(f"""
-        <style>
-        .step1-btn div.stButton > button {{ background: {btn_bg} !important; color: white !important; }}
-        .step1-btn div.stButton > button:hover {{ background: {btn_hover} !important; }}
-        </style>
-        """, unsafe_allow_html=True)
-        
-        st.markdown("<div class='step1-btn'>", unsafe_allow_html=True)
         c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
         with c_btn2:
             if st.button("Next Step", use_container_width=True):
@@ -308,15 +269,28 @@ with col_main:
                     st.session_state.selected_types = selected
                     st.session_state.step = 2
                     st.rerun()
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # =========================================================
     # STAP 2: DYNAMISCHE DETAILS
     # =========================================================
     elif st.session_state.step == 2:
         
-        # Standaard knoppen hier mooi paars
-        st.markdown("""<style>div.stButton > button { background: #894b9d !important; color: white !important; }</style>""", unsafe_allow_html=True)
+        # CSS voor Stap 2
+        st.markdown("""
+        <style>
+        .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
+        .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;}
+        .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;}
+        .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
+
+        /* STYLING VOOR DE 'X' KNOPJES IN STAP 2 */
+        .step2-panel button[kind="tertiary"] {
+            color: #888 !important; padding: 0px !important; min-height: 0px !important;
+            margin-top: 15px !important; font-size: 16px !important;
+        }
+        .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
+        </style>
+        """, unsafe_allow_html=True)
         
         st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
         
@@ -407,9 +381,6 @@ with col_main:
     # STAP 3: REVIEW
     # =========================================================
     elif st.session_state.step == 3:
-        
-        st.markdown("""<style>div.stButton > button { background: #894b9d !important; color: white !important; }</style>""", unsafe_allow_html=True)
-        
         o = st.session_state.temp_order
         with st.container(border=True):
             col_s1, col_s2 = st.columns(2)
