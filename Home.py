@@ -94,13 +94,46 @@ st.markdown("""
     /* --- BUTTONS & FORMS --- */
     div.stButton > button { background: #894b9d; color: white; border: none; border-radius: 30px; padding: 12px 28px; width: 100%; font-weight: bold;}
     div.stButton > button:hover { background: #723e83; color: white; }
-    div[data-testid="stCheckbox"] { display: flex; justify-content: center; margin-bottom: 20px;}
+    
+    /* FORMS GENERAL */
     div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input { color: white; }
     label { color: #ccc !important; font-weight: 600; }
     
-    /* Zorg dat de radio buttons (toggles) en sub-checkboxes in stap 2 links uitlijnen */
+    /* --- NIEUW: GROTERE CHECKBOXES (Stap 1) --- */
+    /* Het vierkantje zelf vergroten */
+    div[data-testid="stCheckbox"] label span[role="checkbox"] {
+        transform: scale(1.5); 
+        margin-right: 10px;
+    }
+    /* De tekst ernaast ook iets groter en duidelijker */
+    div[data-testid="stCheckbox"] label p {
+        font-size: 16px !important;
+        font-weight: 600 !important;
+    }
+    /* Centreren in stap 1 */
+    div[data-testid="stCheckbox"] { display: flex; justify-content: center; margin-bottom: 20px;}
+
+    /* --- STAP 2 SPECIFIEK --- */
+    /* Zorg dat de radio buttons en checkboxes in stap 2 weer normaal links uitlijnen */
     .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px;}
+    .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.0); } /* Normale grootte in stap 2 */
+    .step2-panel div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
+
+    /* STYLING VOOR DE 'X' KNOPJES */
+    /* We maken de knopjes in de 'close-col' klein en minimalistisch */
+    div[data-testid="column"]:has(> div > div > div > div > .close-btn-marker) button {
+        background-color: transparent !important;
+        color: #aaa !important;
+        border: none !important;
+        padding: 0px !important;
+        font-size: 18px !important;
+        margin-top: -5px !important; /* Beetje omhoog smokkelen */
+    }
+    div[data-testid="column"]:has(> div > div > div > div > .close-btn-marker) button:hover {
+        color: red !important;
+        background-color: transparent !important;
+    }
     </style>
     
     <div class="navbar">
@@ -186,49 +219,64 @@ with col_main:
                     st.session_state.step = 2
                     st.rerun()
 
-    # --- STAP 2: DYNAMISCHE DETAILS (ZOALS DE FOTO) ---
+    # --- STAP 2: DYNAMISCHE DETAILS (MET 'X' KNOP) ---
     elif st.session_state.step == 2:
         with st.form("shipment_form"):
             st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
             
-            # Maak dynamisch het aantal kolommen aan op basis van de selectie!
+            # Check of er nog iets geselecteerd is. Zo niet, ga terug naar stap 1.
+            if not st.session_state.selected_types:
+                 st.session_state.step = 1
+                 st.rerun()
+
             aantal_geselecteerd = len(st.session_state.selected_types)
             cols = st.columns(aantal_geselecteerd)
             
-            # Vul elke kolom met de specifieke vragen voor dat type
-            for i, sel in enumerate(st.session_state.selected_types):
+            # We itereren over een KOPIE van de lijst ([:]) omdat we items gaan verwijderen
+            for i, sel in enumerate(st.session_state.selected_types[:]):
                 with cols[i]:
                     with st.container(border=True):
+                        # --- DE 'X' KNOP LOGICA ---
+                        # Maak 2 kolommen: eentje breed voor de titel, eentje smal voor de X
+                        c_title, c_close = st.columns([9, 1])
+                        with c_title:
+                             st.markdown(f"#### {sel}")
+                        with c_close:
+                            # Een marker voor onze CSS om dit knopje te vinden
+                            st.markdown('<span class="close-btn-marker"></span>', unsafe_allow_html=True)
+                            # De 'X' knop. Als erop geklikt wordt:
+                            if st.button("❌", key=f"btn_close_{sel}", help=f"Remove {sel}"):
+                                st.session_state.selected_types.remove(sel) # Verwijder uit lijst
+                                st.rerun() # Herlaad pagina direct
+
+                        # --- DE FORMULIER VELDEN ---
                         if sel == "Parcels & Documents":
-                            st.markdown("#### 📦 Parcels & Documents")
                             st.text_input("Average Number of Shipments *", key="pd_avg")
                             st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
                             st.markdown("**Where do you ship? ***")
-                            st.checkbox("Domestic (within the country)", key="pd_dom")
-                            st.checkbox("Pan-European (within the continent)", key="pd_pan")
-                            st.checkbox("Worldwide (beyond the continent)", key="pd_world")
+                            st.checkbox("Domestic", key="pd_dom")
+                            st.checkbox("Pan-European", key="pd_pan")
+                            st.checkbox("Worldwide", key="pd_world")
                             
                         elif sel == "Cargo & Freight":
-                            st.markdown("#### 🚛 Cargo & Freight")
                             st.radio("Shipping Type *", ["One-off", "Recurring Shipment"], horizontal=True, key="cf_type")
                             st.markdown("**Load Type ***")
                             st.checkbox("Pallet", key="cf_pal")
                             st.checkbox("Full Container/Truck Load", key="cf_full")
                             st.checkbox("Loose Cargo", key="cf_lc")
-                            st.text_input("Average Number of Shipments per Year *", key="cf_avg")
+                            st.text_input("Avg. Shipments per Year *", key="cf_avg")
                             st.markdown("**Where do you ship? ***")
                             st.checkbox("Domestic", key="cf_dom")
                             st.checkbox("Pan-European", key="cf_pan")
                             st.checkbox("Worldwide", key="cf_world")
                             
                         elif sel == "Mail & Direct Marketing":
-                            st.markdown("#### ✉️ Mail & Direct Marketing")
                             st.text_input("Average Number of Shipments *", key="mdm_avg")
                             st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                             st.markdown("**Where do you ship? ***")
                             st.checkbox("Pan-European", key="mdm_pan")
                             st.checkbox("Worldwide", key="mdm_world")
-                            st.caption("Our business accounts for Mail & Direct Marketing currently service international shipments only.")
+                            st.caption("International shipments only.")
                             
             st.markdown("</div>", unsafe_allow_html=True)
             
