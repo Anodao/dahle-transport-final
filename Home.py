@@ -15,10 +15,10 @@ if "reset" in st.query_params:
     st.session_state.step = 1
     st.session_state.selected_types = [] 
     st.session_state.temp_order = {}
-    # Reset ook de nieuwe vinkjes
     st.session_state.chk_parcels = False
     st.session_state.chk_freight = False
     st.session_state.chk_mail = False
+    st.session_state.show_error = False
     st.query_params.clear()
 
 # --- SESSION STATE ---
@@ -26,12 +26,12 @@ if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
 if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
-# State voor de grote kaarten
 if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
 if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
+if 'show_error' not in st.session_state: st.session_state.show_error = False
 
-# --- CSS STYLING ---
+# --- CSS STYLING GLOBAL ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -45,7 +45,7 @@ st.markdown("""
     footer { visibility: hidden; }
     
     /* --- NAVBAR --- */
-    .block-container { padding-top: 130px; }
+    .block-container { padding-top: 110px; }
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; 
@@ -69,7 +69,7 @@ st.markdown("""
     .cta-btn:hover { background-color: #723e83; }
 
     /* --- STEP TRACKER --- */
-    .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 40px; margin-top: 10px; gap: 15px; }
+    .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
     .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
     .step-circle {
         width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555; display: flex; justify-content: center; align-items: center;
@@ -89,59 +89,33 @@ st.markdown("""
         padding: 30px 25px; text-align: left; min-height: 380px;
         display: flex; flex-direction: column; justify-content: flex-start;
         margin-bottom: 0px; transition: 0.3s;
+        pointer-events: none; /* Zorgt dat we door de kaart heen klikken op de onzichtbare checkbox */
     }
     .card-title { font-size: 18px; font-weight: 700; color: white; margin-bottom: 10px; margin-top: 0;}
     .card-badge { 
         display: inline-block; padding: 4px 12px; border: 1px solid #666; 
         border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;
     }
-    .card-list { font-size: 13px; color: #bbb; line-height: 1.6; padding-left: 15px; margin-bottom: 30px; flex-grow: 1;}
+    .card-list { font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; flex-grow: 1;}
     .card-list li { margin-bottom: 8px; }
     .card-footer { font-size: 12px; color: #888; text-align: left; background: #2f2f2f; padding: 15px; border-radius: 8px;}
     .card-icons { font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;}
-    
-    /* --- HET KLIKBARE BLOK MAGIE (STAP 1) --- */
-    /* Selecteer alleen kolommen waar een option-card in zit */
-    div[data-testid="column"]:has(.option-card) { position: relative; cursor: pointer; }
-    
-    /* Maak de checkbox een onzichtbare overlay over de HELE kolom */
-    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] {
-        position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: transparent;
-    }
-    /* Rek het klikbare gebied van de checkbox label op */
-    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] label {
-        width: 100%; height: 100%; cursor: pointer; display: block;
-    }
-    /* Plaats het zichtbare vierkantje exact rechtsboven */
-    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] label span[role="checkbox"] {
-        position: absolute; top: 25px; right: 25px; transform: scale(1.6);
-        background-color: #262626; border: 2px solid #666; border-radius: 4px;
-    }
-    /* Verberg de tekst van de checkbox, want we gebruiken de mooie kaart */
-    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] label p { display: none; }
-    
-    /* Hover effect: Als we over de kolom hoveren, licht de kaart op! */
-    div[data-testid="column"]:has(.option-card):hover .option-card {
-        border-color: #894b9d; background-color: #2e2e2e; transform: translateY(-5px);
-    }
 
     /* --- ALGEMENE FORMS & BUTTONS --- */
     div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] { 
-        background: #894b9d; color: white; border: none; border-radius: 30px; padding: 12px 28px; width: 100%; font-weight: bold;
+        border: none; border-radius: 6px; padding: 10px 28px; font-weight: bold;
     }
-    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { background: #723e83; color: white; }
-    
     div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input { color: white; }
     label { color: #ccc !important; font-weight: 600; }
 
-    /* --- STAP 2: NORMAAL GEDRAG HERSTELLEN --- */
+    /* --- STAP 2: NORMAAL GEDRAG HERSTELLEN VOOR CHECKBOXES --- */
     .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
     .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;}
     .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;}
     .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
 
-    /* STYLING VOOR DE 'X' KNOPJES (TERTIARY) */
+    /* STYLING VOOR DE 'X' KNOPJES IN STAP 2 */
     .step2-panel button[kind="tertiary"] {
         color: #888 !important; padding: 0px !important; min-height: 0px !important;
         margin-top: 15px !important; font-size: 16px !important;
@@ -199,10 +173,41 @@ with col_main:
     """
     st.markdown(tracker_html, unsafe_allow_html=True)
 
-    # --- STAP 1: KEUZE (VOLLEDIG KLIKBARE KAARTEN) ---
+    # =========================================================
+    # STAP 1: KEUZE (VOLLEDIG KLIKBARE KAARTEN)
+    # =========================================================
     if st.session_state.step == 1:
+        
+        # MAGISCHE CSS: Zorgt ervoor dat in Stap 1 de hele kolom een knop wordt
+        st.markdown("""
+        <style>
+        div[data-testid="column"] { position: relative; }
+        div[data-testid="stCheckbox"] { 
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
+        }
+        div[data-testid="stCheckbox"] label { 
+            width: 100%; height: 100%; cursor: pointer; display: block; 
+        }
+        div[data-testid="stCheckbox"] label p { display: none !important; }
+        
+        /* Box in de hoek */
+        div[data-testid="stCheckbox"] label span[role="checkbox"] { 
+            position: absolute; top: 25px; right: 25px; transform: scale(1.6); 
+            background-color: transparent; border: 2px solid #555; border-radius: 4px; margin: 0;
+        }
+        /* Hover over de kolom licht de kaart op */
+        div[data-testid="column"]:hover .option-card {
+            border-color: #894b9d; background-color: #2e2e2e;
+        }
+        /* Hover licht ook het vinkje op */
+        div[data-testid="stCheckbox"]:hover label span[role="checkbox"] {
+            border-color: #894b9d;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
         st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>To find your service match, select all that you ship on a regular basis.</h3>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #888; margin-bottom: 40px;'>Select at least one option to continue</p>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #888; margin-bottom: 30px;'>Select at least one option to continue</p>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
         
@@ -224,7 +229,7 @@ with col_main:
                     </div>
                 </div>
             ''', unsafe_allow_html=True)
-            st.checkbox("Parcels", key="chk_parcels")
+            st.checkbox(" ", key="chk_parcels") # Onzichtbare tekst, CSS rekt dit uit
 
         # KAART 2: Freight
         with c2:
@@ -244,7 +249,7 @@ with col_main:
                     </div>
                 </div>
             ''', unsafe_allow_html=True)
-            st.checkbox("Freight", key="chk_freight")
+            st.checkbox("  ", key="chk_freight")
 
         # KAART 3: Mail
         with c3:
@@ -264,10 +269,29 @@ with col_main:
                     </div>
                 </div>
             ''', unsafe_allow_html=True)
-            st.checkbox("Mail", key="chk_mail")
+            st.checkbox("   ", key="chk_mail")
 
-        st.markdown("<br><br>", unsafe_allow_html=True)
+        # --- FOUTMELDING & KNOP ---
+        if st.session_state.show_error:
+            st.markdown("<p style='text-align: center; color: #ff4b4b; font-weight: bold; margin-top: 15px;'>❌ Please select at least one option.</p>", unsafe_allow_html=True)
+        else:
+            st.write("") # Lege ruimte als er geen error is
+            
+        st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 10px;'>⏱ Typically takes less than 5 minutes.</p>", unsafe_allow_html=True)
         
+        # Dynamische knop kleur (Grijs als er niks is geselecteerd, paars als er wel iets is geselecteerd)
+        any_checked = st.session_state.chk_parcels or st.session_state.chk_freight or st.session_state.chk_mail
+        btn_bg = "#894b9d" if any_checked else "#a9a9a9"
+        btn_hover = "#723e83" if any_checked else "#a9a9a9"
+        
+        st.markdown(f"""
+        <style>
+        .step1-btn div.stButton > button {{ background: {btn_bg} !important; color: white !important; }}
+        .step1-btn div.stButton > button:hover {{ background: {btn_hover} !important; }}
+        </style>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("<div class='step1-btn'>", unsafe_allow_html=True)
         c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
         with c_btn2:
             if st.button("Next Step", use_container_width=True):
@@ -277,14 +301,23 @@ with col_main:
                 if st.session_state.chk_mail: selected.append("Mail & Direct Marketing")
                 
                 if len(selected) == 0:
-                    st.error("❌ Please select at least one option.")
+                    st.session_state.show_error = True
+                    st.rerun()
                 else:
+                    st.session_state.show_error = False
                     st.session_state.selected_types = selected
                     st.session_state.step = 2
                     st.rerun()
+        st.markdown("</div>", unsafe_allow_html=True)
 
-    # --- STAP 2: DYNAMISCHE DETAILS ---
+    # =========================================================
+    # STAP 2: DYNAMISCHE DETAILS
+    # =========================================================
     elif st.session_state.step == 2:
+        
+        # Standaard knoppen hier mooi paars
+        st.markdown("""<style>div.stButton > button { background: #894b9d !important; color: white !important; }</style>""", unsafe_allow_html=True)
+        
         st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
         
         if not st.session_state.selected_types:
@@ -370,8 +403,13 @@ with col_main:
                 st.session_state.step = 3
                 st.rerun()
 
-    # --- STAP 3: REVIEW ---
+    # =========================================================
+    # STAP 3: REVIEW
+    # =========================================================
     elif st.session_state.step == 3:
+        
+        st.markdown("""<style>div.stButton > button { background: #894b9d !important; color: white !important; }</style>""", unsafe_allow_html=True)
+        
         o = st.session_state.temp_order
         with st.container(border=True):
             col_s1, col_s2 = st.columns(2)
