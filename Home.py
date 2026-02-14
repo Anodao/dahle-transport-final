@@ -15,17 +15,21 @@ if "reset" in st.query_params:
     st.session_state.step = 1
     st.session_state.selected_types = [] 
     st.session_state.temp_order = {}
+    # Reset ook de nieuwe vinkjes
+    st.session_state.chk_parcels = False
+    st.session_state.chk_freight = False
+    st.session_state.chk_mail = False
     st.query_params.clear()
 
 # --- SESSION STATE ---
-if 'orders' not in st.session_state:
-    st.session_state.orders = []
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'selected_types' not in st.session_state:
-    st.session_state.selected_types = []
-if 'temp_order' not in st.session_state:
-    st.session_state.temp_order = {}
+if 'orders' not in st.session_state: st.session_state.orders = []
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'selected_types' not in st.session_state: st.session_state.selected_types = []
+if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
+# State voor de grote kaarten
+if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
+if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
+if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 
 # --- CSS STYLING ---
 st.markdown("""
@@ -33,16 +37,15 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-    /* --- HEADER & SIDEBAR KNOP FIX --- */
+    /* --- HEADER & SIDEBAR FIX --- */
     header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; }
     div[data-testid="stDecoration"] { display: none; }
     div[data-testid="stToolbar"] { display: none; }
     button[kind="header"] { color: #000 !important; margin-top: 5px; pointer-events: auto !important; }
     footer { visibility: hidden; }
     
-    /* --- NAVBAR STYLING --- */
+    /* --- NAVBAR --- */
     .block-container { padding-top: 130px; }
-
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; 
@@ -65,14 +68,12 @@ st.markdown("""
     }
     .cta-btn:hover { background-color: #723e83; }
 
-    /* --- STEP TRACKER STYLING --- */
+    /* --- STEP TRACKER --- */
     .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 40px; margin-top: 10px; gap: 15px; }
     .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
     .step-circle {
-        width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555;
-        display: flex; justify-content: center; align-items: center;
-        font-weight: 700; font-size: 16px; color: #aaa; background-color: #262626;
-        margin-bottom: 10px; z-index: 2; transition: 0.3s;
+        width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555; display: flex; justify-content: center; align-items: center;
+        font-weight: 700; font-size: 16px; color: #aaa; background-color: #262626; margin-bottom: 10px; z-index: 2; transition: 0.3s;
     }
     .step-label { font-size: 13px; font-weight: 600; color: #888; text-align: center; }
     .step-line { height: 2px; width: 60px; background-color: #444; margin-top: 20px; }
@@ -82,52 +83,70 @@ st.markdown("""
     .step-item.completed .step-label { color: #894b9d; }
     .line-completed { background-color: #894b9d; }
 
-    /* --- CARDS --- */
+    /* --- DE NIEUWE OPTION CARDS (EXACT ZOALS DE FOTO) --- */
     .option-card {
-        background: #262626; border: 1px solid #444; border-radius: 12px;
-        padding: 40px 20px; text-align: center; min-height: 250px;
-        display: flex; flex-direction: column; justify-content: center;
-        margin-bottom: 15px; 
+        background: #262626; border: 2px solid #444; border-radius: 12px;
+        padding: 30px 25px; text-align: left; min-height: 380px;
+        display: flex; flex-direction: column; justify-content: flex-start;
+        margin-bottom: 0px; transition: 0.3s;
     }
-    .option-card:hover { border-color: #894b9d; background: #2e2e2e; transition: 0.3s;}
+    .card-title { font-size: 18px; font-weight: 700; color: white; margin-bottom: 10px; margin-top: 0;}
+    .card-badge { 
+        display: inline-block; padding: 4px 12px; border: 1px solid #666; 
+        border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;
+    }
+    .card-list { font-size: 13px; color: #bbb; line-height: 1.6; padding-left: 15px; margin-bottom: 30px; flex-grow: 1;}
+    .card-list li { margin-bottom: 8px; }
+    .card-footer { font-size: 12px; color: #888; text-align: left; background: #2f2f2f; padding: 15px; border-radius: 8px;}
+    .card-icons { font-size: 28px; margin-top: 5px; display: flex; gap: 15px; justify-content: center;}
     
-    /* --- BUTTONS & FORMS --- */
+    /* --- HET KLIKBARE BLOK MAGIE (STAP 1) --- */
+    /* Selecteer alleen kolommen waar een option-card in zit */
+    div[data-testid="column"]:has(.option-card) { position: relative; cursor: pointer; }
+    
+    /* Maak de checkbox een onzichtbare overlay over de HELE kolom */
+    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] {
+        position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; background: transparent;
+    }
+    /* Rek het klikbare gebied van de checkbox label op */
+    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] label {
+        width: 100%; height: 100%; cursor: pointer; display: block;
+    }
+    /* Plaats het zichtbare vierkantje exact rechtsboven */
+    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] label span[role="checkbox"] {
+        position: absolute; top: 25px; right: 25px; transform: scale(1.6);
+        background-color: #262626; border: 2px solid #666; border-radius: 4px;
+    }
+    /* Verberg de tekst van de checkbox, want we gebruiken de mooie kaart */
+    div[data-testid="column"]:has(.option-card) div[data-testid="stCheckbox"] label p { display: none; }
+    
+    /* Hover effect: Als we over de kolom hoveren, licht de kaart op! */
+    div[data-testid="column"]:has(.option-card):hover .option-card {
+        border-color: #894b9d; background-color: #2e2e2e; transform: translateY(-5px);
+    }
+
+    /* --- ALGEMENE FORMS & BUTTONS --- */
     div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] { 
-        background: #894b9d; color: white; border: none; border-radius: 30px; 
-        padding: 12px 28px; width: 100%; font-weight: bold;
+        background: #894b9d; color: white; border: none; border-radius: 30px; padding: 12px 28px; width: 100%; font-weight: bold;
     }
-    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { 
-        background: #723e83; color: white; 
-    }
+    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { background: #723e83; color: white; }
     
-    /* FORMS GENERAL */
     div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input { color: white; }
     label { color: #ccc !important; font-weight: 600; }
-    
-    /* --- GROTERE CHECKBOXES (Stap 1) --- */
-    div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.5); margin-right: 10px; }
-    div[data-testid="stCheckbox"] label p { font-size: 16px !important; font-weight: 600 !important; }
-    div[data-testid="stCheckbox"] { display: flex; justify-content: center; margin-bottom: 20px;}
 
-    /* --- STAP 2 SPECIFIEK --- */
-    .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px;}
-    .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.0); } 
-    .step2-panel div[data-testid="stCheckbox"] label p { font-size: 14px !important; }
+    /* --- STAP 2: NORMAAL GEDRAG HERSTELLEN --- */
+    .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
+    .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;}
+    .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;}
+    .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
 
-    /* --- FIX VOOR DE 'X' KNOPJES --- */
-    /* Zorg dat de tertiary buttons geen rare randen hebben en mooi uitlijnen */
+    /* STYLING VOOR DE 'X' KNOPJES (TERTIARY) */
     .step2-panel button[kind="tertiary"] {
-        color: #888 !important; /* Grijze kleur, net als in je voorbeeld */
-        padding: 0px !important;
-        min-height: 0px !important;
-        margin-top: 15px !important; /* Lijnt hem mooi uit met de titel */
-        font-size: 16px !important;
+        color: #888 !important; padding: 0px !important; min-height: 0px !important;
+        margin-top: 15px !important; font-size: 16px !important;
     }
-    .step2-panel button[kind="tertiary"]:hover {
-        color: #ff4b4b !important; /* Rood bij hoveren */
-        background-color: transparent !important;
-    }
+    .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
     </style>
     
     <div class="navbar">
@@ -180,31 +199,82 @@ with col_main:
     """
     st.markdown(tracker_html, unsafe_allow_html=True)
 
-    # --- STAP 1: KEUZE ---
+    # --- STAP 1: KEUZE (VOLLEDIG KLIKBARE KAARTEN) ---
     if st.session_state.step == 1:
         st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>To find your service match, select all that you ship on a regular basis.</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #888; margin-bottom: 40px;'>Select at least one option to continue</p>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
+        
+        # KAART 1: Parcels
         with c1:
-            st.markdown('<div class="option-card"><h1>📦</h1><h3>Parcels & Documents</h3><p>Light to medium weight shipments (B2B/B2C)</p></div>', unsafe_allow_html=True)
-            check_parcels = st.checkbox("Select Parcels & Documents")
-        with c2:
-            st.markdown('<div class="option-card"><h1>🚛</h1><h3>Cargo & Freight</h3><p>Heavier shipments using pallets or containers (B2B)</p></div>', unsafe_allow_html=True)
-            check_freight = st.checkbox("Select Cargo & Freight")
-        with c3:
-            st.markdown('<div class="option-card"><h1>✉️</h1><h3>Mail & Direct Marketing</h3><p>Lightweight goods & international business mail</p></div>', unsafe_allow_html=True)
-            check_mail = st.checkbox("Select Mail & Marketing")
+            is_p = st.session_state.chk_parcels
+            b_css1 = "border-color: #894b9d; background-color: #2e2e2e;" if is_p else ""
+            st.markdown(f'''
+                <div class="option-card" style="{b_css1}">
+                    <h4 class="card-title">Parcels & Documents</h4>
+                    <span class="card-badge">Typically up to 31.5kg</span>
+                    <ul class="card-list">
+                        <li>Light to medium weight shipments</li>
+                        <li>B2B/B2C</li>
+                    </ul>
+                    <div class="card-footer">
+                        Commonly shipped items:
+                        <div class="card-icons">✉️ 📦 📚</div>
+                    </div>
+                </div>
+            ''', unsafe_allow_html=True)
+            st.checkbox("Parcels", key="chk_parcels")
 
-        st.markdown("---")
+        # KAART 2: Freight
+        with c2:
+            is_f = st.session_state.chk_freight
+            b_css2 = "border-color: #894b9d; background-color: #2e2e2e;" if is_f else ""
+            st.markdown(f'''
+                <div class="option-card" style="{b_css2}">
+                    <h4 class="card-title">Cargo & Freight</h4>
+                    <span class="card-badge">Typically over 31.5kg+</span>
+                    <ul class="card-list">
+                        <li>Heavier shipments using pallets or containers</li>
+                        <li>B2B</li>
+                    </ul>
+                    <div class="card-footer">
+                        Commonly shipped items:
+                        <div class="card-icons">🚛 🏗️</div>
+                    </div>
+                </div>
+            ''', unsafe_allow_html=True)
+            st.checkbox("Freight", key="chk_freight")
+
+        # KAART 3: Mail
+        with c3:
+            is_m = st.session_state.chk_mail
+            b_css3 = "border-color: #894b9d; background-color: #2e2e2e;" if is_m else ""
+            st.markdown(f'''
+                <div class="option-card" style="{b_css3}">
+                    <h4 class="card-title">Mail & Direct Marketing</h4>
+                    <span class="card-badge">Typically up to 2kg</span>
+                    <ul class="card-list">
+                        <li>Lightweight goods</li>
+                        <li>International business mail (letters, brochures, books)</li>
+                    </ul>
+                    <div class="card-footer">
+                        Commonly shipped items:
+                        <div class="card-icons">📭 📄</div>
+                    </div>
+                </div>
+            ''', unsafe_allow_html=True)
+            st.checkbox("Mail", key="chk_mail")
+
+        st.markdown("<br><br>", unsafe_allow_html=True)
         
         c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
         with c_btn2:
             if st.button("Next Step", use_container_width=True):
                 selected = []
-                if check_parcels: selected.append("Parcels & Documents")
-                if check_freight: selected.append("Cargo & Freight")
-                if check_mail: selected.append("Mail & Direct Marketing")
+                if st.session_state.chk_parcels: selected.append("Parcels & Documents")
+                if st.session_state.chk_freight: selected.append("Cargo & Freight")
+                if st.session_state.chk_mail: selected.append("Mail & Direct Marketing")
                 
                 if len(selected) == 0:
                     st.error("❌ Please select at least one option.")
@@ -217,7 +287,6 @@ with col_main:
     elif st.session_state.step == 2:
         st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
         
-        # Check of er nog iets geselecteerd is. Zo niet, ga terug naar stap 1.
         if not st.session_state.selected_types:
              st.session_state.step = 1
              st.rerun()
@@ -228,14 +297,17 @@ with col_main:
         for i, sel in enumerate(st.session_state.selected_types[:]):
             with cols[i]:
                 with st.container(border=True):
-                    # --- DE GEFIXTE 'X' KNOP ---
+                    # --- DE 'X' KNOP LOGICA ---
                     c_title, c_close = st.columns([8, 1])
                     with c_title:
                          st.markdown(f"#### {sel}")
                     with c_close:
-                        # Door type="tertiary" te gebruiken verdwijnen de dikke randen!
                         if st.button("✖", key=f"btn_close_{sel}", help=f"Remove {sel}", type="tertiary"):
                             st.session_state.selected_types.remove(sel)
+                            # Zorg dat de kaart in stap 1 ook wordt uitgevinkt!
+                            if sel == "Parcels & Documents": st.session_state.chk_parcels = False
+                            if sel == "Cargo & Freight": st.session_state.chk_freight = False
+                            if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
                             st.rerun() 
 
                     # --- DE VELDEN ---
@@ -329,8 +401,12 @@ with col_main:
                 st.balloons()
                 st.success("Your transport request has been sent successfully!")
                 time.sleep(2.5)
+                # Volledige reset na succes
                 st.session_state.step = 1
                 st.session_state.selected_types = []
+                st.session_state.chk_parcels = False
+                st.session_state.chk_freight = False
+                st.session_state.chk_mail = False
                 st.rerun()
 
     # =========================================================
@@ -339,5 +415,4 @@ with col_main:
     st.write("")
     st.write("")
     st.markdown("---")
-    
     st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
