@@ -70,7 +70,7 @@ st.markdown("""
     }
     .cta-btn:hover { background-color: #723e83; }
 
-    /* --- STEP TRACKER STYLING (Aangepast voor Dark Mode) --- */
+    /* --- STEP TRACKER STYLING --- */
     .step-wrapper {
         display: flex; justify-content: center; align-items: flex-start;
         margin-bottom: 50px; margin-top: 10px; gap: 15px;
@@ -79,26 +79,23 @@ st.markdown("""
         display: flex; flex-direction: column; align-items: center; width: 80px;
     }
     
-    /* Standaard (inactief) bolletje */
     .step-circle {
         width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555;
         display: flex; justify-content: center; align-items: center;
         font-weight: 700; font-size: 16px; color: #aaa; background-color: #262626;
         margin-bottom: 10px; z-index: 2; transition: 0.3s;
     }
-    /* Standaard (inactief) tekst */
     .step-label { font-size: 13px; font-weight: 600; color: #888; text-align: center; }
     
-    /* Grijze streep */
     .step-line {
         height: 2px; width: 60px; background-color: #444; margin-top: 20px;
     }
 
-    /* ACTIEVE STAP (Nu helder wit zodat het opvalt op zwart) */
+    /* ACTIEVE STAP */
     .step-item.active .step-circle { border-color: #ffffff; background-color: #ffffff; color: #000000; }
-    .step-item.active .step-label { color: #ffffff; } /* Opgelost! */
+    .step-item.active .step-label { color: #ffffff; }
     
-    /* VOLTOOIDE STAP (Dahle Paars) */
+    /* VOLTOOIDE STAP */
     .step-item.completed .step-circle { 
         border-color: #894b9d; background-color: #894b9d; color: white; 
     }
@@ -226,13 +223,19 @@ with col_main:
                 st.session_state.step = 1
                 st.rerun()
             
-            if submit and company and email:
-                st.session_state.temp_order = {
-                    "company": company, "email": email,
-                    "route": route, "weight": weight, "type": st.session_state.selected_type
-                }
-                st.session_state.step = 3
-                st.rerun()
+            # --- VALIDATIE TOEGEVOEGD HIER ---
+            if submit:
+                # Controleer of alle velden zijn ingevuld (behalve gewicht, want die is altijd minimaal 1)
+                if not company or not email or not route:
+                    st.error("⚠️ Please fill in all fields (Company Name, Email, and Route) before continuing.")
+                else:
+                    # Alles is ingevuld! Sla op en ga naar stap 3
+                    st.session_state.temp_order = {
+                        "company": company, "email": email,
+                        "route": route, "weight": weight, "type": st.session_state.selected_type
+                    }
+                    st.session_state.step = 3
+                    st.rerun()
 
     # --- STAP 3: REVIEW ---
     elif st.session_state.step == 3:
