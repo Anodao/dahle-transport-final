@@ -53,7 +53,15 @@ st.markdown("""
     }
     
     .nav-logo { display: flex; justify-content: flex-start; padding-left: 40px; }
-    .nav-logo img { height: 48px; }
+    
+    /* LOGO LINK & HOVER EFFECT */
+    .nav-logo a { text-decoration: none; display: flex; align-items: center; }
+    .nav-logo img { 
+        height: 48px; 
+        transition: transform 0.2s ease-in-out; /* Zorgt voor soepele animatie */
+        cursor: pointer; 
+    }
+    .nav-logo img:hover { transform: scale(1.05); } /* Logo wordt 5% groter bij hover */
     
     .nav-links { 
         display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; 
@@ -122,7 +130,9 @@ st.markdown("""
     
     <div class="navbar">
         <div class="nav-logo">
-            <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
+            <a href="?home=1" target="_self" title="Go to Homepage">
+                <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
+            </a>
         </div>
         <div class="nav-links">
             <span>Home</span>
@@ -223,13 +233,10 @@ with col_main:
                 st.session_state.step = 1
                 st.rerun()
             
-            # --- VALIDATIE TOEGEVOEGD HIER ---
             if submit:
-                # Controleer of alle velden zijn ingevuld (behalve gewicht, want die is altijd minimaal 1)
                 if not company or not email or not route:
                     st.error("⚠️ Please fill in all fields (Company Name, Email, and Route) before continuing.")
                 else:
-                    # Alles is ingevuld! Sla op en ga naar stap 3
                     st.session_state.temp_order = {
                         "company": company, "email": email,
                         "route": route, "weight": weight, "type": st.session_state.selected_type
