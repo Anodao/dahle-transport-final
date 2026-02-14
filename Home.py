@@ -202,3 +202,11 @@ with col_main:
 # Sidebar info
 st.sidebar.markdown("### ⚙️ Menu")
 st.sidebar.info("Use this menu to switch between **Home** (Customer) and **Planner** (Internal).")
+
+# --- GEHEIM KNOPJE VOOR DE DEMO ---
+    st.write("") # Beetje witruimte
+    st.markdown("---")
+    
+    if st.button("🔒 Open Internal Planner System (Demo)", use_container_width=True):
+        st.switch_page("pages/Planner.py")
+
