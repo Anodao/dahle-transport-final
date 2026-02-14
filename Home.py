@@ -20,10 +20,10 @@ if 'selected_type' not in st.session_state:
 if 'temp_order' not in st.session_state:
     st.session_state.temp_order = {}
 
-# --- CSS STYLING ---
+# --- CSS STYLING (EXACT ZOALS DE FOTO, IN HET ENGELS) ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
     /* --- HEADER & SIDEBAR KNOP FIX --- */
@@ -31,61 +31,67 @@ st.markdown("""
     div[data-testid="stDecoration"] { display: none; }
     div[data-testid="stToolbar"] { display: none; }
     
-    /* Maak het sidebar pijltje ZWART en goed zichtbaar */
+    /* Maak het sidebar pijltje zwart */
     button[kind="header"] { color: #000 !important; margin-top: 5px; }
     footer { visibility: hidden; }
     
-    /* --- NAVBAR STYLING (EXACTLY LIKE THE PHOTO) --- */
+    /* --- NAVBAR STYLING --- */
     .block-container { padding-top: 150px; }
 
     .navbar {
-        position: fixed; top: 0; left: 0; width: 100%; height: 110px;
-        background-color: white; z-index: 999;
+        position: fixed; 
+        top: 0; 
+        left: 0; 
+        width: 100%; 
+        height: 90px; /* Iets subtielere hoogte, zoals op de foto */
+        background-color: white; 
+        z-index: 999;
         border-bottom: 1px solid #eaeaea; 
-        display: flex; align-items: center; justify-content: space-between;
+        
+        /* GRID maakt perfecte centrering mogelijk */
+        display: grid; 
+        grid-template-columns: 1fr auto 1fr; 
+        align-items: center;
+        
         padding: 0 40px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     
-    /* Divide the navbar into 3 equal blocks for perfect centering */
     .nav-logo {
-        flex: 1;
         display: flex;
         justify-content: flex-start;
-        padding-left: 50px; /* Room for the Streamlit sidebar button */
+        padding-left: 40px; /* Ruimte voor de Streamlit sidebar knop */
     }
-    .nav-logo img { height: 60px; } 
+    .nav-logo img { height: 48px; } /* Exacte verhouding met tekst */
     
     .nav-links { 
-        flex: 2; /* Takes up the middle space */
         display: flex; 
-        justify-content: center; /* Forces the text to the absolute center */
-        gap: 35px; 
-        font-size: 16px; 
-        font-weight: 700; /* Bold, like on the photo */
-        color: #000; 
+        gap: 28px; /* Tussenruimte zoals op de foto */
+        font-size: 15px; 
+        font-weight: 500; /* Net iets strakker/dunner */
+        color: #000000; 
     }
-    .nav-links span { cursor: pointer; transition: 0.2s; }
-    .nav-links span:hover { color: #9b59b6; }
+    .nav-links span { cursor: pointer; transition: color 0.2s; }
+    .nav-links span:hover { color: #894b9d; }
 
     .nav-cta {
-        flex: 1;
         display: flex;
-        justify-content: flex-end; /* Forces the button all the way to the right */
+        justify-content: flex-end; 
     }
     .cta-btn { 
-        background-color: #8c4b99; /* Dahle Purple */
-        color: white; 
-        padding: 14px 30px; 
-        border-radius: 30px; 
+        background-color: #894b9d; /* Exacte Dahle Paars van je foto */
+        color: white !important; 
+        padding: 10px 24px; /* Plattere pilvorm zoals de foto */
+        border-radius: 50px; 
         text-decoration: none; 
-        font-weight: bold; 
-        font-size: 14px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        font-weight: 600; 
+        font-size: 13px;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         cursor: pointer;
-        transition: 0.2s;
+        transition: background-color 0.2s;
     }
-    .cta-btn:hover { background-color: #7a3c87; }
+    .cta-btn:hover { background-color: #723e83; }
 
     /* --- CARDS --- */
     .option-card {
@@ -93,11 +99,11 @@ st.markdown("""
         padding: 40px 20px; text-align: center; min-height: 280px;
         display: flex; flex-direction: column; justify-content: center;
     }
-    .option-card:hover { border-color: #9b59b6; background: #2e2e2e; transform: translateY(-5px); transition: 0.3s;}
+    .option-card:hover { border-color: #894b9d; background: #2e2e2e; transform: translateY(-5px); transition: 0.3s;}
     
     /* --- BUTTONS --- */
-    div.stButton > button { background: #9b59b6; color: white; border: none; border-radius: 30px; padding: 12px 28px; width: 100%; font-weight: bold;}
-    div.stButton > button:hover { background: #af6bca; color: white; }
+    div.stButton > button { background: #894b9d; color: white; border: none; border-radius: 30px; padding: 12px 28px; width: 100%; font-weight: bold;}
+    div.stButton > button:hover { background: #723e83; color: white; }
     
     /* FORMS */
     div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
@@ -122,9 +128,8 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-
 # =========================================================
-# THE WEBSITE LOGIC
+# DE WEBSITE LOGICA
 # =========================================================
 
 col_spacer_L, col_main, col_spacer_R = st.columns([1, 3, 1])
@@ -132,7 +137,7 @@ col_spacer_L, col_main, col_spacer_R = st.columns([1, 3, 1])
 with col_main:
     st.markdown("<h2 style='text-align: center; margin-bottom: 40px;'>📦 Create new shipment</h2>", unsafe_allow_html=True)
 
-    # STEP 1: CHOOSE
+    # STAP 1: KEUZE
     if st.session_state.step == 1:
         st.write("Select the type of goods you want to ship:")
         st.write("")
@@ -156,7 +161,7 @@ with col_main:
                 st.session_state.step = 2
                 st.rerun()
 
-    # STEP 2: DETAILS
+    # STAP 2: DETAILS
     elif st.session_state.step == 2:
         st.info(f"Shipping Type: {st.session_state.selected_type}")
         with st.form("shipment_form"):
