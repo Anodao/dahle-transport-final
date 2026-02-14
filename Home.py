@@ -13,7 +13,7 @@ st.set_page_config(
 # --- LOGO RESET TRUCJE ---
 if "reset" in st.query_params:
     st.session_state.step = 1
-    st.session_state.selected_types = [] # Is nu een lijst!
+    st.session_state.selected_types = [] 
     st.session_state.temp_order = {}
     st.query_params.clear()
 
@@ -22,7 +22,6 @@ if 'orders' not in st.session_state:
     st.session_state.orders = []
 if 'step' not in st.session_state:
     st.session_state.step = 1
-# LET OP: selected_type is nu selected_types (meervoud, een lijst)
 if 'selected_types' not in st.session_state:
     st.session_state.selected_types = []
 if 'temp_order' not in st.session_state:
@@ -88,21 +87,20 @@ st.markdown("""
         background: #262626; border: 1px solid #444; border-radius: 12px;
         padding: 40px 20px; text-align: center; min-height: 250px;
         display: flex; flex-direction: column; justify-content: center;
-        margin-bottom: 15px; /* Ruimte voor de checkbox */
+        margin-bottom: 15px; 
     }
     .option-card:hover { border-color: #894b9d; background: #2e2e2e; transition: 0.3s;}
     
-    /* --- BUTTONS --- */
+    /* --- BUTTONS & FORMS --- */
     div.stButton > button { background: #894b9d; color: white; border: none; border-radius: 30px; padding: 12px 28px; width: 100%; font-weight: bold;}
     div.stButton > button:hover { background: #723e83; color: white; }
-    
-    /* Zorg dat de checkboxes netjes gecentreerd onder de kaarten staan */
     div[data-testid="stCheckbox"] { display: flex; justify-content: center; margin-bottom: 20px;}
-    
-    /* FORMS */
     div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input { color: white; }
     label { color: #ccc !important; font-weight: 600; }
+    
+    /* Zorg dat de radio buttons (toggles) en sub-checkboxes in stap 2 links uitlijnen */
+    .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px;}
     </style>
     
     <div class="navbar">
@@ -124,7 +122,7 @@ st.markdown("""
 # DE WEBSITE LOGICA
 # =========================================================
 
-col_spacer_L, col_main, col_spacer_R = st.columns([1, 4, 1])
+col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
 
 with col_main:
     
@@ -155,41 +153,32 @@ with col_main:
     """
     st.markdown(tracker_html, unsafe_allow_html=True)
 
-    # --- STAP 1: KEUZE (NU MET CHECKBOXES!) ---
+    # --- STAP 1: KEUZE ---
     if st.session_state.step == 1:
         st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>To find your service match, select all that you ship on a regular basis.</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #888; margin-bottom: 40px;'>Select at least one option to continue</p>", unsafe_allow_html=True)
         
         c1, c2, c3 = st.columns(3)
-        
-        # Kolom 1
         with c1:
-            st.markdown('<div class="option-card"><h1>📦</h1><h3>Parcels & Docs</h3><p>Small boxes, envelopes, and urgent documents up to 30kg.</p></div>', unsafe_allow_html=True)
-            check_parcels = st.checkbox("Select Parcels & Docs")
-            
-        # Kolom 2
+            st.markdown('<div class="option-card"><h1>📦</h1><h3>Parcels & Documents</h3><p>Light to medium weight shipments (B2B/B2C)</p></div>', unsafe_allow_html=True)
+            check_parcels = st.checkbox("Select Parcels & Documents")
         with c2:
-            st.markdown('<div class="option-card"><h1>🚛</h1><h3>Freight / Pallets</h3><p>Euro pallets, industrial goods, and bulk cargo over 30kg.</p></div>', unsafe_allow_html=True)
-            check_freight = st.checkbox("Select Freight / Pallets")
-            
-        # Kolom 3
+            st.markdown('<div class="option-card"><h1>🚛</h1><h3>Cargo & Freight</h3><p>Heavier shipments using pallets or containers (B2B)</p></div>', unsafe_allow_html=True)
+            check_freight = st.checkbox("Select Cargo & Freight")
         with c3:
-            st.markdown('<div class="option-card"><h1>❄️</h1><h3>Special Transport</h3><p>Refrigerated, hazardous (ADR), or oversized loads.</p></div>', unsafe_allow_html=True)
-            check_special = st.checkbox("Select Special Transport")
+            st.markdown('<div class="option-card"><h1>✉️</h1><h3>Mail & Direct Marketing</h3><p>Lightweight goods & international business mail</p></div>', unsafe_allow_html=True)
+            check_mail = st.checkbox("Select Mail & Marketing")
 
         st.markdown("---")
         
-        # De "Next Step" knop en validatie (zoals op de foto)
         c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
         with c_btn2:
             if st.button("Next Step", use_container_width=True):
-                # Verzamel alle aangevinkte opties in een lijst
                 selected = []
-                if check_parcels: selected.append("Parcels/Docs")
-                if check_freight: selected.append("Freight/Pallets")
-                if check_special: selected.append("Special Transport")
+                if check_parcels: selected.append("Parcels & Documents")
+                if check_freight: selected.append("Cargo & Freight")
+                if check_mail: selected.append("Mail & Direct Marketing")
                 
-                # Check of er minstens 1 is aangevinkt
                 if len(selected) == 0:
                     st.error("❌ Please select at least one option.")
                 else:
@@ -197,21 +186,61 @@ with col_main:
                     st.session_state.step = 2
                     st.rerun()
 
-    # --- STAP 2: DETAILS ---
+    # --- STAP 2: DYNAMISCHE DETAILS (ZOALS DE FOTO) ---
     elif st.session_state.step == 2:
         with st.form("shipment_form"):
-            # Laat zien welke types zijn gekozen (komma gescheiden)
-            gekozen_types = ", ".join(st.session_state.selected_types)
-            st.write(f"**Selected:** {gekozen_types}")
-            st.write("")
+            st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
             
+            # Maak dynamisch het aantal kolommen aan op basis van de selectie!
+            aantal_geselecteerd = len(st.session_state.selected_types)
+            cols = st.columns(aantal_geselecteerd)
+            
+            # Vul elke kolom met de specifieke vragen voor dat type
+            for i, sel in enumerate(st.session_state.selected_types):
+                with cols[i]:
+                    with st.container(border=True):
+                        if sel == "Parcels & Documents":
+                            st.markdown("#### 📦 Parcels & Documents")
+                            st.text_input("Average Number of Shipments *", key="pd_avg")
+                            st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
+                            st.markdown("**Where do you ship? ***")
+                            st.checkbox("Domestic (within the country)", key="pd_dom")
+                            st.checkbox("Pan-European (within the continent)", key="pd_pan")
+                            st.checkbox("Worldwide (beyond the continent)", key="pd_world")
+                            
+                        elif sel == "Cargo & Freight":
+                            st.markdown("#### 🚛 Cargo & Freight")
+                            st.radio("Shipping Type *", ["One-off", "Recurring Shipment"], horizontal=True, key="cf_type")
+                            st.markdown("**Load Type ***")
+                            st.checkbox("Pallet", key="cf_pal")
+                            st.checkbox("Full Container/Truck Load", key="cf_full")
+                            st.checkbox("Loose Cargo", key="cf_lc")
+                            st.text_input("Average Number of Shipments per Year *", key="cf_avg")
+                            st.markdown("**Where do you ship? ***")
+                            st.checkbox("Domestic", key="cf_dom")
+                            st.checkbox("Pan-European", key="cf_pan")
+                            st.checkbox("Worldwide", key="cf_world")
+                            
+                        elif sel == "Mail & Direct Marketing":
+                            st.markdown("#### ✉️ Mail & Direct Marketing")
+                            st.text_input("Average Number of Shipments *", key="mdm_avg")
+                            st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
+                            st.markdown("**Where do you ship? ***")
+                            st.checkbox("Pan-European", key="mdm_pan")
+                            st.checkbox("Worldwide", key="mdm_world")
+                            st.caption("Our business accounts for Mail & Direct Marketing currently service international shipments only.")
+                            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            st.markdown("---")
+            st.markdown("### General Contact Details")
             c_form1, c_form2 = st.columns(2)
             with c_form1:
-                company = st.text_input("Company Name")
-                email = st.text_input("Email")
+                company = st.text_input("Company Name *")
+                email = st.text_input("Email *")
             with c_form2:
-                route = st.text_input("Route (e.g. Oslo -> Bergen)")
-                weight = st.number_input("Total Weight (kg)", min_value=1)
+                route = st.text_input("Route (e.g. Oslo -> Bergen) *")
+                weight = st.number_input("Total Est. Weight (kg)", min_value=1)
             
             st.markdown("---")
             c_back, c_next = st.columns([1, 4])
@@ -224,12 +253,12 @@ with col_main:
             
             if submit:
                 if not company or not email or not route:
-                    st.error("⚠️ Please fill in all fields (Company Name, Email, and Route) before continuing.")
+                    st.error("⚠️ Please fill in all General Contact Details before continuing.")
                 else:
                     st.session_state.temp_order = {
                         "company": company, "email": email,
                         "route": route, "weight": weight, 
-                        "types": st.session_state.selected_types # Bewaar de lijst!
+                        "types": st.session_state.selected_types
                     }
                     st.session_state.step = 3
                     st.rerun()
@@ -242,7 +271,6 @@ with col_main:
             with col_s1:
                 st.write(f"**Customer:** {o['company']}")
                 st.write(f"**Email:** {o['email']}")
-                # Print de lijst netjes uit
                 st.write(f"**Shipment Types:** {', '.join(o['types'])}")
             with col_s2:
                 st.write(f"**Route:** {o['route']}")
@@ -260,7 +288,6 @@ with col_main:
                 new_order['id'] = len(st.session_state.orders) + 1001
                 new_order['date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 new_order['status'] = "New"
-                # Voor weergave in de planner, maken we er weer een string van
                 new_order['type'] = ", ".join(o['types']) 
                 
                 st.session_state.orders.append(new_order)
@@ -268,7 +295,7 @@ with col_main:
                 st.success("Your transport request has been sent successfully!")
                 time.sleep(2.5)
                 st.session_state.step = 1
-                st.session_state.selected_types = [] # Reset de selectie
+                st.session_state.selected_types = []
                 st.rerun()
 
     # =========================================================
