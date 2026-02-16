@@ -6,71 +6,78 @@ st.set_page_config(
     page_title="Dahle Transport - Planner",
     page_icon="⚙️",
     layout="wide",
-    initial_sidebar_state="expanded"
+    initial_sidebar_state="collapsed"
 )
 
 # --- INITIALIZE STATE ---
-# Voor de zekerheid checken of de orders bestaan, anders crasht de planner
 if 'orders' not in st.session_state:
     st.session_state.orders = []
 if 'selected_order' not in st.session_state:
     st.session_state.selected_order = None
 
-# --- CSS STYLING VOOR DE PLANNER ---
+# --- CSS STYLING VOOR DE PLANNER (VOLLEDIG GEFORCEERDE KLEUREN) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
     
-    /* Forceer de algemene tekstkleur naar donkergrijs/zwart, zodat het NOOIT wit-op-wit is */
-    .stApp { background-color: #f4f6f9; }
+    /* Verberg de sidebar en knoppen volledig */
+    [data-testid="collapsedControl"] { display: none !important; }
+    [data-testid="stSidebar"] { display: none !important; }
+    header[data-testid="stHeader"] { display: none !important; }
+    
+    /* Algemene achtergrond voor de planner */
+    .stApp { background-color: #f8f9fa !important; }
     .block-container { padding-top: 2rem; }
-    h1, h2, h3, h4, h5, h6 { color: #2c3e50 !important; }
-    p, span, div { color: #34495e !important; }
 
-    /* De donkerblauwe header banner bovenaan */
+    /* De donkerpaarse Dahle Transport header banner bovenaan */
     .header-banner {
-        background-color: #2c3e50;
+        background-color: #894b9d; /* DAHLE PAARS */
         padding: 30px 40px;
         border-radius: 12px;
         margin-bottom: 30px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .header-banner h1 { color: #ffffff !important; margin: 0; font-weight: 700; letter-spacing: 0.5px;}
-    .header-banner p { color: #bdc3c7 !important; margin: 5px 0 0 0; font-size: 14px;}
+    .header-banner p { color: #e0d0e6 !important; margin: 5px 0 0 0; font-size: 14px;}
 
     /* Styling voor de lijst met orders links (Inbox) */
     .inbox-card {
-        background-color: #ffffff;
-        border: 1px solid #e0e6ed;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        background-color: #ffffff !important;
+        border: 1px solid #e0e6ed !important;
+        border-radius: 8px !important;
+        padding: 20px !important;
+        margin-bottom: 15px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
     }
-    .inbox-title { color: #2c3e50 !important; font-weight: 700; font-size: 16px; margin: 0 0 8px 0; }
-    .inbox-subtitle { color: #7f8c8d !important; font-size: 13px; margin: 0 0 8px 0; line-height: 1.4;}
-    .inbox-date { color: #95a5a6 !important; font-size: 11px; margin: 0; }
+    .inbox-title { color: #333333 !important; font-weight: 700; font-size: 16px; margin: 0 0 8px 0; }
+    .inbox-subtitle { color: #666666 !important; font-size: 13px; margin: 0 0 8px 0; line-height: 1.4;}
+    .inbox-date { color: #888888 !important; font-size: 11px; margin: 0; }
     .status-new { color: #e74c3c !important; font-weight: 900; }
     
     /* Styling voor de order details rechts */
     .detail-box {
-        background-color: #ffffff;
-        border: 1px solid #e0e6ed;
-        border-radius: 8px;
-        padding: 30px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        background-color: #ffffff !important;
+        border: 1px solid #e0e6ed !important;
+        border-radius: 8px !important;
+        padding: 30px !important;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
     }
-    .detail-label { color: #95a5a6 !important; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px;}
-    .detail-value { color: #2c3e50 !important; font-size: 15px; font-weight: 500; margin-bottom: 20px;}
-    .detail-header { border-bottom: 2px solid #f0f3f6; padding-bottom: 10px; margin-bottom: 20px; margin-top: 20px;}
+    .detail-box h2 { color: #333333 !important; margin-top: 0;}
+    .detail-box h4 { color: #894b9d !important; border-bottom: 2px solid #f0f3f6; padding-bottom: 10px; margin-bottom: 20px; margin-top: 20px;}
+    .detail-label { color: #888888 !important; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 2px; letter-spacing: 0.5px;}
+    .detail-value { color: #333333 !important; font-size: 15px; font-weight: 500; margin-bottom: 20px;}
+    
+    /* Vang de lege state af */
+    .empty-state h2 { color: #333333 !important; }
+    .empty-state p { color: #888888 !important; }
     
     /* Terug knop naar home */
     .home-link { text-align: right; margin-bottom: 20px; }
     
-    /* Streamlit Knoppen fix voor planner */
-    div.stButton > button { background-color: #2c3e50 !important; color: white !important; border: none; font-weight: bold; border-radius: 6px;}
-    div.stButton > button:hover { background-color: #1a252f !important; }
+    /* Streamlit Knoppen fix voor planner (Dahle Paars) */
+    div.stButton > button { background-color: #894b9d !important; color: white !important; border: none; font-weight: bold; border-radius: 6px;}
+    div.stButton > button:hover { background-color: #723e83 !important; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -94,7 +101,7 @@ col_inbox, col_details = st.columns([1, 2], gap="large")
 # LINKER KOLOM: INBOX
 # =========================================================
 with col_inbox:
-    st.markdown("### 📥 Inbox")
+    st.markdown("<h3 style='color:#333333;'>📥 Inbox</h3>", unsafe_allow_html=True)
     st.write("") # Extra ruimte
     
     if not st.session_state.orders:
@@ -120,16 +127,16 @@ with col_inbox:
 # RECHTER KOLOM: ORDER DETAILS
 # =========================================================
 with col_details:
-    st.markdown("### 📋 Order Details")
+    st.markdown("<h3 style='color:#333333;'>📋 Order Details</h3>", unsafe_allow_html=True)
     st.write("")
     selected = st.session_state.selected_order
     
     if not selected:
         # Als er nog niets is aangeklikt
         st.markdown("""
-            <div class="detail-box" style="text-align: center; padding: 60px; background-color: #f8f9fa;">
-                <h2 style="color: #bdc3c7 !important;">No order selected</h2>
-                <p style="color: #95a5a6 !important;">Click on an order in the inbox to view the full details here.</p>
+            <div class="detail-box empty-state" style="text-align: center; padding: 60px; background-color: #f8f9fa !important;">
+                <h2>No order selected</h2>
+                <p>Click on an order in the inbox to view the full details here.</p>
             </div>
         """, unsafe_allow_html=True)
     else:
@@ -153,10 +160,10 @@ with col_details:
 
         st.markdown(f"""
             <div class="detail-box">
-                <h2 style="margin-top:0;">Order #{order_id}</h2>
-                <p style="color: #95a5a6 !important; font-size: 13px; margin-bottom: 25px;">Received on {date}</p>
+                <h2>Order #{order_id}</h2>
+                <p style="color: #888888 !important; font-size: 13px; margin-bottom: 25px;">Received on {date}</p>
                 
-                <h4 class="detail-header">🏢 Company Information</h4>
+                <h4>🏢 Company Information</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr;">
                     <div>
                         <p class="detail-label">Company Name</p>
@@ -170,7 +177,7 @@ with col_details:
                 <p class="detail-label">Registered Address</p>
                 <p class="detail-value">{address}</p>
                 
-                <h4 class="detail-header">👤 Contact Person</h4>
+                <h4>👤 Contact Person</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr;">
                     <div>
                         <p class="detail-label">Name</p>
@@ -182,14 +189,14 @@ with col_details:
                     </div>
                 </div>
                 <p class="detail-label">Email Address</p>
-                <p class="detail-value"><a href="mailto:{email}" style="color: #2980b9;">{email}</a></p>
+                <p class="detail-value"><a href="mailto:{email}" style="color: #894b9d;">{email}</a></p>
                 
-                <h4 class="detail-header">📦 Shipment Details</h4>
+                <h4>📦 Shipment Details</h4>
                 <p class="detail-label">Requested Services</p>
                 <p class="detail-value" style="font-weight: 700;">{s_type}</p>
                 
                 <p class="detail-label">Additional Instructions / Details</p>
-                <p class="detail-value" style="background-color: #f4f6f9; padding: 15px; border-radius: 6px; font-size: 14px;">{info}</p>
+                <p class="detail-value" style="background-color: #f8f9fa !important; padding: 15px; border-radius: 6px; font-size: 14px;">{info}</p>
             </div>
         """, unsafe_allow_html=True)
         
