@@ -37,7 +37,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-    /* --- VERBERG SIDEBAR & HEADER VOLLEDIG --- */
+    /* --- HEADER & SIDEBAR FIX --- */
     [data-testid="collapsedControl"] { display: none !important; }
     [data-testid="stSidebar"] { display: none !important; }
     header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
@@ -365,8 +365,12 @@ with col_main:
             st.rerun()
             
         if c_next.button("Continue to Review →"):
+            # 1. Controleer of alles is ingevuld
             if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
                 st.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
+            # 2. Controleer of het e-mailadres een '@' bevat
+            elif "@" not in work_email:
+                st.error("⚠️ Please enter a valid email address containing an '@' symbol.")
             else:
                 st.session_state.temp_order = {
                     "company": company_name, 
