@@ -50,7 +50,7 @@ st.markdown("""
         border: 1px solid #e0e6ed !important;
         border-radius: 8px !important;
         padding: 20px !important;
-        margin-bottom: 5px !important; /* Minder marge ivm knop eronder */
+        margin-bottom: 5px !important;
         box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
         transition: all 0.2s ease-in-out;
     }
@@ -63,12 +63,12 @@ st.markdown("""
         transition: all 0.2s ease-in-out;
     }
 
-    /* --- NIEUW: HIGHLIGHT EFFECT VOOR GESELECTEERDE ORDER --- */
+    /* --- HIGHLIGHT EFFECT VOOR GESELECTEERDE ORDER --- */
     .selected-card {
         border: 2px solid #894b9d !important;
-        background-color: #faf5fc !important; /* Licht paarse tint */
+        background-color: #faf5fc !important; 
         box-shadow: 0 6px 12px rgba(137, 75, 157, 0.15) !important;
-        transform: translateX(8px); /* Schuift iets naar rechts richting de details */
+        transform: translateX(8px); 
     }
 
     .inbox-title { color: #333333 !important; font-weight: 700; font-size: 16px; margin: 0 0 8px 0; }
@@ -126,7 +126,7 @@ with col_inbox:
         st.info("No new requests at the moment. Waiting for customers...")
     else:
         for o in reversed(st.session_state.orders): 
-            # Checken of de kaart het highlight-effect (selected-card) moet krijgen
+            # Checken of de kaart het highlight-effect moet krijgen
             is_active = "selected-card" if o.get('id') == selected_id else ""
             
             st.markdown(f"""
@@ -137,7 +137,6 @@ with col_inbox:
 </div>
 """, unsafe_allow_html=True)
             
-            # Knop tekst veranderen als hij is aangeklikt
             btn_txt = f"👁️ Viewing Order #{o.get('id')}" if o.get('id') == selected_id else f"Open Order #{o.get('id')}"
             
             if st.button(btn_txt, key=f"btn_{o.get('id')}", use_container_width=True):
@@ -203,9 +202,9 @@ with col_details:
             else:
                 st.markdown("<span style='background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;'>🔴 Action Required</span>", unsafe_allow_html=True)
                 
-            st.subheader(f"Order #{order_id}")
-            st.caption(f"Received on {date}")
-            st.write("") 
+            # DE FIX VOOR DE ONZICHTBARE TITEL UIT DE SCREENSHOT
+            st.markdown(f"<h2 style='color: #2c3e50; margin-top: 15px; margin-bottom: 0px;'>Order #{order_id}</h2>", unsafe_allow_html=True)
+            st.markdown(f"<p style='color: #888888; font-size: 13px; margin-bottom: 25px;'>Received on {date}</p>", unsafe_allow_html=True)
             
             st.markdown("<h4 style='color: #894b9d; border-bottom: 2px solid #f0f3f6; padding-bottom: 5px;'>🏢 Company Information</h4>", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
