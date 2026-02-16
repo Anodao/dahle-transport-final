@@ -30,6 +30,8 @@ if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
 if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 if 'show_error' not in st.session_state: st.session_state.show_error = False
+# NIEUW: Een unieke order teller die altijd doortelt
+if 'order_counter' not in st.session_state: st.session_state.order_counter = 1000
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
@@ -121,7 +123,6 @@ col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
 
 with col_main:
     
-    # --- DYNAMISCHE STEP TRACKER ---
     s = st.session_state.step
     def get_class(step_num):
         if s > step_num: return "completed"
@@ -148,11 +149,7 @@ with col_main:
     """
     st.markdown(tracker_html, unsafe_allow_html=True)
 
-    # =========================================================
-    # STAP 1: KEUZE (VOLLEDIG KLIKBARE KAARTEN)
-    # =========================================================
     if st.session_state.step == 1:
-        
         st.markdown("""
         <style>
         div[data-testid="stVerticalBlockBorderWrapper"] {
@@ -249,11 +246,7 @@ with col_main:
                     st.session_state.step = 2
                     st.rerun()
 
-    # =========================================================
-    # STAP 2: DYNAMISCHE DETAILS + NIEUW CONTACT FORMULIER
-    # =========================================================
     elif st.session_state.step == 2:
-        
         st.markdown("""
         <style>
         .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
@@ -321,7 +314,6 @@ with col_main:
         
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # --- HET CONTACT FORMULIER ---
         st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Send us your contact information and we will get in touch.</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
         
@@ -332,7 +324,6 @@ with col_main:
             company_name = st.text_input("Company Name *", key="comp_name")
             company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg")
             company_address = st.text_input("Company Address *", key="comp_addr")
-            
             c_pc, c_city = st.columns(2)
             with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc")
             with c_city: city = st.text_input("City *", key="comp_city")
@@ -343,32 +334,26 @@ with col_main:
             c_fn, c_ln = st.columns(2)
             with c_fn: first_name = st.text_input("First Name *", key="cont_fn")
             with c_ln: last_name = st.text_input("Last Name *", key="cont_ln")
-            
             work_email = st.text_input("Work Email *", placeholder="example@email.no", key="cont_email")
-            
             st.markdown("<label style='font-size: 14px; font-weight: 600; color: #ccc;'>Phone *</label>", unsafe_allow_html=True)
             c_code, c_phone = st.columns([1, 3])
             with c_code: 
                 phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
             with c_phone: 
                 phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone")
-                
             additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=100, key="cont_info")
 
         st.write("")
         st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
         
         c_back, c_next = st.columns([1, 4])
-        
         if c_back.button("← Go Back"):
             st.session_state.step = 1
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            # 1. Controleer of alles is ingevuld
             if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
                 st.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
-            # 2. Controleer of het e-mailadres een '@' bevat
             elif "@" not in work_email:
                 st.error("⚠️ Please enter a valid email address containing an '@' symbol.")
             else:
@@ -385,9 +370,6 @@ with col_main:
                 st.session_state.step = 3
                 st.rerun()
 
-    # =========================================================
-    # STAP 3: REVIEW 
-    # =========================================================
     elif st.session_state.step == 3:
         o = st.session_state.temp_order
         with st.container(border=True):
@@ -421,8 +403,11 @@ with col_main:
                 st.rerun()
         with c_b2:
             if st.button("✅ CONFIRM & SEND REQUEST"):
+                # HIER WORDT DE UNIEKE TELLER OPGEHOOGD VOOR ELKE NIEUWE ORDER!
+                st.session_state.order_counter += 1
+                
                 new_order = o.copy()
-                new_order['id'] = len(st.session_state.orders) + 1001
+                new_order['id'] = st.session_state.order_counter
                 new_order['date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 new_order['status'] = "New"
                 new_order['type'] = ", ".join(o['types']) 
@@ -440,9 +425,6 @@ with col_main:
                 st.session_state.chk_mail = False
                 st.rerun()
 
-    # =========================================================
-    # DE DEMO KNOP NAAR DE PLANNER
-    # =========================================================
     st.write("")
     st.write("")
     st.markdown("---")
