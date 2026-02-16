@@ -15,7 +15,7 @@ if 'orders' not in st.session_state:
 if 'selected_order' not in st.session_state:
     st.session_state.selected_order = None
 
-# --- CSS STYLING VOOR DE PLANNER (VOLLEDIG GEFORCEERDE KLEUREN) ---
+# --- CSS STYLING VOOR DE PLANNER ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -75,18 +75,19 @@ st.markdown("""
     /* Container voor de 'Go Back' knop */
     .home-btn-container { margin-bottom: 30px; }
     
-    /* Streamlit Knoppen fix voor planner (Dahle Paars) */
+    /* Streamlit Knoppen fix voor planner */
     div.stButton > button { background-color: #894b9d !important; color: white !important; border: none; font-weight: bold; border-radius: 6px;}
     div.stButton > button:hover { background-color: #723e83 !important; }
     </style>
 """, unsafe_allow_html=True)
 
 # --- HEADER BANNER ---
+# Let op: Geen spaties aan het begin van de HTML lijnen hieronder!
 st.markdown("""
-    <div class="header-banner">
-        <h1>🔒 Planner Dashboard</h1>
-        <p>Internal Use Only</p>
-    </div>
+<div class="header-banner">
+    <h1>🔒 Planner Dashboard</h1>
+    <p>Internal Use Only</p>
+</div>
 """, unsafe_allow_html=True)
 
 # --- ECHTE KNOP NAAR HOME ---
@@ -103,23 +104,22 @@ col_inbox, col_details = st.columns([1, 2], gap="large")
 # =========================================================
 with col_inbox:
     st.markdown("<h3 style='color:#333333;'>📥 Inbox</h3>", unsafe_allow_html=True)
-    st.write("") # Extra ruimte
+    st.write("") 
     
     if not st.session_state.orders:
         st.info("No new requests at the moment. Waiting for customers...")
     else:
-        # We draaien de lijst om zodat de nieuwste order bovenaan staat
         for o in reversed(st.session_state.orders): 
             with st.container():
+                # Geen inspringing hier, anders wordt het als codeblok gezien!
                 st.markdown(f"""
-                    <div class="inbox-card">
-                        <p class="inbox-title"><span class="status-new">🔴 New</span> &nbsp; {o.get('company', 'Unknown')}</p>
-                        <p class="inbox-subtitle">{o.get('type', '')}</p>
-                        <p class="inbox-date">Received: {o.get('date', '')}</p>
-                    </div>
-                """, unsafe_allow_html=True)
+<div class="inbox-card">
+    <p class="inbox-title"><span class="status-new">🔴 New</span> &nbsp; {o.get('company', 'Unknown')}</p>
+    <p class="inbox-subtitle">{o.get('type', '')}</p>
+    <p class="inbox-date">Received: {o.get('date', '')}</p>
+</div>
+""", unsafe_allow_html=True)
                 
-                # Een Streamlit knop om de details te openen
                 if st.button(f"Open Order #{o.get('id', '0000')}", key=f"btn_{o.get('id')}", use_container_width=True):
                     st.session_state.selected_order = o
                     st.rerun()
@@ -133,15 +133,14 @@ with col_details:
     selected = st.session_state.selected_order
     
     if not selected:
-        # Als er nog niets is aangeklikt
+        # Geen inspringing
         st.markdown("""
-            <div class="detail-box empty-state" style="text-align: center; padding: 60px; background-color: #f8f9fa !important;">
-                <h2>No order selected</h2>
-                <p>Click on an order in the inbox to view the full details here.</p>
-            </div>
-        """, unsafe_allow_html=True)
+<div class="detail-box empty-state" style="text-align: center; padding: 60px; background-color: #f8f9fa !important;">
+    <h2>No order selected</h2>
+    <p>Click on an order in the inbox to view the full details here.</p>
+</div>
+""", unsafe_allow_html=True)
     else:
-        # Haal de data veilig op
         company = selected.get('company', 'N/A')
         reg_no = selected.get('reg_no', 'N/A')
         address = selected.get('address', 'N/A')
@@ -153,66 +152,64 @@ with col_details:
         date = selected.get('date', 'N/A')
         order_id = selected.get('id', 'N/A')
         
-        # Lege info netjes afvangen
         if not info.strip():
             info = "None provided."
         if not reg_no.strip():
             reg_no = "Not provided."
 
+        # DE OPLOSSING ZIT HIER: Geen spaties meer voor de HTML code
         st.markdown(f"""
-            <div class="detail-box">
-                <h2>Order #{order_id}</h2>
-                <p style="color: #888888 !important; font-size: 13px; margin-bottom: 25px;">Received on {date}</p>
-                
-                <h4>🏢 Company Information</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr;">
-                    <div>
-                        <p class="detail-label">Company Name</p>
-                        <p class="detail-value">{company}</p>
-                    </div>
-                    <div>
-                        <p class="detail-label">Registration No.</p>
-                        <p class="detail-value">{reg_no}</p>
-                    </div>
-                </div>
-                <p class="detail-label">Registered Address</p>
-                <p class="detail-value">{address}</p>
-                
-                <h4>👤 Contact Person</h4>
-                <div style="display: grid; grid-template-columns: 1fr 1fr;">
-                    <div>
-                        <p class="detail-label">Name</p>
-                        <p class="detail-value">{contact_name}</p>
-                    </div>
-                    <div>
-                        <p class="detail-label">Phone</p>
-                        <p class="detail-value">{phone}</p>
-                    </div>
-                </div>
-                <p class="detail-label">Email Address</p>
-                <p class="detail-value"><a href="mailto:{email}" style="color: #894b9d;">{email}</a></p>
-                
-                <h4>📦 Shipment Details</h4>
-                <p class="detail-label">Requested Services</p>
-                <p class="detail-value" style="font-weight: 700;">{s_type}</p>
-                
-                <p class="detail-label">Additional Instructions / Details</p>
-                <p class="detail-value" style="background-color: #f8f9fa !important; padding: 15px; border-radius: 6px; font-size: 14px;">{info}</p>
-            </div>
-        """, unsafe_allow_html=True)
+<div class="detail-box">
+    <h2>Order #{order_id}</h2>
+    <p style="color: #888888 !important; font-size: 13px; margin-bottom: 25px;">Received on {date}</p>
+    
+    <h4>🏢 Company Information</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr;">
+        <div>
+            <p class="detail-label">Company Name</p>
+            <p class="detail-value">{company}</p>
+        </div>
+        <div>
+            <p class="detail-label">Registration No.</p>
+            <p class="detail-value">{reg_no}</p>
+        </div>
+    </div>
+    <p class="detail-label">Registered Address</p>
+    <p class="detail-value">{address}</p>
+    
+    <h4>👤 Contact Person</h4>
+    <div style="display: grid; grid-template-columns: 1fr 1fr;">
+        <div>
+            <p class="detail-label">Name</p>
+            <p class="detail-value">{contact_name}</p>
+        </div>
+        <div>
+            <p class="detail-label">Phone</p>
+            <p class="detail-value">{phone}</p>
+        </div>
+    </div>
+    <p class="detail-label">Email Address</p>
+    <p class="detail-value"><a href="mailto:{email}" style="color: #894b9d;">{email}</a></p>
+    
+    <h4>📦 Shipment Details</h4>
+    <p class="detail-label">Requested Services</p>
+    <p class="detail-value" style="font-weight: 700;">{s_type}</p>
+    
+    <p class="detail-label">Additional Instructions / Details</p>
+    <p class="detail-value" style="background-color: #f8f9fa !important; padding: 15px; border-radius: 6px; font-size: 14px; border: 1px solid #e0e6ed;">{info}</p>
+</div>
+""", unsafe_allow_html=True)
         
         st.write("")
         c_btn1, c_btn2, c_space = st.columns([2, 2, 3])
         with c_btn1:
             if st.button("✅ Mark as Processed", use_container_width=True):
-                # Verwijdert de order uit het systeem voor de demo
                 st.session_state.orders = [o for o in st.session_state.orders if o['id'] != order_id]
                 st.session_state.selected_order = None
                 st.success("Order has been successfully processed!")
                 time.sleep(1.5)
                 st.rerun()
         with c_btn2:
-            # Optioneel verwijderen knopje
             if st.button("🗑️ Delete", type="secondary", use_container_width=True):
                 st.session_state.orders = [o for o in st.session_state.orders if o['id'] != order_id]
                 st.session_state.selected_order = None
