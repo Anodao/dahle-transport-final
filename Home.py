@@ -264,7 +264,7 @@ with col_main:
         .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; }
         .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
         
-        /* Zorg dat de nieuwe radio knoppen mooi passen */
+        /* Zorg dat de radio knoppen netjes onder elkaar staan */
         .step2-panel div[role="radiogroup"] { gap: 0.5rem; }
         </style>
         """, unsafe_allow_html=True)
@@ -295,9 +295,10 @@ with col_main:
                         st.text_input("Average Number of Shipments *", key="pd_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
                         
-                        # --- HIER ZIJN DE RADIO BUTTONS MET UITLEG ---
+                        # --- VERBETERDE RADIO BUTTONS MET KLEINE TEKST ERONDER ---
                         st.radio("**Where do you ship? *** (Select one)", 
-                                 ["Domestic (within the country)", "Pan-European (within the continent)", "Worldwide (beyond the continent)"], 
+                                 options=["Domestic", "Pan-European", "Worldwide"], 
+                                 captions=["within the country", "within the continent", "beyond the continent"],
                                  key="pd_ship_where")
                         
                     elif sel == "Cargo & Freight":
@@ -308,20 +309,22 @@ with col_main:
                         st.checkbox("Loose Cargo", key="cf_lc")
                         st.text_input("Avg. Shipments per Year *", key="cf_avg")
                         
-                        # --- HIER ZIJN DE RADIO BUTTONS MET UITLEG ---
+                        # --- VERBETERDE RADIO BUTTONS MET KLEINE TEKST ERONDER ---
                         st.radio("**Where do you ship? *** (Select one)", 
-                                 ["Domestic (within the country)", "Pan-European (within the continent)", "Worldwide (beyond the continent)"], 
+                                 options=["Domestic", "Pan-European", "Worldwide"], 
+                                 captions=["within the country", "within the continent", "beyond the continent"],
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
                         st.text_input("Average Number of Shipments *", key="mdm_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                         
-                        # --- HIER ZIJN DE RADIO BUTTONS MET UITLEG ---
+                        # --- VERBETERDE RADIO BUTTONS MET KLEINE TEKST ERONDER ---
                         st.radio("**Where do you ship? *** (Select one)", 
-                                 ["Pan-European (within the continent)", "Worldwide (beyond the continent)"], 
+                                 options=["Pan-European", "Worldwide"], 
+                                 captions=["within the continent", "beyond the continent"],
                                  key="mdm_ship_where")
-                        st.caption("International shipments only.")
+                        st.caption("Our business accounts for Mail & Direct Marketing currently service international shipments only.")
                         
         st.markdown("</div>", unsafe_allow_html=True)
         
@@ -343,7 +346,7 @@ with col_main:
             with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc")
             with c_city: city = st.text_input("City *", key="comp_city")
             
-            # --- HIER IS DE LAND-BLOKKADE OPGEHEVEN ---
+            # --- VELD VOOR LAND IS VRIJ BEWERKBAAR ---
             country = st.text_input("Country *", value="Norway", key="comp_country")
 
         with c_form_right:
@@ -373,14 +376,13 @@ with col_main:
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            # Update de validatie zodat het nieuwe "country" veld ook gecontroleerd wordt
+            # Update de validatie zodat het "country" veld ook gecontroleerd wordt
             if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
                 st.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
             else:
                 st.session_state.temp_order = {
                     "company": company_name, 
                     "reg_no": company_reg,
-                    # Adres opbouwen inclusief het land!
                     "address": f"{company_address}, {postal_code} {city}, {country}",
                     "contact_name": f"{first_name} {last_name}",
                     "email": work_email,
