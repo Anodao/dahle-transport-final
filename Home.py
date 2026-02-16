@@ -19,6 +19,7 @@ if "reset" in st.query_params:
     st.session_state.chk_freight = False
     st.session_state.chk_mail = False
     st.session_state.show_error = False
+    st.session_state.is_submitted = False
     st.query_params.clear()
 
 # --- SESSION STATE ---
@@ -30,8 +31,8 @@ if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
 if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 if 'show_error' not in st.session_state: st.session_state.show_error = False
-# NIEUW: Een unieke order teller die altijd doortelt
 if 'order_counter' not in st.session_state: st.session_state.order_counter = 1000
+if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
@@ -149,6 +150,9 @@ with col_main:
     """
     st.markdown(tracker_html, unsafe_allow_html=True)
 
+    # =========================================================
+    # STAP 1: KEUZE 
+    # =========================================================
     if st.session_state.step == 1:
         st.markdown("""
         <style>
@@ -246,6 +250,9 @@ with col_main:
                     st.session_state.step = 2
                     st.rerun()
 
+    # =========================================================
+    # STAP 2: DYNAMISCHE DETAILS
+    # =========================================================
     elif st.session_state.step == 2:
         st.markdown("""
         <style>
@@ -346,16 +353,20 @@ with col_main:
         st.write("")
         st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
         
+        # --- HIER ZETTEN WE EEN PLACEHOLDER VOOR DE ERROR BERICHTEN ---
+        error_container = st.empty()
+        
         c_back, c_next = st.columns([1, 4])
         if c_back.button("← Go Back"):
             st.session_state.step = 1
             st.rerun()
             
         if c_next.button("Continue to Review →"):
+            # Controleer via de placeholder (boven de knoppen)
             if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
-                st.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
+                error_container.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
             elif "@" not in work_email:
-                st.error("⚠️ Please enter a valid email address containing an '@' symbol.")
+                error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
             else:
                 st.session_state.temp_order = {
                     "company": company_name, 
@@ -370,6 +381,9 @@ with col_main:
                 st.session_state.step = 3
                 st.rerun()
 
+    # =========================================================
+    # STAP 3: REVIEW (MET SUCCESS STATE!)
+    # =========================================================
     elif st.session_state.step == 3:
         o = st.session_state.temp_order
         with st.container(border=True):
@@ -396,35 +410,53 @@ with col_main:
                     st.write(f"_{o['info']}_")
         
         st.write("")
-        c_b1, c_b2 = st.columns([1, 4])
-        with c_b1:
-            if st.button("← Edit Details"):
-                st.session_state.step = 2
-                st.rerun()
-        with c_b2:
-            if st.button("✅ CONFIRM & SEND REQUEST"):
-                # HIER WORDT DE UNIEKE TELLER OPGEHOOGD VOOR ELKE NIEUWE ORDER!
-                st.session_state.order_counter += 1
-                
-                new_order = o.copy()
-                new_order['id'] = st.session_state.order_counter
-                new_order['date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                new_order['status'] = "New"
-                new_order['type'] = ", ".join(o['types']) 
-                new_order['route'] = o['address'] 
-                new_order['weight'] = 0 
-                
-                st.session_state.orders.append(new_order)
-                st.balloons()
-                st.success("Your transport request has been sent successfully! We will get in touch shortly.")
-                time.sleep(3)
+        
+        # --- ALS HIJ NOG NIET VERZONDEN IS, TOON DE KNOPPEN ---
+        if not st.session_state.is_submitted:
+            c_b1, c_b2 = st.columns([1, 4])
+            with c_b1:
+                if st.button("← Edit Details"):
+                    st.session_state.step = 2
+                    st.rerun()
+            with c_b2:
+                if st.button("✅ CONFIRM & SEND REQUEST"):
+                    st.session_state.order_counter += 1
+                    
+                    new_order = o.copy()
+                    new_order['id'] = st.session_state.order_counter
+                    new_order['date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    new_order['status'] = "New"
+                    new_order['type'] = ", ".join(o['types']) 
+                    new_order['route'] = o['address'] 
+                    new_order['weight'] = 0 
+                    
+                    updated_orders = st.session_state.orders.copy()
+                    updated_orders.append(new_order)
+                    st.session_state.orders = updated_orders
+                    
+                    st.balloons()
+                    # Zet de state op submitted zodat de bedankt-tekst verschijnt
+                    st.session_state.is_submitted = True
+                    st.rerun()
+                    
+        # --- ALS HIJ WEL VERZONDEN IS, TOON DE BEDANKT-MELDING ---
+        else:
+            st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
+            st.info("You can review your submitted details above.")
+            
+            # Knop om het proces te herstarten
+            if st.button("← Start a New Request"):
                 st.session_state.step = 1
+                st.session_state.is_submitted = False
                 st.session_state.selected_types = []
                 st.session_state.chk_parcels = False
                 st.session_state.chk_freight = False
                 st.session_state.chk_mail = False
                 st.rerun()
 
+    # =========================================================
+    # DE DEMO KNOP NAAR DE PLANNER
+    # =========================================================
     st.write("")
     st.write("")
     st.markdown("---")
