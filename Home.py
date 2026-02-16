@@ -276,7 +276,6 @@ with col_main:
         aantal_geselecteerd = len(st.session_state.selected_types)
         cols = st.columns(aantal_geselecteerd)
         
-        # We maken wat tijdelijke variabelen aan om de validatie straks te kunnen controleren
         pd_avg_val = ""
         cf_avg_val = ""
         cf_pal_val = False
@@ -298,7 +297,8 @@ with col_main:
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
-                        pd_avg_val = st.text_input("Average Number of Shipments *", key="pd_avg")
+                        # Limiet van 50 tekens toegevoegd
+                        pd_avg_val = st.text_input("Average Number of Shipments *", key="pd_avg", max_chars=50)
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
@@ -311,14 +311,17 @@ with col_main:
                         cf_pal_val = st.checkbox("Pallet", key="cf_pal")
                         cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
                         cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
-                        cf_avg_val = st.text_input("Avg. Shipments per Year *", key="cf_avg")
+                        
+                        # Limiet van 50 tekens toegevoegd
+                        cf_avg_val = st.text_input("Avg. Shipments per Year *", key="cf_avg", max_chars=50)
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
-                        mdm_avg_val = st.text_input("Average Number of Shipments *", key="mdm_avg")
+                        # Limiet van 50 tekens toegevoegd
+                        mdm_avg_val = st.text_input("Average Number of Shipments *", key="mdm_avg", max_chars=50)
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
@@ -337,32 +340,36 @@ with col_main:
         
         with c_form_left:
             st.markdown("#### Company Details")
-            company_name = st.text_input("Company Name *", key="comp_name")
-            company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg")
-            company_address = st.text_input("Company Address *", key="comp_addr")
+            # Alle limieten toegevoegd
+            company_name = st.text_input("Company Name *", key="comp_name", max_chars=100)
+            company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
+            company_address = st.text_input("Company Address *", key="comp_addr", max_chars=150)
             c_pc, c_city = st.columns(2)
-            with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc")
-            with c_city: city = st.text_input("City *", key="comp_city")
-            country = st.text_input("Country *", value="Norway", key="comp_country")
+            with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc", max_chars=20)
+            with c_city: city = st.text_input("City *", key="comp_city", max_chars=100)
+            country = st.text_input("Country *", value="Norway", key="comp_country", max_chars=100)
 
         with c_form_right:
             st.markdown("#### Contact Person")
             c_fn, c_ln = st.columns(2)
-            with c_fn: first_name = st.text_input("First Name *", key="cont_fn")
-            with c_ln: last_name = st.text_input("Last Name *", key="cont_ln")
-            work_email = st.text_input("Work Email *", placeholder="example@email.no", key="cont_email")
+            # Alle limieten toegevoegd
+            with c_fn: first_name = st.text_input("First Name *", key="cont_fn", max_chars=50)
+            with c_ln: last_name = st.text_input("Last Name *", key="cont_ln", max_chars=50)
+            work_email = st.text_input("Work Email *", placeholder="example@email.no", key="cont_email", max_chars=150)
+            
             st.markdown("<label style='font-size: 14px; font-weight: 600; color: #ccc;'>Phone *</label>", unsafe_allow_html=True)
             c_code, c_phone = st.columns([1, 3])
             with c_code: 
                 phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
             with c_phone: 
-                phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone")
-            additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=100, key="cont_info")
+                phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
+            
+            # Limiet op 300 tekens gezet, zodat ze wel een duidelijke omschrijving kunnen geven
+            additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
         st.write("")
         st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
         
-        # --- PLACEHOLDER VOOR ERROR BERICHTEN ---
         error_container = st.empty()
         
         c_back, c_next = st.columns([1, 4])
@@ -373,23 +380,19 @@ with col_main:
         if c_next.button("Continue to Review →"):
             missing_fields = False
             
-            # 1. Controleer of alle verplichte Contact-velden zijn ingevuld
             if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
                 missing_fields = True
                 
-            # 2. Controleer of de getoonde dynamische velden (met een *) zijn ingevuld
             if "Parcels & Documents" in st.session_state.selected_types and not pd_avg_val.strip():
                 missing_fields = True
             
             if "Cargo & Freight" in st.session_state.selected_types:
-                # Check of tekst is ingevuld EN of er minimaal 1 checkbox bij Load Type is aangevinkt
                 if not cf_avg_val.strip() or not (cf_pal_val or cf_full_val or cf_lc_val):
                     missing_fields = True
                     
             if "Mail & Direct Marketing" in st.session_state.selected_types and not mdm_avg_val.strip():
                 missing_fields = True
 
-            # 3. Voer de definitieve logica uit
             if missing_fields:
                 error_container.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
             elif "@" not in work_email:
@@ -438,7 +441,6 @@ with col_main:
         
         st.write("")
         
-        # --- ALS HIJ NOG NIET VERZONDEN IS, TOON DE KNOPPEN ---
         if not st.session_state.is_submitted:
             c_b1, c_b2 = st.columns([1, 4])
             with c_b1:
@@ -462,16 +464,13 @@ with col_main:
                     st.session_state.orders = updated_orders
                     
                     st.balloons()
-                    # Zet de state op submitted zodat de bedankt-tekst verschijnt
                     st.session_state.is_submitted = True
                     st.rerun()
                     
-        # --- ALS HIJ WEL VERZONDEN IS, TOON DE BEDANKT-MELDING ---
         else:
             st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
             st.info("You can review your submitted details above.")
             
-            # Knop om het proces te herstarten
             if st.button("← Start a New Request"):
                 st.session_state.step = 1
                 st.session_state.is_submitted = False
