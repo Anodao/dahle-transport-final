@@ -35,7 +35,7 @@ st.markdown("""
         background-color: #894b9d; /* DAHLE PAARS */
         padding: 30px 40px;
         border-radius: 12px;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
     .header-banner h1 { color: #ffffff !important; margin: 0; font-weight: 700; letter-spacing: 0.5px;}
@@ -72,8 +72,8 @@ st.markdown("""
     .empty-state h2 { color: #333333 !important; }
     .empty-state p { color: #888888 !important; }
     
-    /* Terug knop naar home */
-    .home-link { text-align: right; margin-bottom: 20px; }
+    /* Container voor de 'Go Back' knop */
+    .home-btn-container { margin-bottom: 30px; }
     
     /* Streamlit Knoppen fix voor planner (Dahle Paars) */
     div.stButton > button { background-color: #894b9d !important; color: white !important; border: none; font-weight: bold; border-radius: 6px;}
@@ -89,9 +89,10 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# Link om makkelijk terug te navigeren naar de klant-website
-st.markdown('<div class="home-link">', unsafe_allow_html=True)
-st.page_link("Home.py", label="← Go Back to Customer Website", icon="🏠")
+# --- ECHTE KNOP NAAR HOME ---
+st.markdown('<div class="home-btn-container">', unsafe_allow_html=True)
+if st.button("🏠 ← Go Back to Customer Website"):
+    st.switch_page("Home.py")
 st.markdown('</div>', unsafe_allow_html=True)
 
 # --- LAYOUT VERDELING ---
