@@ -91,24 +91,13 @@ st.markdown("""
     div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { 
         background: #723e83 !important; color: white !important; 
     }
-    div[data-baseweb="input"] { background-color: #333; border-radius: 8px; }
-    div[data-baseweb="input"] input { color: white; }
-    label { color: #ccc !important; font-weight: 600; }
-    </style>
+    div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
+    div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
+    label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
     
-    <div class="navbar">
-        <div class="nav-logo">
-            <a href="?reset=true" target="_self" title="Go back to Step 1">
-                <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
-            </a>
-        </div>
-        <div class="nav-links">
-            <span>Home</span><span>About Us</span><span>Services</span><span>Gallery</span><span>Contact</span>
-        </div>
-        <div class="nav-cta">
-            <a class="cta-btn">CONTACT US</a>
-        </div>
-    </div>
+    /* Dropdown text kleur fix */
+    div[data-baseweb="select"] div { color: white; background-color: #333;}
+    </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
@@ -151,42 +140,22 @@ with col_main:
     # =========================================================
     if st.session_state.step == 1:
         
-        # CSS speciaal voor de kaarten in Stap 1
         st.markdown("""
         <style>
-        /* 1. De boxen opmaken als echte kaarten */
         div[data-testid="stVerticalBlockBorderWrapper"] {
-            position: relative !important;
-            border-radius: 12px !important;
-            transition: all 0.3s ease !important;
-            background-color: #262626 !important;
-            border: 2px solid #444 !important;
-            padding: 25px !important; /* Iets meer padding voor een luchtiger gevoel */
-            height: 100%;
+            position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important;
+            background-color: #262626 !important; border: 2px solid #444 !important; padding: 25px !important; height: 100%;
         }
-        
-        /* 2. Hover effect (kaart komt iets omhoog) */
         div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-            border-color: #894b9d !important;
-            background-color: #2e2e2e !important;
-            transform: translateY(-5px);
+            border-color: #894b9d !important; background-color: #2e2e2e !important; transform: translateY(-5px);
         }
-        
-        /* 3. Als het vinkje aan staat, licht de héle box paars op! */
         div[data-testid="stVerticalBlockBorderWrapper"]:has(input[type="checkbox"]:checked) {
-            border-color: #894b9d !important;
-            background-color: #2e2e2e !important;
+            border-color: #894b9d !important; background-color: #2e2e2e !important;
         }
-        
-        /* 4. MAGIC TRICK: Maak de héle box klikbaar */
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10;
         }
-        
-        /* 5. Maak het vinkje zelf groot en stijl het als de titel van de kaart */
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] {
-            margin-bottom: 5px; padding-top: 0px;
-        }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] { margin-bottom: 5px; padding-top: 0px; }
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] {
             transform: scale(1.6); margin-right: 15px; border-color: #888;
         }
@@ -201,15 +170,13 @@ with col_main:
         
         c1, c2, c3 = st.columns(3)
         
-        # KAART 1: Parcels (GEÜPDATETE FOOTER)
         with c1:
             with st.container(border=True):
                 st.checkbox("Parcels & Documents", key="chk_parcels")
                 st.markdown("""
                     <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 31.5kg</span>
                     <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
-                        <li>Light to medium weight shipments</li>
-                        <li>B2B/B2C</li>
+                        <li>Light to medium weight shipments</li><li>B2B/B2C</li>
                     </ul>
                     <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
                         Commonly shipped items:
@@ -217,15 +184,13 @@ with col_main:
                     </div>
                 """, unsafe_allow_html=True)
 
-        # KAART 2: Freight (GEÜPDATETE FOOTER)
         with c2:
             with st.container(border=True):
                 st.checkbox("Cargo & Freight", key="chk_freight")
                 st.markdown("""
                     <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically over 31.5kg+</span>
                     <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
-                        <li>Heavier shipments using pallets or containers</li>
-                        <li>B2B</li>
+                        <li>Heavier shipments using pallets or containers</li><li>B2B</li>
                     </ul>
                     <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
                         Commonly shipped items:
@@ -233,15 +198,13 @@ with col_main:
                     </div>
                 """, unsafe_allow_html=True)
 
-        # KAART 3: Mail (GEÜPDATETE FOOTER)
         with c3:
             with st.container(border=True):
                 st.checkbox("Mail & Marketing", key="chk_mail")
                 st.markdown("""
                     <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 2kg</span>
                     <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
-                        <li>Lightweight goods</li>
-                        <li>International business mail (letters, brochures, books)</li>
+                        <li>Lightweight goods</li><li>International business mail (letters, brochures, books)</li>
                     </ul>
                     <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
                         Commonly shipped items:
@@ -249,7 +212,6 @@ with col_main:
                     </div>
                 """, unsafe_allow_html=True)
 
-        # --- FOUTMELDING & KNOP ---
         if st.session_state.show_error:
             st.markdown("<p style='text-align: center; color: #ff4b4b; font-weight: bold; margin-top: 20px;'>❌ Please select at least one option.</p>", unsafe_allow_html=True)
         else:
@@ -275,23 +237,17 @@ with col_main:
                     st.rerun()
 
     # =========================================================
-    # STAP 2: DYNAMISCHE DETAILS
+    # STAP 2: DYNAMISCHE DETAILS + NIEUW CONTACT FORMULIER
     # =========================================================
     elif st.session_state.step == 2:
         
-        # CSS voor Stap 2
         st.markdown("""
         <style>
         .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
         .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;}
         .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;}
         .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
-
-        /* STYLING VOOR DE 'X' KNOPJES IN STAP 2 */
-        .step2-panel button[kind="tertiary"] {
-            color: #888 !important; padding: 0px !important; min-height: 0px !important;
-            margin-top: 15px !important; font-size: 16px !important;
-        }
+        .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; }
         .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
         </style>
         """, unsafe_allow_html=True)
@@ -308,10 +264,8 @@ with col_main:
         for i, sel in enumerate(st.session_state.selected_types[:]):
             with cols[i]:
                 with st.container(border=True):
-                    # --- DE 'X' KNOP LOGICA ---
                     c_title, c_close = st.columns([8, 1])
-                    with c_title:
-                         st.markdown(f"#### {sel}")
+                    with c_title: st.markdown(f"#### {sel}")
                     with c_close:
                         if st.button("✖", key=f"btn_close_{sel}", help=f"Remove {sel}", type="tertiary"):
                             st.session_state.selected_types.remove(sel)
@@ -320,7 +274,6 @@ with col_main:
                             if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
                             st.rerun() 
 
-                    # --- DE VELDEN ---
                     if sel == "Parcels & Documents":
                         st.text_input("Average Number of Shipments *", key="pd_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
@@ -351,54 +304,106 @@ with col_main:
                         
         st.markdown("</div>", unsafe_allow_html=True)
         
-        st.markdown("---")
-        st.markdown("### General Contact Details")
-        c_form1, c_form2 = st.columns(2)
-        with c_form1:
-            company = st.text_input("Company Name *", key="company_name")
-            email = st.text_input("Email *", key="email_address")
-        with c_form2:
-            route = st.text_input("Route (e.g. Oslo -> Bergen) *", key="route_info")
-            weight = st.number_input("Total Est. Weight (kg)", min_value=1, key="weight_info")
+        st.markdown("<br><br>", unsafe_allow_html=True)
         
-        st.markdown("---")
+        # --- HET NIEUWE UITGEBREIDE CONTACT FORMULIER ---
+        st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Send us your contact information and we will get in touch.</h3>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
+        
+        c_form_left, c_form_right = st.columns(2, gap="large")
+        
+        # LINKER KOLOM: Bedrijfsgegevens
+        with c_form_left:
+            st.markdown("#### Company Details")
+            company_name = st.text_input("Company Name *", key="comp_name")
+            company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg")
+            company_address = st.text_input("Company Address *", key="comp_addr")
+            
+            c_pc, c_city = st.columns(2)
+            with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc")
+            with c_city: city = st.text_input("City *", key="comp_city")
+            
+            country = st.text_input("Country *", value="Norway", disabled=True, key="comp_country")
+
+        # RECHTER KOLOM: Contactpersoon gegevens
+        with c_form_right:
+            st.markdown("#### Contact Person")
+            c_fn, c_ln = st.columns(2)
+            with c_fn: first_name = st.text_input("First Name *", key="cont_fn")
+            with c_ln: last_name = st.text_input("Last Name *", key="cont_ln")
+            
+            work_email = st.text_input("Work Email *", placeholder="example@email.no", key="cont_email")
+            
+            # Slimme truc voor de telefoon layout
+            st.markdown("<label style='font-size: 14px; font-weight: 600; color: #ccc;'>Phone *</label>", unsafe_allow_html=True)
+            c_code, c_phone = st.columns([1, 3])
+            with c_code: 
+                phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
+            with c_phone: 
+                phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone")
+                
+            additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=100, key="cont_info")
+
+        st.write("")
+        st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
+        
         c_back, c_next = st.columns([1, 4])
         
-        if c_back.button("← Back"):
+        if c_back.button("← Go Back"):
             st.session_state.step = 1
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            if not company or not email or not route:
-                st.error("⚠️ Please fill in all General Contact Details before continuing.")
+            # Validatie Check (Controleren of ALLE verplichte velden zijn ingevuld)
+            if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone:
+                st.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
             else:
+                # Sla alle data op in het geheugen
                 st.session_state.temp_order = {
-                    "company": company, "email": email,
-                    "route": route, "weight": weight, 
+                    "company": company_name, 
+                    "reg_no": company_reg,
+                    "address": f"{company_address}, {postal_code} {city}, Norway",
+                    "contact_name": f"{first_name} {last_name}",
+                    "email": work_email,
+                    "phone": f"{phone_code} {phone}",
+                    "info": additional_info,
                     "types": st.session_state.selected_types
                 }
                 st.session_state.step = 3
                 st.rerun()
 
     # =========================================================
-    # STAP 3: REVIEW
+    # STAP 3: REVIEW (NU MET ALLE NIEUWE GEGEVENS)
     # =========================================================
     elif st.session_state.step == 3:
         o = st.session_state.temp_order
         with st.container(border=True):
+            st.markdown("#### Review your request")
+            st.markdown("---")
+            
             col_s1, col_s2 = st.columns(2)
             with col_s1:
-                st.write(f"**Customer:** {o['company']}")
-                st.write(f"**Email:** {o['email']}")
-                st.write(f"**Shipment Types:** {', '.join(o['types'])}")
+                st.write(f"**Company Name:** {o['company']}")
+                if o['reg_no']: st.write(f"**Registration No:** {o['reg_no']}")
+                st.write(f"**Address:** {o['address']}")
+                st.write("")
+                st.write(f"**Selected Services:**")
+                for s_type in o['types']:
+                    st.write(f"- {s_type}")
+                    
             with col_s2:
-                st.write(f"**Route:** {o['route']}")
-                st.write(f"**Total Weight:** {o['weight']} kg")
+                st.write(f"**Contact Person:** {o['contact_name']}")
+                st.write(f"**Email:** {o['email']}")
+                st.write(f"**Phone:** {o['phone']}")
+                if o['info']:
+                    st.write("")
+                    st.write(f"**Additional Information:**")
+                    st.write(f"_{o['info']}_")
         
         st.write("")
         c_b1, c_b2 = st.columns([1, 4])
         with c_b1:
-            if st.button("← Edit"):
+            if st.button("← Edit Details"):
                 st.session_state.step = 2
                 st.rerun()
         with c_b2:
@@ -408,11 +413,13 @@ with col_main:
                 new_order['date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 new_order['status'] = "New"
                 new_order['type'] = ", ".join(o['types']) 
+                new_order['route'] = o['address'] # Vervanging voor oude layout in de planner
+                new_order['weight'] = 0 # Dummy voor planner
                 
                 st.session_state.orders.append(new_order)
                 st.balloons()
-                st.success("Your transport request has been sent successfully!")
-                time.sleep(2.5)
+                st.success("Your transport request has been sent successfully! We will get in touch shortly.")
+                time.sleep(3)
                 # Volledige reset na succes
                 st.session_state.step = 1
                 st.session_state.selected_types = []
