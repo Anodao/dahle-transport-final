@@ -21,7 +21,7 @@ def init_connection():
 try:
     supabase = init_connection()
 except Exception as e:
-    st.error("⚠️ Database connection failed. Please check your secrets.toml file.")
+    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
 
 # --- LOGO RESET TRUCJE ---
 if "reset" in st.query_params:
@@ -31,16 +31,20 @@ if "reset" in st.query_params:
     st.session_state.chk_parcels = False
     st.session_state.chk_freight = False
     st.session_state.chk_mail = False
+    st.session_state.show_error = False
     st.session_state.is_submitted = False
     st.query_params.clear()
 
-# --- SESSION STATE ---
+# --- SESSION STATE (HIER ZAT DE FOUT, show_error IS TERUG!) ---
+if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
 if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
 if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
 if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
+if 'show_error' not in st.session_state: st.session_state.show_error = False
+if 'order_counter' not in st.session_state: st.session_state.order_counter = 1000
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
@@ -452,7 +456,6 @@ with col_main:
             with c_b2:
                 if st.button("✅ CONFIRM & SEND REQUEST"):
                     
-                    # --- BEREID DATA VOOR DATABASE VOOR ---
                     db_order = {
                         "company": o['company'],
                         "reg_no": o['reg_no'],
@@ -466,7 +469,6 @@ with col_main:
                         "received_date": datetime.now().strftime("%Y-%m-%d %H:%M")
                     }
                     
-                    # --- SCHRIJF WEG NAAR SUPABASE ---
                     try:
                         supabase.table("orders").insert(db_order).execute()
                         st.balloons()
@@ -474,8 +476,7 @@ with col_main:
                         st.rerun()
                     except Exception as e:
                         st.error("⚠️ Failed to send order to the database. Please try again later.")
-                        st.error(f"Technical info: {e}")
-                    
+                        
         else:
             st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
             st.info("You can review your submitted details above.")
