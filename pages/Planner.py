@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 from datetime import datetime
+from supabase import create_client, Client
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -10,13 +11,41 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- INITIALIZE STATE ---
-if 'orders' not in st.session_state:
-    st.session_state.orders = []
-if 'processed_orders' not in st.session_state:
-    st.session_state.processed_orders = []
+# --- SUPABASE CONNECTIE ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+try:
+    supabase = init_connection()
+except Exception as e:
+    st.error("⚠️ Database connection failed. Please check your secrets.toml file.")
+    st.stop()
+
+# --- HAAL DATA LIVE OP UIT DATABASE ---
+try:
+    active_resp = supabase.table("orders").select("*").eq("status", "New").order("id", desc=True).execute()
+    active_orders = active_resp.data
+    
+    processed_resp = supabase.table("orders").select("*").eq("status", "Processed").order("processed_at", desc=True).execute()
+    processed_orders = processed_resp.data
+except Exception as e:
+    st.error(f"Error fetching data: {e}")
+    active_orders = []
+    processed_orders = []
+
+# --- INITIALIZE STATE VOOR GESELECTEERDE ORDER ---
 if 'selected_order' not in st.session_state:
     st.session_state.selected_order = None
+
+# Zorg dat de openstaande order geüpdatet blijft als de database verandert
+if st.session_state.selected_order:
+    curr_id = st.session_state.selected_order['id']
+    # Zoek hem op in de net opgehaalde data
+    found = next((o for o in active_orders + processed_orders if o['id'] == curr_id), None)
+    st.session_state.selected_order = found
 
 # --- CSS STYLING VOOR DE PLANNER ---
 st.markdown("""
@@ -112,7 +141,6 @@ st.markdown('</div>', unsafe_allow_html=True)
 # --- LAYOUT VERDELING ---
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
-# Bewaar het ID van de huidig geselecteerde order om hem te kunnen highlighten
 selected_id = st.session_state.selected_order.get('id') if st.session_state.selected_order else None
 
 # =========================================================
@@ -122,18 +150,17 @@ with col_inbox:
     # --- 1. ACTIEVE ORDERS ---
     st.markdown("<h3 style='color:#333333; margin-bottom: 15px;'>📥 Inbox</h3>", unsafe_allow_html=True)
     
-    if not st.session_state.orders:
+    if not active_orders:
         st.info("No new requests at the moment. Waiting for customers...")
     else:
-        for o in reversed(st.session_state.orders): 
-            # Checken of de kaart het highlight-effect moet krijgen
+        for o in active_orders: 
             is_active = "selected-card" if o.get('id') == selected_id else ""
             
             st.markdown(f"""
 <div class="inbox-card {is_active}">
     <p class="inbox-title"><span class="status-new">🔴 New</span> &nbsp; {o.get('company', 'Unknown')}</p>
-    <p class="inbox-subtitle">{o.get('type', '')}</p>
-    <p class="inbox-date">Received: {o.get('date', '')}</p>
+    <p class="inbox-subtitle">{o.get('types', '')}</p>
+    <p class="inbox-date">Received: {o.get('received_date', '')}</p>
 </div>
 """, unsafe_allow_html=True)
             
@@ -147,19 +174,16 @@ with col_inbox:
     # --- 2. VERWERKTE ORDERS (GESCHIEDENIS) ---
     st.markdown("<br><h3 style='color:#333333; margin-bottom: 15px; border-top: 2px solid #e0e6ed; padding-top: 15px;'>✅ Processed History</h3>", unsafe_allow_html=True)
     
-    if not st.session_state.processed_orders:
+    if not processed_orders:
         st.write("<p style='color:#888888; font-size: 14px;'>No orders have been processed yet.</p>", unsafe_allow_html=True)
     else:
-        sorted_history = sorted(st.session_state.processed_orders, key=lambda x: x.get('processed_at', ''), reverse=True)
-        
-        for po in sorted_history:
-            # Checken of de VERWERKTE kaart het highlight-effect moet krijgen
+        for po in processed_orders:
             is_active = "selected-card" if po.get('id') == selected_id else ""
             
             st.markdown(f"""
 <div class="processed-card {is_active}">
     <p class="inbox-title" style="color: #888 !important;"><span class="status-done">✅ Done</span> &nbsp; {po.get('company', 'Unknown')}</p>
-    <p class="inbox-subtitle" style="color: #999 !important;">{po.get('type', '')}</p>
+    <p class="inbox-subtitle" style="color: #999 !important;">{po.get('types', '')}</p>
     <p class="inbox-date">Processed on: {po.get('processed_at', '')}</p>
 </div>
 """, unsafe_allow_html=True)
@@ -184,15 +208,15 @@ with col_details:
     else:
         company = selected.get('company', 'N/A')
         reg_no = selected.get('reg_no', '')
-        if not reg_no.strip(): reg_no = "Not provided"
+        if not reg_no or not reg_no.strip(): reg_no = "Not provided"
         address = selected.get('address', 'N/A')
         contact_name = selected.get('contact_name', 'N/A')
         email = selected.get('email', 'N/A')
         phone = selected.get('phone', 'N/A')
         info = selected.get('info', '')
-        if not info.strip(): info = "None provided."
-        s_type = selected.get('type', 'N/A')
-        date = selected.get('date', 'N/A')
+        if not info or not info.strip(): info = "None provided."
+        s_type = selected.get('types', 'N/A')
+        date = selected.get('received_date', 'N/A')
         order_id = selected.get('id', 'N/A')
         status = selected.get('status', 'New')
 
@@ -202,7 +226,6 @@ with col_details:
             else:
                 st.markdown("<span style='background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;'>🔴 Action Required</span>", unsafe_allow_html=True)
                 
-            # DE FIX VOOR DE ONZICHTBARE TITEL UIT DE SCREENSHOT
             st.markdown(f"<h2 style='color: #2c3e50; margin-top: 15px; margin-bottom: 0px;'>Order #{order_id}</h2>", unsafe_allow_html=True)
             st.markdown(f"<p style='color: #888888; font-size: 13px; margin-bottom: 25px;'>Received on {date}</p>", unsafe_allow_html=True)
             
@@ -236,22 +259,23 @@ with col_details:
             if status != 'Processed':
                 with c_btn1:
                     if st.button("✅ Mark as Processed", use_container_width=True):
-                        selected['status'] = 'Processed'
-                        selected['processed_at'] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                        st.session_state.processed_orders.append(selected) 
-                        st.session_state.orders = [o for o in st.session_state.orders if o['id'] != order_id] 
+                        # --- UPDATE IN DATABASE ---
+                        now = datetime.now().strftime("%Y-%m-%d %H:%M")
+                        supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", order_id).execute()
                         st.session_state.selected_order = None 
                         st.success("Order has been successfully processed!")
                         time.sleep(1.5)
                         st.rerun()
                 with c_btn2:
                     if st.button("🗑️ Delete Request", type="secondary", use_container_width=True):
-                        st.session_state.orders = [o for o in st.session_state.orders if o['id'] != order_id]
+                        # --- VERWIJDER UIT DATABASE ---
+                        supabase.table("orders").delete().eq("id", order_id).execute()
                         st.session_state.selected_order = None
                         st.rerun()
             else:
                 with c_btn1:
                     if st.button("🗑️ Delete from History", type="secondary", use_container_width=True):
-                        st.session_state.processed_orders = [o for o in st.session_state.processed_orders if o['id'] != order_id]
+                        # --- VERWIJDER UIT DATABASE ---
+                        supabase.table("orders").delete().eq("id", order_id).execute()
                         st.session_state.selected_order = None
                         st.rerun()
