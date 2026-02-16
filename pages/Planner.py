@@ -13,7 +13,6 @@ st.set_page_config(
 # --- INITIALIZE STATE ---
 if 'orders' not in st.session_state:
     st.session_state.orders = []
-# NIEUW: Lijst voor verwerkte orders
 if 'processed_orders' not in st.session_state:
     st.session_state.processed_orders = []
 if 'selected_order' not in st.session_state:
@@ -45,22 +44,31 @@ st.markdown("""
     .header-banner h1 { color: #ffffff !important; margin: 0; font-weight: 700; letter-spacing: 0.5px;}
     .header-banner p { color: #e0d0e6 !important; margin: 5px 0 0 0; font-size: 14px;}
 
-    /* Styling voor de actieve inbox kaarten */
+    /* --- INBOX KAARTEN STYLING --- */
     .inbox-card {
         background-color: #ffffff !important;
         border: 1px solid #e0e6ed !important;
         border-radius: 8px !important;
         padding: 20px !important;
-        margin-bottom: 15px !important;
+        margin-bottom: 5px !important; /* Minder marge ivm knop eronder */
         box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
+        transition: all 0.2s ease-in-out;
     }
-    /* Styling voor de VERWERKTE inbox kaarten */
     .processed-card {
         background-color: #f8f9fa !important;
         border: 1px dashed #bdc3c7 !important;
         border-radius: 8px !important;
         padding: 20px !important;
-        margin-bottom: 15px !important;
+        margin-bottom: 5px !important;
+        transition: all 0.2s ease-in-out;
+    }
+
+    /* --- NIEUW: HIGHLIGHT EFFECT VOOR GESELECTEERDE ORDER --- */
+    .selected-card {
+        border: 2px solid #894b9d !important;
+        background-color: #faf5fc !important; /* Licht paarse tint */
+        box-shadow: 0 6px 12px rgba(137, 75, 157, 0.15) !important;
+        transform: translateX(8px); /* Schuift iets naar rechts richting de details */
     }
 
     .inbox-title { color: #333333 !important; font-weight: 700; font-size: 16px; margin: 0 0 8px 0; }
@@ -75,12 +83,13 @@ st.markdown("""
     
     /* Container voor de 'Go Back' knop */
     .home-btn-container { margin-bottom: 30px; }
+    .card-spacer { margin-bottom: 20px; }
     
     /* Streamlit Knoppen fix voor planner (Dahle Paars) */
     div.stButton > button { background-color: #894b9d !important; color: white !important; border: none; font-weight: bold; border-radius: 6px;}
     div.stButton > button:hover { background-color: #723e83 !important; }
     
-    /* Zorg dat de secundaire (delete/go back) knop een andere kleur krijgt */
+    /* Secundaire knop (voor "Delete" of "Go Back") */
     div.stButton > button[kind="secondary"] { background-color: #e0e6ed !important; color: #333 !important;}
     div.stButton > button[kind="secondary"]:hover { background-color: #bdc3c7 !important; }
     </style>
@@ -103,6 +112,9 @@ st.markdown('</div>', unsafe_allow_html=True)
 # --- LAYOUT VERDELING ---
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
+# Bewaar het ID van de huidig geselecteerde order om hem te kunnen highlighten
+selected_id = st.session_state.selected_order.get('id') if st.session_state.selected_order else None
+
 # =========================================================
 # LINKER KOLOM: INBOX & GESCHIEDENIS
 # =========================================================
@@ -114,17 +126,24 @@ with col_inbox:
         st.info("No new requests at the moment. Waiting for customers...")
     else:
         for o in reversed(st.session_state.orders): 
-            st.markdown(f"""
-                <div class="inbox-card">
-                    <p class="inbox-title"><span class="status-new">🔴 New</span> &nbsp; {o.get('company', 'Unknown')}</p>
-                    <p class="inbox-subtitle">{o.get('type', '')}</p>
-                    <p class="inbox-date">Received: {o.get('date', '')}</p>
-                </div>
-            """, unsafe_allow_html=True)
+            # Checken of de kaart het highlight-effect (selected-card) moet krijgen
+            is_active = "selected-card" if o.get('id') == selected_id else ""
             
-            if st.button(f"Open Order #{o.get('id', '0000')}", key=f"btn_{o.get('id')}", use_container_width=True):
+            st.markdown(f"""
+<div class="inbox-card {is_active}">
+    <p class="inbox-title"><span class="status-new">🔴 New</span> &nbsp; {o.get('company', 'Unknown')}</p>
+    <p class="inbox-subtitle">{o.get('type', '')}</p>
+    <p class="inbox-date">Received: {o.get('date', '')}</p>
+</div>
+""", unsafe_allow_html=True)
+            
+            # Knop tekst veranderen als hij is aangeklikt
+            btn_txt = f"👁️ Viewing Order #{o.get('id')}" if o.get('id') == selected_id else f"Open Order #{o.get('id')}"
+            
+            if st.button(btn_txt, key=f"btn_{o.get('id')}", use_container_width=True):
                 st.session_state.selected_order = o
                 st.rerun()
+            st.markdown('<div class="card-spacer"></div>', unsafe_allow_html=True)
 
     # --- 2. VERWERKTE ORDERS (GESCHIEDENIS) ---
     st.markdown("<br><h3 style='color:#333333; margin-bottom: 15px; border-top: 2px solid #e0e6ed; padding-top: 15px;'>✅ Processed History</h3>", unsafe_allow_html=True)
@@ -132,21 +151,26 @@ with col_inbox:
     if not st.session_state.processed_orders:
         st.write("<p style='color:#888888; font-size: 14px;'>No orders have been processed yet.</p>", unsafe_allow_html=True)
     else:
-        # Sorteer op datum afgerond (nieuwste bovenaan)
         sorted_history = sorted(st.session_state.processed_orders, key=lambda x: x.get('processed_at', ''), reverse=True)
         
         for po in sorted_history:
-            st.markdown(f"""
-                <div class="processed-card">
-                    <p class="inbox-title" style="color: #888 !important;"><span class="status-done">✅ Done</span> &nbsp; {po.get('company', 'Unknown')}</p>
-                    <p class="inbox-subtitle" style="color: #999 !important;">{po.get('type', '')}</p>
-                    <p class="inbox-date">Processed on: {po.get('processed_at', '')}</p>
-                </div>
-            """, unsafe_allow_html=True)
+            # Checken of de VERWERKTE kaart het highlight-effect moet krijgen
+            is_active = "selected-card" if po.get('id') == selected_id else ""
             
-            if st.button(f"View Order #{po.get('id', '0000')}", key=f"btn_hist_{po.get('id')}", type="secondary", use_container_width=True):
+            st.markdown(f"""
+<div class="processed-card {is_active}">
+    <p class="inbox-title" style="color: #888 !important;"><span class="status-done">✅ Done</span> &nbsp; {po.get('company', 'Unknown')}</p>
+    <p class="inbox-subtitle" style="color: #999 !important;">{po.get('type', '')}</p>
+    <p class="inbox-date">Processed on: {po.get('processed_at', '')}</p>
+</div>
+""", unsafe_allow_html=True)
+            
+            btn_txt = f"👁️ Viewing Order #{po.get('id')}" if po.get('id') == selected_id else f"View Order #{po.get('id')}"
+            
+            if st.button(btn_txt, key=f"btn_hist_{po.get('id')}", type="secondary", use_container_width=True):
                 st.session_state.selected_order = po
                 st.rerun()
+            st.markdown('<div class="card-spacer"></div>', unsafe_allow_html=True)
 
 # =========================================================
 # RECHTER KOLOM: ORDER DETAILS 
@@ -171,12 +195,9 @@ with col_details:
         s_type = selected.get('type', 'N/A')
         date = selected.get('date', 'N/A')
         order_id = selected.get('id', 'N/A')
-        
-        # Check de status om de juiste badge te tonen
         status = selected.get('status', 'New')
 
         with st.container(border=True):
-            # Visuele status badge bovenaan de detail box
             if status == 'Processed':
                 st.markdown(f"<span style='background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;'>✅ Processed on {selected.get('processed_at', '')}</span>", unsafe_allow_html=True)
             else:
@@ -186,7 +207,6 @@ with col_details:
             st.caption(f"Received on {date}")
             st.write("") 
             
-            # --- COMPANY INFO ---
             st.markdown("<h4 style='color: #894b9d; border-bottom: 2px solid #f0f3f6; padding-bottom: 5px;'>🏢 Company Information</h4>", unsafe_allow_html=True)
             c1, c2 = st.columns(2)
             with c1:
@@ -195,7 +215,6 @@ with col_details:
                 st.markdown(f"<p class='detail-label'>Registration No.</p><p class='detail-value'>{reg_no}</p>", unsafe_allow_html=True)
             st.markdown(f"<p class='detail-label'>Registered Address</p><p class='detail-value'>{address}</p>", unsafe_allow_html=True)
             
-            # --- CONTACT PERSON ---
             st.write("")
             st.markdown("<h4 style='color: #894b9d; border-bottom: 2px solid #f0f3f6; padding-bottom: 5px;'>👤 Contact Person</h4>", unsafe_allow_html=True)
             c3, c4 = st.columns(2)
@@ -205,7 +224,6 @@ with col_details:
                 st.markdown(f"<p class='detail-label'>Phone</p><p class='detail-value'>{phone}</p>", unsafe_allow_html=True)
             st.markdown(f"<p class='detail-label'>Email Address</p><p class='detail-value'><a href='mailto:{email}' style='color: #894b9d;'>{email}</a></p>", unsafe_allow_html=True)
             
-            # --- SHIPMENT DETAILS ---
             st.write("")
             st.markdown("<h4 style='color: #894b9d; border-bottom: 2px solid #f0f3f6; padding-bottom: 5px;'>📦 Shipment Details</h4>", unsafe_allow_html=True)
             st.markdown(f"<p class='detail-label'>Requested Services</p><p class='detail-value' style='font-weight: 700;'>{s_type}</p>", unsafe_allow_html=True)
@@ -214,19 +232,16 @@ with col_details:
             
             st.write("---")
             
-            # --- ACTIE KNOPPEN (Afhankelijk van status) ---
             c_btn1, c_btn2, _ = st.columns([2, 2, 3])
             
             if status != 'Processed':
-                # Order is nog ACTIEF
                 with c_btn1:
                     if st.button("✅ Mark as Processed", use_container_width=True):
-                        # Zet om naar processed en voeg tijdstip toe
                         selected['status'] = 'Processed'
                         selected['processed_at'] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                        st.session_state.processed_orders.append(selected) # Zet in nieuwe lijst
-                        st.session_state.orders = [o for o in st.session_state.orders if o['id'] != order_id] # Verwijder uit oude lijst
-                        st.session_state.selected_order = None # Reset de view
+                        st.session_state.processed_orders.append(selected) 
+                        st.session_state.orders = [o for o in st.session_state.orders if o['id'] != order_id] 
+                        st.session_state.selected_order = None 
                         st.success("Order has been successfully processed!")
                         time.sleep(1.5)
                         st.rerun()
@@ -236,7 +251,6 @@ with col_details:
                         st.session_state.selected_order = None
                         st.rerun()
             else:
-                # Order is al VERWERKT (Alleen een delete knop tonen)
                 with c_btn1:
                     if st.button("🗑️ Delete from History", type="secondary", use_container_width=True):
                         st.session_state.processed_orders = [o for o in st.session_state.processed_orders if o['id'] != order_id]
