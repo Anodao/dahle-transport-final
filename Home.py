@@ -1,6 +1,7 @@
 import streamlit as st
 import time
 from datetime import datetime
+from supabase import create_client, Client
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -10,6 +11,18 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- SUPABASE CONNECTIE ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+try:
+    supabase = init_connection()
+except Exception as e:
+    st.error("⚠️ Database connection failed. Please check your secrets.toml file.")
+
 # --- LOGO RESET TRUCJE ---
 if "reset" in st.query_params:
     st.session_state.step = 1
@@ -18,20 +31,16 @@ if "reset" in st.query_params:
     st.session_state.chk_parcels = False
     st.session_state.chk_freight = False
     st.session_state.chk_mail = False
-    st.session_state.show_error = False
     st.session_state.is_submitted = False
     st.query_params.clear()
 
 # --- SESSION STATE ---
-if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
 if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
 if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
 if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
-if 'show_error' not in st.session_state: st.session_state.show_error = False
-if 'order_counter' not in st.session_state: st.session_state.order_counter = 1000
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
@@ -251,7 +260,7 @@ with col_main:
                     st.rerun()
 
     # =========================================================
-    # STAP 2: DYNAMISCHE DETAILS + NIEUW CONTACT FORMULIER
+    # STAP 2: DYNAMISCHE DETAILS + CONTACT FORMULIER
     # =========================================================
     elif st.session_state.step == 2:
         
@@ -297,7 +306,6 @@ with col_main:
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
-                        # Limiet van 50 tekens toegevoegd
                         pd_avg_val = st.text_input("Average Number of Shipments *", key="pd_avg", max_chars=50)
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
@@ -311,8 +319,6 @@ with col_main:
                         cf_pal_val = st.checkbox("Pallet", key="cf_pal")
                         cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
                         cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
-                        
-                        # Limiet van 50 tekens toegevoegd
                         cf_avg_val = st.text_input("Avg. Shipments per Year *", key="cf_avg", max_chars=50)
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
@@ -320,7 +326,6 @@ with col_main:
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
-                        # Limiet van 50 tekens toegevoegd
                         mdm_avg_val = st.text_input("Average Number of Shipments *", key="mdm_avg", max_chars=50)
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
@@ -340,7 +345,6 @@ with col_main:
         
         with c_form_left:
             st.markdown("#### Company Details")
-            # Alle limieten toegevoegd
             company_name = st.text_input("Company Name *", key="comp_name", max_chars=100)
             company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
             company_address = st.text_input("Company Address *", key="comp_addr", max_chars=150)
@@ -352,7 +356,6 @@ with col_main:
         with c_form_right:
             st.markdown("#### Contact Person")
             c_fn, c_ln = st.columns(2)
-            # Alle limieten toegevoegd
             with c_fn: first_name = st.text_input("First Name *", key="cont_fn", max_chars=50)
             with c_ln: last_name = st.text_input("Last Name *", key="cont_ln", max_chars=50)
             work_email = st.text_input("Work Email *", placeholder="example@email.no", key="cont_email", max_chars=150)
@@ -364,7 +367,6 @@ with col_main:
             with c_phone: 
                 phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
             
-            # Limiet op 300 tekens gezet, zodat ze wel een duidelijke omschrijving kunnen geven
             additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
         st.write("")
@@ -412,7 +414,7 @@ with col_main:
                 st.rerun()
 
     # =========================================================
-    # STAP 3: REVIEW (MET SUCCESS STATE!)
+    # STAP 3: REVIEW (OPSLAAN IN SUPABASE!)
     # =========================================================
     elif st.session_state.step == 3:
         o = st.session_state.temp_order
@@ -449,23 +451,30 @@ with col_main:
                     st.rerun()
             with c_b2:
                 if st.button("✅ CONFIRM & SEND REQUEST"):
-                    st.session_state.order_counter += 1
                     
-                    new_order = o.copy()
-                    new_order['id'] = st.session_state.order_counter
-                    new_order['date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    new_order['status'] = "New"
-                    new_order['type'] = ", ".join(o['types']) 
-                    new_order['route'] = o['address'] 
-                    new_order['weight'] = 0 
+                    # --- BEREID DATA VOOR DATABASE VOOR ---
+                    db_order = {
+                        "company": o['company'],
+                        "reg_no": o['reg_no'],
+                        "address": o['address'],
+                        "contact_name": o['contact_name'],
+                        "email": o['email'],
+                        "phone": o['phone'],
+                        "info": o['info'],
+                        "types": ", ".join(o['types']),
+                        "status": "New",
+                        "received_date": datetime.now().strftime("%Y-%m-%d %H:%M")
+                    }
                     
-                    updated_orders = st.session_state.orders.copy()
-                    updated_orders.append(new_order)
-                    st.session_state.orders = updated_orders
-                    
-                    st.balloons()
-                    st.session_state.is_submitted = True
-                    st.rerun()
+                    # --- SCHRIJF WEG NAAR SUPABASE ---
+                    try:
+                        supabase.table("orders").insert(db_order).execute()
+                        st.balloons()
+                        st.session_state.is_submitted = True
+                        st.rerun()
+                    except Exception as e:
+                        st.error("⚠️ Failed to send order to the database. Please try again later.")
+                        st.error(f"Technical info: {e}")
                     
         else:
             st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
