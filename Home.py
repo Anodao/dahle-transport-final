@@ -37,11 +37,10 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-    /* --- HEADER & SIDEBAR FIX --- */
-    header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; }
-    div[data-testid="stDecoration"] { display: none; }
-    div[data-testid="stToolbar"] { display: none; }
-    button[kind="header"] { color: #000 !important; margin-top: 5px; pointer-events: auto !important; }
+    /* --- VERBERG SIDEBAR & HEADER VOLLEDIG --- */
+    [data-testid="collapsedControl"] { display: none !important; }
+    [data-testid="stSidebar"] { display: none !important; }
+    header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
     footer { visibility: hidden; }
     
     /* --- NAVBAR --- */
@@ -263,8 +262,6 @@ with col_main:
         .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
         .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; }
         .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
-        
-        /* Zorg dat de radio knoppen netjes onder elkaar staan */
         .step2-panel div[role="radiogroup"] { gap: 0.5rem; }
         </style>
         """, unsafe_allow_html=True)
@@ -294,8 +291,6 @@ with col_main:
                     if sel == "Parcels & Documents":
                         st.text_input("Average Number of Shipments *", key="pd_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
-                        
-                        # --- VERBETERDE RADIO BUTTONS MET KLEINE TEKST ERONDER ---
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
@@ -308,8 +303,6 @@ with col_main:
                         st.checkbox("Full Container/Truck Load", key="cf_full")
                         st.checkbox("Loose Cargo", key="cf_lc")
                         st.text_input("Avg. Shipments per Year *", key="cf_avg")
-                        
-                        # --- VERBETERDE RADIO BUTTONS MET KLEINE TEKST ERONDER ---
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
@@ -318,8 +311,6 @@ with col_main:
                     elif sel == "Mail & Direct Marketing":
                         st.text_input("Average Number of Shipments *", key="mdm_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
-                        
-                        # --- VERBETERDE RADIO BUTTONS MET KLEINE TEKST ERONDER ---
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
                                  captions=["within the continent", "beyond the continent"],
@@ -345,8 +336,6 @@ with col_main:
             c_pc, c_city = st.columns(2)
             with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc")
             with c_city: city = st.text_input("City *", key="comp_city")
-            
-            # --- VELD VOOR LAND IS VRIJ BEWERKBAAR ---
             country = st.text_input("Country *", value="Norway", key="comp_country")
 
         with c_form_right:
@@ -376,7 +365,6 @@ with col_main:
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            # Update de validatie zodat het "country" veld ook gecontroleerd wordt
             if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
                 st.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
             else:
