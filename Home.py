@@ -263,6 +263,9 @@ with col_main:
         .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
         .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; }
         .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
+        
+        /* Zorg dat de nieuwe radio knoppen mooi passen */
+        .step2-panel div[role="radiogroup"] { gap: 0.5rem; }
         </style>
         """, unsafe_allow_html=True)
         
@@ -291,10 +294,11 @@ with col_main:
                     if sel == "Parcels & Documents":
                         st.text_input("Average Number of Shipments *", key="pd_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
-                        st.markdown("**Where do you ship? ***")
-                        st.checkbox("Domestic", key="pd_dom")
-                        st.checkbox("Pan-European", key="pd_pan")
-                        st.checkbox("Worldwide", key="pd_world")
+                        
+                        # --- HIER ZIJN DE RADIO BUTTONS MET UITLEG ---
+                        st.radio("**Where do you ship? *** (Select one)", 
+                                 ["Domestic (within the country)", "Pan-European (within the continent)", "Worldwide (beyond the continent)"], 
+                                 key="pd_ship_where")
                         
                     elif sel == "Cargo & Freight":
                         st.radio("Shipping Type *", ["One-off", "Recurring Shipment"], horizontal=True, key="cf_type")
@@ -303,30 +307,32 @@ with col_main:
                         st.checkbox("Full Container/Truck Load", key="cf_full")
                         st.checkbox("Loose Cargo", key="cf_lc")
                         st.text_input("Avg. Shipments per Year *", key="cf_avg")
-                        st.markdown("**Where do you ship? ***")
-                        st.checkbox("Domestic", key="cf_dom")
-                        st.checkbox("Pan-European", key="cf_pan")
-                        st.checkbox("Worldwide", key="cf_world")
+                        
+                        # --- HIER ZIJN DE RADIO BUTTONS MET UITLEG ---
+                        st.radio("**Where do you ship? *** (Select one)", 
+                                 ["Domestic (within the country)", "Pan-European (within the continent)", "Worldwide (beyond the continent)"], 
+                                 key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
                         st.text_input("Average Number of Shipments *", key="mdm_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
-                        st.markdown("**Where do you ship? ***")
-                        st.checkbox("Pan-European", key="mdm_pan")
-                        st.checkbox("Worldwide", key="mdm_world")
+                        
+                        # --- HIER ZIJN DE RADIO BUTTONS MET UITLEG ---
+                        st.radio("**Where do you ship? *** (Select one)", 
+                                 ["Pan-European (within the continent)", "Worldwide (beyond the continent)"], 
+                                 key="mdm_ship_where")
                         st.caption("International shipments only.")
                         
         st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        # --- HET NIEUWE UITGEBREIDE CONTACT FORMULIER ---
+        # --- HET CONTACT FORMULIER ---
         st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Send us your contact information and we will get in touch.</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
         
         c_form_left, c_form_right = st.columns(2, gap="large")
         
-        # LINKER KOLOM: Bedrijfsgegevens
         with c_form_left:
             st.markdown("#### Company Details")
             company_name = st.text_input("Company Name *", key="comp_name")
@@ -337,9 +343,9 @@ with col_main:
             with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc")
             with c_city: city = st.text_input("City *", key="comp_city")
             
-            country = st.text_input("Country *", value="Norway", disabled=True, key="comp_country")
+            # --- HIER IS DE LAND-BLOKKADE OPGEHEVEN ---
+            country = st.text_input("Country *", value="Norway", key="comp_country")
 
-        # RECHTER KOLOM: Contactpersoon gegevens
         with c_form_right:
             st.markdown("#### Contact Person")
             c_fn, c_ln = st.columns(2)
@@ -348,7 +354,6 @@ with col_main:
             
             work_email = st.text_input("Work Email *", placeholder="example@email.no", key="cont_email")
             
-            # Slimme truc voor de telefoon layout
             st.markdown("<label style='font-size: 14px; font-weight: 600; color: #ccc;'>Phone *</label>", unsafe_allow_html=True)
             c_code, c_phone = st.columns([1, 3])
             with c_code: 
@@ -368,15 +373,15 @@ with col_main:
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            # Validatie Check (Controleren of ALLE verplichte velden zijn ingevuld)
-            if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone:
+            # Update de validatie zodat het nieuwe "country" veld ook gecontroleerd wordt
+            if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
                 st.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
             else:
-                # Sla alle data op in het geheugen
                 st.session_state.temp_order = {
                     "company": company_name, 
                     "reg_no": company_reg,
-                    "address": f"{company_address}, {postal_code} {city}, Norway",
+                    # Adres opbouwen inclusief het land!
+                    "address": f"{company_address}, {postal_code} {city}, {country}",
                     "contact_name": f"{first_name} {last_name}",
                     "email": work_email,
                     "phone": f"{phone_code} {phone}",
@@ -387,7 +392,7 @@ with col_main:
                 st.rerun()
 
     # =========================================================
-    # STAP 3: REVIEW (NU MET ALLE NIEUWE GEGEVENS)
+    # STAP 3: REVIEW 
     # =========================================================
     elif st.session_state.step == 3:
         o = st.session_state.temp_order
@@ -427,14 +432,13 @@ with col_main:
                 new_order['date'] = datetime.now().strftime("%Y-%m-%d %H:%M")
                 new_order['status'] = "New"
                 new_order['type'] = ", ".join(o['types']) 
-                new_order['route'] = o['address'] # Vervanging voor oude layout in de planner
-                new_order['weight'] = 0 # Dummy voor planner
+                new_order['route'] = o['address'] 
+                new_order['weight'] = 0 
                 
                 st.session_state.orders.append(new_order)
                 st.balloons()
                 st.success("Your transport request has been sent successfully! We will get in touch shortly.")
                 time.sleep(3)
-                # Volledige reset na succes
                 st.session_state.step = 1
                 st.session_state.selected_types = []
                 st.session_state.chk_parcels = False
