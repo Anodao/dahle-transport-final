@@ -251,9 +251,10 @@ with col_main:
                     st.rerun()
 
     # =========================================================
-    # STAP 2: DYNAMISCHE DETAILS
+    # STAP 2: DYNAMISCHE DETAILS + NIEUW CONTACT FORMULIER
     # =========================================================
     elif st.session_state.step == 2:
+        
         st.markdown("""
         <style>
         .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
@@ -275,6 +276,14 @@ with col_main:
         aantal_geselecteerd = len(st.session_state.selected_types)
         cols = st.columns(aantal_geselecteerd)
         
+        # We maken wat tijdelijke variabelen aan om de validatie straks te kunnen controleren
+        pd_avg_val = ""
+        cf_avg_val = ""
+        cf_pal_val = False
+        cf_full_val = False
+        cf_lc_val = False
+        mdm_avg_val = ""
+        
         for i, sel in enumerate(st.session_state.selected_types[:]):
             with cols[i]:
                 with st.container(border=True):
@@ -289,7 +298,7 @@ with col_main:
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
-                        st.text_input("Average Number of Shipments *", key="pd_avg")
+                        pd_avg_val = st.text_input("Average Number of Shipments *", key="pd_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
@@ -299,17 +308,17 @@ with col_main:
                     elif sel == "Cargo & Freight":
                         st.radio("Shipping Type *", ["One-off", "Recurring Shipment"], horizontal=True, key="cf_type")
                         st.markdown("**Load Type ***")
-                        st.checkbox("Pallet", key="cf_pal")
-                        st.checkbox("Full Container/Truck Load", key="cf_full")
-                        st.checkbox("Loose Cargo", key="cf_lc")
-                        st.text_input("Avg. Shipments per Year *", key="cf_avg")
+                        cf_pal_val = st.checkbox("Pallet", key="cf_pal")
+                        cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
+                        cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
+                        cf_avg_val = st.text_input("Avg. Shipments per Year *", key="cf_avg")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
-                        st.text_input("Average Number of Shipments *", key="mdm_avg")
+                        mdm_avg_val = st.text_input("Average Number of Shipments *", key="mdm_avg")
                         st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
@@ -353,7 +362,7 @@ with col_main:
         st.write("")
         st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
         
-        # --- HIER ZETTEN WE EEN PLACEHOLDER VOOR DE ERROR BERICHTEN ---
+        # --- PLACEHOLDER VOOR ERROR BERICHTEN ---
         error_container = st.empty()
         
         c_back, c_next = st.columns([1, 4])
@@ -362,8 +371,26 @@ with col_main:
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            # Controleer via de placeholder (boven de knoppen)
+            missing_fields = False
+            
+            # 1. Controleer of alle verplichte Contact-velden zijn ingevuld
             if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
+                missing_fields = True
+                
+            # 2. Controleer of de getoonde dynamische velden (met een *) zijn ingevuld
+            if "Parcels & Documents" in st.session_state.selected_types and not pd_avg_val.strip():
+                missing_fields = True
+            
+            if "Cargo & Freight" in st.session_state.selected_types:
+                # Check of tekst is ingevuld EN of er minimaal 1 checkbox bij Load Type is aangevinkt
+                if not cf_avg_val.strip() or not (cf_pal_val or cf_full_val or cf_lc_val):
+                    missing_fields = True
+                    
+            if "Mail & Direct Marketing" in st.session_state.selected_types and not mdm_avg_val.strip():
+                missing_fields = True
+
+            # 3. Voer de definitieve logica uit
+            if missing_fields:
                 error_container.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
             elif "@" not in work_email:
                 error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
