@@ -34,6 +34,7 @@ if "reset" in st.query_params:
     st.session_state.show_error = False
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
+    st.session_state.scroll_up = False
     st.query_params.clear()
 
 # --- SESSION STATE ---
@@ -48,6 +49,7 @@ if 'show_error' not in st.session_state: st.session_state.show_error = False
 if 'order_counter' not in st.session_state: st.session_state.order_counter = 1000
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
+if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
@@ -270,6 +272,24 @@ with col_main:
     # =========================================================
     elif st.session_state.step == 2:
         
+        # --- VERBORGEN ANKER OM NAARTOE TE SCROLLEN ---
+        st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
+        
+        # --- JAVASCRIPT VOOR AUTO-SCROLL (VOERT UIT ALS SCROLL_UP TRUE IS) ---
+        if st.session_state.get('scroll_up', False):
+            st.components.v1.html(
+                """
+                <script>
+                    const doc = window.parent.document;
+                    const el = doc.getElementById("error-top");
+                    if(el) {
+                        el.scrollIntoView({behavior: "smooth"});
+                    }
+                </script>
+                """, height=0
+            )
+            st.session_state.scroll_up = False # Reset direct na het scrollen
+            
         st.markdown("""
         <style>
         .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
@@ -284,7 +304,6 @@ with col_main:
         
         # --- HIGHLIGHT FUNCTIES ---
         def req_lbl(key, base_text):
-            """Maakt het label rood als het veld verplicht en leeg is tijdens de validatie"""
             if st.session_state.get('validate_step2', False):
                 val = st.session_state.get(key, "")
                 if not val or not str(val).strip():
@@ -292,7 +311,6 @@ with col_main:
             return base_text
 
         def email_lbl():
-            """Speciale validatie weergave voor de e-mail"""
             base = "Work Email *"
             if st.session_state.get('validate_step2', False):
                 val = st.session_state.get('cont_email', "")
@@ -329,7 +347,7 @@ with col_main:
                             if sel == "Parcels & Documents": st.session_state.chk_parcels = False
                             if sel == "Cargo & Freight": st.session_state.chk_freight = False
                             if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
-                            st.session_state.validate_step2 = False # Reset validatie
+                            st.session_state.validate_step2 = False
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
@@ -343,7 +361,6 @@ with col_main:
                     elif sel == "Cargo & Freight":
                         st.radio("Shipping Type *", ["One-time shipment", "Recurring Shipment"], horizontal=True, key="cf_type")
                         
-                        # Custom highlight label voor checkboxes
                         cf_lbl = "**Load Type ***"
                         if st.session_state.get('validate_step2', False) and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
                             cf_lbl += " 🚨 :red[(Select at least one)]"
@@ -395,7 +412,6 @@ with col_main:
             
             work_email = st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
             
-            # Custom label styling voor het geklapte Phone label
             phone_lbl = "Phone *"
             if st.session_state.get('validate_step2', False) and not st.session_state.get('cont_phone', '').strip():
                 phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
@@ -412,7 +428,6 @@ with col_main:
         st.write("")
         st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
         
-        # --- BEREKEN ONTBREKENDE VELDEN VOOR DE ERROR BALK ONDERAAN ---
         error_container = st.empty()
         missing_fields = False
         
@@ -431,7 +446,6 @@ with col_main:
 
         invalid_email = bool(work_email.strip() and "@" not in work_email)
 
-        # Toon de balk ALS er op de knop is geklikt (en we dus in validatie status zijn)
         if st.session_state.get('validate_step2', False):
             if missing_fields:
                 error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
@@ -441,18 +455,19 @@ with col_main:
         c_back, c_next = st.columns([1, 4])
         if c_back.button("← Go Back"):
             st.session_state.step = 1
-            st.session_state.validate_step2 = False # Reset validatie status
+            st.session_state.validate_step2 = False 
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            st.session_state.validate_step2 = True # Start de validatie (kleurt de lege velden rood)
+            st.session_state.validate_step2 = True 
             
             if missing_fields or invalid_email:
-                # Als er iets mist, forceer een rerun. De lege velden worden rood gemarkeerd!
+                # --- HIER WORDT DE SCROLL TRIGGER GEZET ALS DE VALIDATIE FAALT ---
+                st.session_state.scroll_up = True
                 st.rerun()
             else:
-                # Alles is succesvol ingevuld!
-                st.session_state.validate_step2 = False # Reset validatie
+                st.session_state.validate_step2 = False 
+                st.session_state.scroll_up = False
                 
                 compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
                 
@@ -550,6 +565,7 @@ with col_main:
                 st.session_state.step = 1
                 st.session_state.is_submitted = False
                 st.session_state.validate_step2 = False
+                st.session_state.scroll_up = False
                 st.session_state.selected_types = []
                 st.session_state.chk_parcels = False
                 st.session_state.chk_freight = False
