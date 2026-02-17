@@ -33,6 +33,7 @@ if "reset" in st.query_params:
     st.session_state.chk_mail = False
     st.session_state.show_error = False
     st.session_state.is_submitted = False
+    st.session_state.validate_step2 = False
     st.query_params.clear()
 
 # --- SESSION STATE ---
@@ -46,6 +47,7 @@ if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 if 'show_error' not in st.session_state: st.session_state.show_error = False
 if 'order_counter' not in st.session_state: st.session_state.order_counter = 1000
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
+if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
@@ -280,6 +282,26 @@ with col_main:
         </style>
         """, unsafe_allow_html=True)
         
+        # --- HIGHLIGHT FUNCTIES ---
+        def req_lbl(key, base_text):
+            """Maakt het label rood als het veld verplicht en leeg is tijdens de validatie"""
+            if st.session_state.get('validate_step2', False):
+                val = st.session_state.get(key, "")
+                if not val or not str(val).strip():
+                    return f"{base_text} 🚨 :red[(Required)]"
+            return base_text
+
+        def email_lbl():
+            """Speciale validatie weergave voor de e-mail"""
+            base = "Work Email *"
+            if st.session_state.get('validate_step2', False):
+                val = st.session_state.get('cont_email', "")
+                if not val or not str(val).strip():
+                    return f"{base} 🚨 :red[(Required)]"
+                elif "@" not in str(val):
+                    return f"{base} 🚨 :red[(Missing '@')]"
+            return base
+
         st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
         
         if not st.session_state.selected_types:
@@ -307,11 +329,11 @@ with col_main:
                             if sel == "Parcels & Documents": st.session_state.chk_parcels = False
                             if sel == "Cargo & Freight": st.session_state.chk_freight = False
                             if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
+                            st.session_state.validate_step2 = False # Reset validatie
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
-                        pd_avg_val = st.text_input("Average Number of Shipments *", key="pd_avg", max_chars=50)
-                        # ONE-TIME SHIPMENT TOEGEVOEGD
+                        pd_avg_val = st.text_input(req_lbl("pd_avg", "Average Number of Shipments *"), key="pd_avg", max_chars=50)
                         st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
@@ -319,21 +341,26 @@ with col_main:
                                  key="pd_ship_where")
                         
                     elif sel == "Cargo & Freight":
-                        # ONE-TIME SHIPMENT TOEGEVOEGD
                         st.radio("Shipping Type *", ["One-time shipment", "Recurring Shipment"], horizontal=True, key="cf_type")
-                        st.markdown("**Load Type ***")
+                        
+                        # Custom highlight label voor checkboxes
+                        cf_lbl = "**Load Type ***"
+                        if st.session_state.get('validate_step2', False) and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
+                            cf_lbl += " 🚨 :red[(Select at least one)]"
+                        st.markdown(cf_lbl)
+                        
                         cf_pal_val = st.checkbox("Pallet", key="cf_pal")
                         cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
                         cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
-                        cf_avg_val = st.text_input("Avg. Shipments per Year *", key="cf_avg", max_chars=50)
+                        
+                        cf_avg_val = st.text_input(req_lbl("cf_avg", "Avg. Shipments per Year *"), key="cf_avg", max_chars=50)
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
-                        mdm_avg_val = st.text_input("Average Number of Shipments *", key="mdm_avg", max_chars=50)
-                        # ONE-TIME SHIPMENT TOEGEVOEGD
+                        mdm_avg_val = st.text_input(req_lbl("mdm_avg", "Average Number of Shipments *"), key="mdm_avg", max_chars=50)
                         st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
@@ -352,22 +379,28 @@ with col_main:
         
         with c_form_left:
             st.markdown("#### Company Details")
-            company_name = st.text_input("Company Name *", key="comp_name", max_chars=100)
+            company_name = st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
             company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
-            company_address = st.text_input("Company Address *", key="comp_addr", max_chars=150)
+            company_address = st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
             c_pc, c_city = st.columns(2)
-            with c_pc: postal_code = st.text_input("Postal Code *", key="comp_pc", max_chars=20)
-            with c_city: city = st.text_input("City *", key="comp_city", max_chars=100)
-            country = st.text_input("Country *", value="Norway", key="comp_country", max_chars=100)
+            with c_pc: postal_code = st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
+            with c_city: city = st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
+            country = st.text_input(req_lbl("comp_country", "Country *"), value="Norway", key="comp_country", max_chars=100)
 
         with c_form_right:
             st.markdown("#### Contact Person")
             c_fn, c_ln = st.columns(2)
-            with c_fn: first_name = st.text_input("First Name *", key="cont_fn", max_chars=50)
-            with c_ln: last_name = st.text_input("Last Name *", key="cont_ln", max_chars=50)
-            work_email = st.text_input("Work Email *", placeholder="example@email.no", key="cont_email", max_chars=150)
+            with c_fn: first_name = st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
+            with c_ln: last_name = st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
             
-            st.markdown("<label style='font-size: 14px; font-weight: 600; color: #ccc;'>Phone *</label>", unsafe_allow_html=True)
+            work_email = st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
+            
+            # Custom label styling voor het geklapte Phone label
+            phone_lbl = "Phone *"
+            if st.session_state.get('validate_step2', False) and not st.session_state.get('cont_phone', '').strip():
+                phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
+            st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
+            
             c_code, c_phone = st.columns([1, 3])
             with c_code: 
                 phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
@@ -379,36 +412,48 @@ with col_main:
         st.write("")
         st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
         
+        # --- BEREKEN ONTBREKENDE VELDEN VOOR DE ERROR BALK ONDERAAN ---
         error_container = st.empty()
+        missing_fields = False
         
+        if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip():
+            missing_fields = True
+            
+        if "Parcels & Documents" in st.session_state.selected_types and not pd_avg_val.strip():
+            missing_fields = True
+        
+        if "Cargo & Freight" in st.session_state.selected_types:
+            if not cf_avg_val.strip() or not (cf_pal_val or cf_full_val or cf_lc_val):
+                missing_fields = True
+                
+        if "Mail & Direct Marketing" in st.session_state.selected_types and not mdm_avg_val.strip():
+            missing_fields = True
+
+        invalid_email = bool(work_email.strip() and "@" not in work_email)
+
+        # Toon de balk ALS er op de knop is geklikt (en we dus in validatie status zijn)
+        if st.session_state.get('validate_step2', False):
+            if missing_fields:
+                error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
+            elif invalid_email:
+                error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
+
         c_back, c_next = st.columns([1, 4])
         if c_back.button("← Go Back"):
             st.session_state.step = 1
+            st.session_state.validate_step2 = False # Reset validatie status
             st.rerun()
             
         if c_next.button("Continue to Review →"):
-            missing_fields = False
+            st.session_state.validate_step2 = True # Start de validatie (kleurt de lege velden rood)
             
-            if not company_name or not company_address or not postal_code or not city or not first_name or not last_name or not work_email or not phone or not country:
-                missing_fields = True
-                
-            if "Parcels & Documents" in st.session_state.selected_types and not pd_avg_val.strip():
-                missing_fields = True
-            
-            if "Cargo & Freight" in st.session_state.selected_types:
-                if not cf_avg_val.strip() or not (cf_pal_val or cf_full_val or cf_lc_val):
-                    missing_fields = True
-                    
-            if "Mail & Direct Marketing" in st.session_state.selected_types and not mdm_avg_val.strip():
-                missing_fields = True
-
-            if missing_fields:
-                error_container.error("⚠️ Please fill in all mandatory fields (*) before continuing.")
-            elif "@" not in work_email:
-                error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
+            if missing_fields or invalid_email:
+                # Als er iets mist, forceer een rerun. De lege velden worden rood gemarkeerd!
+                st.rerun()
             else:
+                # Alles is succesvol ingevuld!
+                st.session_state.validate_step2 = False # Reset validatie
                 
-                # --- SLIMME TRUC: We voegen de keuzes uit Stap 2 toe aan 'Additional Information' zodat de Planner het ziet! ---
                 compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
                 
                 if "Parcels & Documents" in st.session_state.selected_types:
@@ -504,6 +549,7 @@ with col_main:
             if st.button("← Start a New Request"):
                 st.session_state.step = 1
                 st.session_state.is_submitted = False
+                st.session_state.validate_step2 = False
                 st.session_state.selected_types = []
                 st.session_state.chk_parcels = False
                 st.session_state.chk_freight = False
