@@ -288,7 +288,7 @@ with col_main:
                 </script>
                 """, height=0
             )
-            st.session_state.scroll_up = False # Reset direct na het scrollen
+            st.session_state.scroll_up = False 
             
         st.markdown("""
         <style>
@@ -351,15 +351,23 @@ with col_main:
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
-                        pd_avg_val = st.text_input(req_lbl("pd_avg", "Average Number of Shipments *"), key="pd_avg", max_chars=50)
-                        st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
+                        # Eerst de radio button tonen
+                        pd_freq = st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
+                        
+                        # Dynamisch het invoerveld verbergen/tonen op basis van de keuze!
+                        if pd_freq != "One-time shipment":
+                            pd_avg_val = st.text_input(req_lbl("pd_avg", "Average Number of Shipments *"), key="pd_avg", max_chars=50)
+                        else:
+                            pd_avg_val = "1" # Dummy waarde achter de schermen
+                            
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
                                  key="pd_ship_where")
                         
                     elif sel == "Cargo & Freight":
-                        st.radio("Shipping Type *", ["One-time shipment", "Recurring Shipment"], horizontal=True, key="cf_type")
+                        # Eerst de radio button tonen
+                        cf_type = st.radio("Shipping Type *", ["One-time shipment", "Recurring Shipment"], horizontal=True, key="cf_type")
                         
                         cf_lbl = "**Load Type ***"
                         if st.session_state.get('validate_step2', False) and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
@@ -370,15 +378,27 @@ with col_main:
                         cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
                         cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
                         
-                        cf_avg_val = st.text_input(req_lbl("cf_avg", "Avg. Shipments per Year *"), key="cf_avg", max_chars=50)
+                        # Dynamisch het invoerveld verbergen/tonen
+                        if cf_type != "One-time shipment":
+                            cf_avg_val = st.text_input(req_lbl("cf_avg", "Avg. Shipments per Year *"), key="cf_avg", max_chars=50)
+                        else:
+                            cf_avg_val = "1" # Dummy waarde
+                            
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
-                        mdm_avg_val = st.text_input(req_lbl("mdm_avg", "Average Number of Shipments *"), key="mdm_avg", max_chars=50)
-                        st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
+                        # Eerst de radio button tonen
+                        mdm_freq = st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
+                        
+                        # Dynamisch het invoerveld verbergen/tonen
+                        if mdm_freq != "One-time shipment":
+                            mdm_avg_val = st.text_input(req_lbl("mdm_avg", "Average Number of Shipments *"), key="mdm_avg", max_chars=50)
+                        else:
+                            mdm_avg_val = "1" # Dummy waarde
+
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
                                  captions=["within the continent", "beyond the continent"],
@@ -434,14 +454,16 @@ with col_main:
         if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip():
             missing_fields = True
             
-        if "Parcels & Documents" in st.session_state.selected_types and not pd_avg_val.strip():
+        if "Parcels & Documents" in st.session_state.selected_types and st.session_state.get('pd_freq') != "One-time shipment" and not pd_avg_val.strip():
             missing_fields = True
         
         if "Cargo & Freight" in st.session_state.selected_types:
-            if not cf_avg_val.strip() or not (cf_pal_val or cf_full_val or cf_lc_val):
+            if st.session_state.get('cf_type') != "One-time shipment" and not cf_avg_val.strip():
+                missing_fields = True
+            if not (cf_pal_val or cf_full_val or cf_lc_val):
                 missing_fields = True
                 
-        if "Mail & Direct Marketing" in st.session_state.selected_types and not mdm_avg_val.strip():
+        if "Mail & Direct Marketing" in st.session_state.selected_types and st.session_state.get('mdm_freq') != "One-time shipment" and not mdm_avg_val.strip():
             missing_fields = True
 
         invalid_email = bool(work_email.strip() and "@" not in work_email)
@@ -462,7 +484,6 @@ with col_main:
             st.session_state.validate_step2 = True 
             
             if missing_fields or invalid_email:
-                # --- HIER WORDT DE SCROLL TRIGGER GEZET ALS DE VALIDATIE FAALT ---
                 st.session_state.scroll_up = True
                 st.rerun()
             else:
@@ -471,18 +492,28 @@ with col_main:
                 
                 compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
                 
+                # --- SLIMME TEKST OPBOUW VOOR DE PLANNER ---
                 if "Parcels & Documents" in st.session_state.selected_types:
-                    compiled_info += f"📦 Parcels: {pd_avg_val} shipments ({st.session_state.pd_freq}) to {st.session_state.pd_ship_where}.\n"
+                    if st.session_state.pd_freq == "One-time shipment":
+                        compiled_info += f"📦 Parcels: One-time shipment to {st.session_state.pd_ship_where}.\n"
+                    else:
+                        compiled_info += f"📦 Parcels: {pd_avg_val} shipments ({st.session_state.pd_freq}) to {st.session_state.pd_ship_where}.\n"
                 
                 if "Cargo & Freight" in st.session_state.selected_types:
                     loads = []
                     if cf_pal_val: loads.append("Pallet")
                     if cf_full_val: loads.append("Full Container")
                     if cf_lc_val: loads.append("Loose Cargo")
-                    compiled_info += f"🚛 Freight: {st.session_state.cf_type}, {cf_avg_val} shipments/yr. Load: {', '.join(loads)} to {st.session_state.cf_ship_where}.\n"
+                    if st.session_state.cf_type == "One-time shipment":
+                        compiled_info += f"🚛 Freight: One-time shipment. Load: {', '.join(loads)} to {st.session_state.cf_ship_where}.\n"
+                    else:
+                        compiled_info += f"🚛 Freight: {cf_avg_val} shipments/yr. Load: {', '.join(loads)} to {st.session_state.cf_ship_where}.\n"
                 
                 if "Mail & Direct Marketing" in st.session_state.selected_types:
-                    compiled_info += f"📭 Mail: {mdm_avg_val} shipments ({st.session_state.mdm_freq}) to {st.session_state.mdm_ship_where}.\n"
+                    if st.session_state.mdm_freq == "One-time shipment":
+                        compiled_info += f"📭 Mail: One-time shipment to {st.session_state.mdm_ship_where}.\n"
+                    else:
+                        compiled_info += f"📭 Mail: {mdm_avg_val} shipments ({st.session_state.mdm_freq}) to {st.session_state.mdm_ship_where}.\n"
                 
                 st.session_state.temp_order = {
                     "company": company_name, 
