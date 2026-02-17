@@ -35,7 +35,7 @@ if "reset" in st.query_params:
     st.session_state.is_submitted = False
     st.query_params.clear()
 
-# --- SESSION STATE (HIER ZAT DE FOUT, show_error IS TERUG!) ---
+# --- SESSION STATE ---
 if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
@@ -311,14 +311,16 @@ with col_main:
 
                     if sel == "Parcels & Documents":
                         pd_avg_val = st.text_input("Average Number of Shipments *", key="pd_avg", max_chars=50)
-                        st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
+                        # ONE-TIME SHIPMENT TOEGEVOEGD
+                        st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
                                  key="pd_ship_where")
                         
                     elif sel == "Cargo & Freight":
-                        st.radio("Shipping Type *", ["One-off", "Recurring Shipment"], horizontal=True, key="cf_type")
+                        # ONE-TIME SHIPMENT TOEGEVOEGD
+                        st.radio("Shipping Type *", ["One-time shipment", "Recurring Shipment"], horizontal=True, key="cf_type")
                         st.markdown("**Load Type ***")
                         cf_pal_val = st.checkbox("Pallet", key="cf_pal")
                         cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
@@ -331,7 +333,8 @@ with col_main:
                         
                     elif sel == "Mail & Direct Marketing":
                         mdm_avg_val = st.text_input("Average Number of Shipments *", key="mdm_avg", max_chars=50)
-                        st.radio("Shipping frequency *", ["Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
+                        # ONE-TIME SHIPMENT TOEGEVOEGD
+                        st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
                                  captions=["within the continent", "beyond the continent"],
@@ -404,6 +407,23 @@ with col_main:
             elif "@" not in work_email:
                 error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
             else:
+                
+                # --- SLIMME TRUC: We voegen de keuzes uit Stap 2 toe aan 'Additional Information' zodat de Planner het ziet! ---
+                compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
+                
+                if "Parcels & Documents" in st.session_state.selected_types:
+                    compiled_info += f"📦 Parcels: {pd_avg_val} shipments ({st.session_state.pd_freq}) to {st.session_state.pd_ship_where}.\n"
+                
+                if "Cargo & Freight" in st.session_state.selected_types:
+                    loads = []
+                    if cf_pal_val: loads.append("Pallet")
+                    if cf_full_val: loads.append("Full Container")
+                    if cf_lc_val: loads.append("Loose Cargo")
+                    compiled_info += f"🚛 Freight: {st.session_state.cf_type}, {cf_avg_val} shipments/yr. Load: {', '.join(loads)} to {st.session_state.cf_ship_where}.\n"
+                
+                if "Mail & Direct Marketing" in st.session_state.selected_types:
+                    compiled_info += f"📭 Mail: {mdm_avg_val} shipments ({st.session_state.mdm_freq}) to {st.session_state.mdm_ship_where}.\n"
+                
                 st.session_state.temp_order = {
                     "company": company_name, 
                     "reg_no": company_reg,
@@ -411,7 +431,7 @@ with col_main:
                     "contact_name": f"{first_name} {last_name}",
                     "email": work_email,
                     "phone": f"{phone_code} {phone}",
-                    "info": additional_info,
+                    "info": compiled_info,
                     "types": st.session_state.selected_types
                 }
                 st.session_state.step = 3
@@ -440,9 +460,9 @@ with col_main:
                 st.write(f"**Contact Person:** {o['contact_name']}")
                 st.write(f"**Email:** {o['email']}")
                 st.write(f"**Phone:** {o['phone']}")
-                if o['info']:
+                if o['info'] and o['info'] != "--- Order Specifications ---\n":
                     st.write("")
-                    st.write(f"**Additional Information:**")
+                    st.write(f"**Additional Information & Specifications:**")
                     st.write(f"_{o['info']}_")
         
         st.write("")
