@@ -403,7 +403,6 @@ with col_main:
                                  options=["Pan-European", "Worldwide"], 
                                  captions=["within the continent", "beyond the continent"],
                                  key="mdm_ship_where")
-                        st.caption("Our business accounts for Mail & Direct Marketing currently service international shipments only.")
                         
         st.markdown("</div>", unsafe_allow_html=True)
         
@@ -610,3 +609,4 @@ with col_main:
     st.write("")
     st.markdown("---")
     st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
+
