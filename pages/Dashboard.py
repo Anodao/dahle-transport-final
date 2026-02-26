@@ -123,10 +123,17 @@ with col_left:
     st.plotly_chart(fig_profit, use_container_width=True)
 
 with col_right:
-    st.write("### 🍃 Emission Share")
-    fig_pie = px.pie(df, values='co2_emission_kg', names='company', hole=0.4, color_discrete_sequence=px.colors.sequential.Purp, template="plotly_dark")
-    fig_pie.update_layout(paper_bgcolor="rgba(0,0,0,0)")
-    st.plotly_chart(fig_pie, use_container_width=True)
+    st.write("### ⚖️ Profit vs. CO₂ Matrix")
+    # Een scatterplot (spreidingsdiagram) is perfect voor deze analyse
+    fig_scatter = px.scatter(df, x='co2_emission_kg', y='profit',
+                             color='company', size='revenue',
+                             hover_name='company',
+                             labels={'co2_emission_kg': 'CO₂ Emissions (kg)', 'profit': 'Net Profit (NOK)'},
+                             template="plotly_dark",
+                             color_discrete_sequence=px.colors.sequential.Purp)
+    
+    fig_scatter.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+    st.plotly_chart(fig_scatter, use_container_width=True)
 
 st.write("---")
 
