@@ -123,17 +123,13 @@ with col_left:
     st.plotly_chart(fig_profit, use_container_width=True)
 
 with col_right:
-    st.write("### ⚖️ Profit vs. CO₂ Matrix")
-    # Een scatterplot (spreidingsdiagram) is perfect voor deze analyse
-    fig_scatter = px.scatter(df, x='co2_emission_kg', y='profit',
-                             color='company', size='revenue',
-                             hover_name='company',
-                             labels={'co2_emission_kg': 'CO₂ Emissions (kg)', 'profit': 'Net Profit (NOK)'},
-                             template="plotly_dark",
-                             color_discrete_sequence=px.colors.sequential.Purp)
-    
-    fig_scatter.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-    st.plotly_chart(fig_scatter, use_container_width=True)
+    st.write("### 🍃 Emission Share (Treemap)")
+    fig_tree = px.treemap(df, path=['company'], values='co2_emission_kg',
+                          color_discrete_sequence=px.colors.sequential.Purp,
+                          template="plotly_dark")
+                          
+    fig_tree.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+    st.plotly_chart(fig_tree, use_container_width=True)
 
 st.write("---")
 
