@@ -111,20 +111,17 @@ k4.metric("Active Shipments", len(df))
 
 st.write("---")
 
-# --- GRAFIEK (GECENTREERD) ---
+# --- GRAFIEK (VOLLEDIGE BREEDTE) ---
 st.write("") # Extra ademruimte
+st.write("### 📈 Profitability per Customer")
 
-# Door [1, 2, 1] te gebruiken, is de middelste kolom twee keer zo breed als de zijkanten
-spacer_links, col_grafiek, spacer_rechts = st.columns([1, 2, 1])
+df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
 
-with col_grafiek:
-    st.markdown("<h3 style='text-align: center;'>📈 Profitability per Customer</h3>", unsafe_allow_html=True)
-    df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
-    
-    fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#894b9d'], template="plotly_dark")
-    fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-    
-    st.plotly_chart(fig_profit, use_container_width=True)
+fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#894b9d'], template="plotly_dark")
+fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+
+# Omdat we use_container_width=True gebruiken en er geen kolommen meer omheen staan, pakt hij nu de hele breedte!
+st.plotly_chart(fig_profit, use_container_width=True)
 
 st.write("---")
 
