@@ -8,7 +8,7 @@ st.set_page_config(
     page_title="Dahle Transport - Performance Dashboard",
     page_icon="📈",
     layout="wide",
-    initial_sidebar_state="collapsed" # Verbergt de zijbalk standaard
+    initial_sidebar_state="collapsed"
 )
 
 # --- SUPABASE CONNECTIE ---
@@ -20,26 +20,31 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- CSS: VOLLEDIGE SIDEBAR VERWIJDERING & STYLING ---
+# --- CSS: ULTIEME SIDEBAR & HEADER VERWIJDERING ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
-    /* VERWIJDER SIDEBAR EN HET >> ICOONTJE VOLLEDIG */
-    [data-testid="collapsedControl"], [data-testid="stSidebar"] {
-        display: none !important;
+    /* VERWIJDER DE HELE BOVENBALK (Inclusief het >> icoontje) */
+    header[data-testid="stHeader"] {
+        visibility: hidden;
+        height: 0%;
     }
     
-    /* Zorg dat de pagina de volledige breedte gebruikt zonder marge links */
+    /* VERWIJDER DE SIDEBAR VOLLEDIG */
+    [data-testid="stSidebar"] {
+        display: none;
+    }
+    
+    /* Zorg dat de content bovenaan begint nu de header weg is */
     .block-container {
-        padding-top: 2rem;
+        padding-top: 1rem;
         max-width: 95%;
     }
 
     .stApp { background-color: #0e1117; }
     
-    /* Dahle Paars Banner */
     .header-banner {
         background-color: #894b9d;
         padding: 25px;
@@ -47,25 +52,19 @@ st.markdown("""
         margin-bottom: 25px;
     }
     
-    /* Custom Card Design voor onderaan */
     .customer-card {
         background-color: #161b22;
         border: 1px solid #30363d;
         border-radius: 10px;
         padding: 20px;
         margin-bottom: 15px;
-        transition: transform 0.2s;
     }
-    .customer-card:hover { border-color: #894b9d; transform: translateY(-2px); }
     
     .customer-name { color: #894b9d; font-size: 18px; font-weight: 700; margin-bottom: 12px; }
     .metric-row { display: flex; justify-content: space-between; border-top: 1px solid #30363d; padding-top: 12px; }
     .metric-box { text-align: center; flex: 1; }
     .metric-label { color: #8b949e; font-size: 11px; text-transform: uppercase; }
     .metric-value { color: #ffffff; font-size: 15px; font-weight: 600; }
-    
-    /* Knoppen */
-    div.stButton > button { border-radius: 6px; font-weight: 600; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -74,13 +73,12 @@ st.markdown('<div class="header-banner">'
             '<h1 style="color: white; margin: 0;">📈 Performance & Margin Analysis</h1>'
             '<p style="color: #e0d0e6; margin: 0;">Financial impact and sustainability tracking</p></div>', unsafe_allow_html=True)
 
-# --- NAVIGATIE & LIVE INPUT ---
+# --- NAVIGATIE & INPUT ---
 c_nav, c_input = st.columns([1, 2])
 with c_nav:
     if st.button("🏠 Back to Planner"):
         st.switch_page("pages/Planner.py")
 with c_input:
-    # De 'Live' data input voor de planner
     fuel_price = st.slider("Live Market Diesel Price (NOK/L)", 15.0, 30.0, 20.5)
 
 # --- DATA VERWERKING ---
@@ -92,10 +90,12 @@ if 'co2_emission_kg' not in df.columns:
     np.random.seed(42)
     df['co2_emission_kg'] = np.random.uniform(40, 150, size=len(df))
 
-# Berekeningen
-df['liters'] = df['co2_emission_kg'] / 2.68
+# --- DE BEREKENINGEN ---
+CO2_PER_LITER = 2.68
+df['liters'] = df['co2_emission_kg'] / CO2_PER_LITER
 df['fuel_cost'] = df['liters'] * fuel_price
-# Fictieve omzet: basis 1500 + 15 per kg CO2 uitstoot
+
+# We simuleren omzet: een vast starttarief van 1500 NOK + 15 NOK per kg CO2 (afstand-proxy)
 df['revenue'] = 1500 + (df['co2_emission_kg'] * 15) 
 df['profit'] = df['revenue'] - df['fuel_cost']
 df['margin_pct'] = (df['profit'] / df['revenue']) * 100
@@ -115,7 +115,6 @@ st.write("---")
 
 # --- GRAFIEKEN ---
 col_left, col_right = st.columns(2)
-
 with col_left:
     st.write("### 📈 Profitability per Customer")
     df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
@@ -133,7 +132,7 @@ st.write("---")
 
 # --- CUSTOMER CARDS (ONDERAAN) ---
 st.write("### 🏢 Detailed Cost & Margin Breakdown")
-st.caption("Live financial performance per client based on the set fuel price.")
+st.info("ℹ️ **How is profit calculated?** Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
 customer_group = df.groupby('company').agg({
     'id': 'count',
@@ -142,12 +141,9 @@ customer_group = df.groupby('company').agg({
     'margin_pct': 'mean'
 }).reset_index().sort_values('profit', ascending=False)
 
-# We tonen de kaarten in 2 kolommen voor een betere balans onderaan
 card_col1, card_col2 = st.columns(2)
-
 for i, (index, row) in enumerate(customer_group.iterrows()):
     target_col = card_col1 if i % 2 == 0 else card_col2
-    
     with target_col:
         margin_color = "#27ae60" if row['margin_pct'] > 85 else "#e67e22"
         st.markdown(f"""
@@ -160,14 +156,14 @@ for i, (index, row) in enumerate(customer_group.iterrows()):
                 </div>
                 <div class="metric-box">
                     <div class="metric-label">Fuel Cost</div>
-                    <div class="metric-value">{row['fuel_cost']:,.0f}</div>
+                    <div class="metric-value">{row['fuel_cost']:,.0f} NOK</div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-label">Profit</div>
+                    <div class="metric-label">Net Profit</div>
                     <div class="metric-value" style="color: #27ae60;">{row['profit']:,.0f} NOK</div>
                 </div>
                 <div class="metric-box">
-                    <div class="metric-label">Margin</div>
+                    <div class="metric-label">Margin %</div>
                     <div class="metric-value" style="color: {margin_color};">{row['margin_pct']:.1f}%</div>
                 </div>
             </div>
