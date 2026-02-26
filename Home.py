@@ -609,14 +609,14 @@ with col_main:
     st.write("")
     st.markdown("---")
     
-    # Gebruik iets bredere kolommen zodat de tekst goed in de knoppen past
-    c_link1, c_link2, c_link3 = st.columns([2, 2, 3])
+    # We gebruiken 4 kolommen: [leeg, knop1, knop2, leeg] om ze te centreren
+    spacer_left, col_btn1, col_btn2, spacer_right = st.columns([1, 1.5, 1.5, 1])
     
-    with c_link1:
+    with col_btn1:
         if st.button("Open Internal Planner System", use_container_width=True):
             st.switch_page("pages/Planner.py")
             
-    with c_link2:
+    with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
 
