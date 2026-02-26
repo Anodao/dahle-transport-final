@@ -602,20 +602,18 @@ with col_main:
                 st.session_state.chk_mail = False
                 st.rerun()
 
-    # =========================================================
-    # DE DEMO KNOP NAAR DE PLANNER
-    # =========================================================
-    st.write("")
-    st.write("")
-    st.markdown("---")
-    st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
-
 # =========================================================
-    # DE DEMO KNOP NAAR DE PLANNER
+    # DE DEMO KNOPPEN NAAR DE PLANNER & DASHBOARD
     # =========================================================
     st.write("")
     st.write("")
     st.markdown("---")
-    st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
+    
+    c_link1, c_link2, c_link3 = st.columns([1, 1, 2])
+    with c_link1:
+        st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
+    with c_link2:
+        st.page_link("pages/Dashboard.py", label="🌍 Open CO₂ Dashboard", icon="📊")
+
 
 
