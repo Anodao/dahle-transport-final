@@ -610,3 +610,12 @@ with col_main:
     st.markdown("---")
     st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
 
+# =========================================================
+    # DE DEMO KNOP NAAR DE PLANNER
+    # =========================================================
+    st.write("")
+    st.write("")
+    st.markdown("---")
+    st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
+
+
