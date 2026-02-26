@@ -5,7 +5,7 @@ from supabase import create_client
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="Dahle Transport - CO₂ Dashboard",
+    page_title="Dahle Transport - CO₂ & Cost Dashboard",
     page_icon="🌍",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -30,14 +30,12 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
     
-    /* Verberg standaard Streamlit menu's */
     [data-testid="collapsedControl"] { display: none !important; }
     [data-testid="stSidebar"] { display: none !important; }
     header[data-testid="stHeader"] { display: none !important; }
     
     .block-container { padding-top: 2rem; }
     
-    /* Dahle Transport Header Banner */
     .header-banner {
         background-color: #894b9d;
         padding: 30px 40px;
@@ -48,7 +46,6 @@ st.markdown("""
     .header-banner h1 { color: #ffffff !important; margin: 0; font-weight: 700;}
     .header-banner p { color: #e0d0e6 !important; margin: 5px 0 0 0; font-size: 14px;}
     
-    /* Terugknop styling */
     div.stButton > button[kind="secondary"] { font-weight: bold; border-radius: 6px; margin-bottom: 20px;}
     </style>
 """, unsafe_allow_html=True)
@@ -56,8 +53,8 @@ st.markdown("""
 # --- HEADER & NAVIGATIE ---
 st.markdown("""
 <div class="header-banner">
-    <h1>🌍 Sustainability & CO₂ Dashboard</h1>
-    <p>CSRD Reporting & Emission Tracking</p>
+    <h1>🌍 Sustainability & Fuel Cost Dashboard</h1>
+    <p>CSRD Reporting, Emission Tracking & Financial Impact</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -76,11 +73,19 @@ with st.spinner('Fetching database records...'):
             
         df = pd.DataFrame(orders_data)
         
-        # Dummy CO2 data genereren als de kolom nog niet bestaat
+        # 1. Dummy CO2 data genereren als de kolom nog niet bestaat
         if 'co2_emission_kg' not in df.columns:
             import numpy as np
             np.random.seed(42) 
             df['co2_emission_kg'] = np.random.uniform(15.0, 120.0, size=len(df)).round(2)
+        
+        # 2. FINANCIËLE BEREKENING TOEVOEGEN
+        DIESEL_PRICE_NOK = 20.50  # Gemiddelde dieselprijs in Noorwegen (pas aan indien nodig)
+        CO2_PER_LITER = 2.68      # 1 liter diesel = ~2.68 kg CO2
+        
+        # Bereken de liters en de uiteindelijke kosten
+        df['fuel_liters'] = df['co2_emission_kg'] / CO2_PER_LITER
+        df['fuel_cost_nok'] = (df['fuel_liters'] * DIESEL_PRICE_NOK).round(2)
             
     except Exception as e:
         st.error(f"Error fetching data: {e}")
@@ -89,16 +94,20 @@ with st.spinner('Fetching database records...'):
 # --- KPI METRICS ---
 total_orders = len(df)
 total_co2 = df['co2_emission_kg'].sum()
+total_fuel_cost = df['fuel_cost_nok'].sum()
 avg_co2 = df['co2_emission_kg'].mean()
 
-# Dit gebruikt nu standaard Streamlit styling, altijd leesbaar!
-col1, col2, col3 = st.columns(3)
+# We maken nu 4 kolommen in plaats van 3, zodat de kosten er mooi naast passen!
+col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric(label="Total Shipments", value=total_orders)
 with col2:
-    st.metric(label="Total CO₂ Emissions", value=f"{total_co2:,.2f} kg", delta="-2.4% vs last month", delta_color="inverse")
+    st.metric(label="Total CO₂ Emissions", value=f"{total_co2:,.0f} kg")
 with col3:
-    st.metric(label="Average CO₂ per Shipment", value=f"{avg_co2:.2f} kg")
+    st.metric(label="Avg. CO₂ per Shipment", value=f"{avg_co2:.1f} kg")
+with col4:
+    # Nieuwe financiële metric
+    st.metric(label="Estimated Fuel Cost", value=f"{total_fuel_cost:,.2f} NOK", delta="Based on 20.50 NOK/L", delta_color="off")
 
 st.write("<br><br>", unsafe_allow_html=True)
 
@@ -106,14 +115,15 @@ st.write("<br><br>", unsafe_allow_html=True)
 c_chart1, c_chart2 = st.columns(2, gap="large")
 
 with c_chart1:
-    st.markdown("### 📊 CO₂ Emissions per Customer")
-    df_company = df.groupby('company')['co2_emission_kg'].sum().reset_index()
-    df_company = df_company.sort_values(by='co2_emission_kg', ascending=False).head(10)
+    st.markdown("### 📊 Financial Impact & CO₂ per Customer")
+    # We tonen nu de kosten in de grafiek in plaats van alleen de CO2
+    df_company = df.groupby('company').agg({'co2_emission_kg':'sum', 'fuel_cost_nok':'sum'}).reset_index()
+    df_company = df_company.sort_values(by='fuel_cost_nok', ascending=False).head(10)
     
-    # Grafiek zonder geforceerde witte achtergrond (past zich nu aan)
-    fig1 = px.bar(df_company, x='company', y='co2_emission_kg', 
+    fig1 = px.bar(df_company, x='company', y='fuel_cost_nok', 
                   color_discrete_sequence=['#894b9d'],
-                  labels={'company': 'Customer', 'co2_emission_kg': 'Total CO₂ (kg)'})
+                  labels={'company': 'Customer', 'fuel_cost_nok': 'Estimated Fuel Cost (NOK)'},
+                  hover_data=['co2_emission_kg']) # Toon de CO2 nog wel als je er met de muis overheen gaat!
     
     st.plotly_chart(fig1, use_container_width=True, theme="streamlit")
 
