@@ -609,11 +609,16 @@ with col_main:
     st.write("")
     st.markdown("---")
     
-    c_link1, c_link2, c_link3 = st.columns([1, 1, 2])
+    # Gebruik iets bredere kolommen zodat de tekst goed in de knoppen past
+    c_link1, c_link2, c_link3 = st.columns([2, 2, 3])
+    
     with c_link1:
-        st.page_link("pages/Planner.py", label="🔒 Open Internal Planner System", icon="⚙️")
+        if st.button("Open Internal Planner System", use_container_width=True):
+            st.switch_page("pages/Planner.py")
+            
     with c_link2:
-        st.page_link("pages/Dashboard.py", label="🌍 Open CO₂ Dashboard", icon="📊")
+        if st.button("Open CO₂ Dashboard", use_container_width=True):
+            st.switch_page("pages/Dashboard.py")
 
 
 
