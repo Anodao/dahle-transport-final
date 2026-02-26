@@ -132,10 +132,18 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# --- ECHTE KNOP NAAR HOME ---
+# --- NAVIGATIE KNOPPEN ---
 st.markdown('<div class="home-btn-container">', unsafe_allow_html=True)
-if st.button("🏠 ← Go Back to Customer Website", type="secondary"):
-    st.switch_page("Home.py")
+c_nav1, c_nav2 = st.columns([1, 1])
+
+with c_nav1:
+    if st.button("🏠 ← Go Back to Website", type="secondary", use_container_width=True):
+        st.switch_page("Home.py")
+
+with c_nav2:
+    if st.button("🌍 Open CO₂ Dashboard →", use_container_width=True):
+        st.switch_page("pages/Dashboard.py")
+        
 st.markdown('</div>', unsafe_allow_html=True)
 
 # --- LAYOUT VERDELING ---
