@@ -1,7 +1,7 @@
 import streamlit as st
 import time
 from datetime import datetime
-from supabase import create_client, Client
+from supabase import create_client
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -43,9 +43,27 @@ if 'selected_order' not in st.session_state:
 # Zorg dat de openstaande order geüpdatet blijft als de database verandert
 if st.session_state.selected_order:
     curr_id = st.session_state.selected_order['id']
-    # Zoek hem op in de net opgehaalde data
     found = next((o for o in active_orders + processed_orders if o['id'] == curr_id), None)
     st.session_state.selected_order = found
+
+# --- POP-UP WAARSCHUWING VOOR VERWIJDEREN ---
+@st.dialog("⚠️ Confirm Deletion")
+def confirm_delete_dialog(order_id):
+    st.write(f"Are you sure you want to permanently delete **Order #{order_id}**?")
+    st.caption("This action cannot be undone. The order will be removed from the database entirely.")
+    
+    st.write("") # Extra witregel voor ademruimte
+    c1, c2 = st.columns(2)
+    with c1:
+        # Annuleren sluit simpelweg de pop-up
+        if st.button("Cancel", type="secondary", use_container_width=True):
+            st.rerun()
+    with c2:
+        # Definitief verwijderen
+        if st.button("🗑️ Yes, Delete", use_container_width=True):
+            supabase.table("orders").delete().eq("id", order_id).execute()
+            st.session_state.selected_order = None
+            st.rerun()
 
 # --- CSS STYLING VOOR DE PLANNER ---
 st.markdown("""
@@ -267,7 +285,6 @@ with col_details:
             if status != 'Processed':
                 with c_btn1:
                     if st.button("✅ Mark as Processed", use_container_width=True):
-                        # --- UPDATE IN DATABASE ---
                         now = datetime.now().strftime("%Y-%m-%d %H:%M")
                         supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", order_id).execute()
                         st.session_state.selected_order = None 
@@ -275,15 +292,11 @@ with col_details:
                         time.sleep(1.5)
                         st.rerun()
                 with c_btn2:
+                    # RIEPT NU DE POP-UP OP IN PLAATS VAN DIRECT TE VERWIJDEREN
                     if st.button("🗑️ Delete Request", type="secondary", use_container_width=True):
-                        # --- VERWIJDER UIT DATABASE ---
-                        supabase.table("orders").delete().eq("id", order_id).execute()
-                        st.session_state.selected_order = None
-                        st.rerun()
+                        confirm_delete_dialog(order_id)
             else:
                 with c_btn1:
+                    # RIEPT NU DE POP-UP OP IN PLAATS VAN DIRECT TE VERWIJDEREN
                     if st.button("🗑️ Delete from History", type="secondary", use_container_width=True):
-                        # --- VERWIJDER UIT DATABASE ---
-                        supabase.table("orders").delete().eq("id", order_id).execute()
-                        st.session_state.selected_order = None
-                        st.rerun()
+                        confirm_delete_dialog(order_id)
