@@ -26,39 +26,13 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
-    /* VERWIJDER DE HELE BOVENBALK */
-    header[data-testid="stHeader"] {
-        visibility: hidden;
-        height: 0%;
-    }
-    
-    /* VERWIJDER DE SIDEBAR VOLLEDIG */
-    [data-testid="stSidebar"] {
-        display: none;
-    }
-    
-    .block-container {
-        padding-top: 1rem;
-        max-width: 95%;
-    }
-
+    header[data-testid="stHeader"] { visibility: hidden; height: 0%; }
+    [data-testid="stSidebar"] { display: none; }
+    .block-container { padding-top: 1rem; max-width: 95%; }
     .stApp { background-color: #0e1117; }
     
-    .header-banner {
-        background-color: #894b9d;
-        padding: 25px;
-        border-radius: 10px;
-        margin-bottom: 25px;
-    }
-    
-    .customer-card {
-        background-color: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
-    }
-    
+    .header-banner { background-color: #894b9d; padding: 25px; border-radius: 10px; margin-bottom: 25px; }
+    .customer-card { background-color: #161b22; border: 1px solid #30363d; border-radius: 10px; padding: 20px; margin-bottom: 15px; }
     .customer-name { color: #894b9d; font-size: 18px; font-weight: 700; margin-bottom: 12px; }
     .metric-row { display: flex; justify-content: space-between; border-top: 1px solid #30363d; padding-top: 12px; }
     .metric-box { text-align: center; flex: 1; }
@@ -111,22 +85,39 @@ k4.metric("Active Shipments", len(df))
 
 st.write("---")
 
-# --- GRAFIEK (VOLLEDIGE BREEDTE) ---
-st.write("") # Extra ademruimte
-st.write("### 📈 Profitability per Customer")
+# --- GRAFIEKEN (STAAF + LIJN) ---
+st.write("") 
+col_left, col_right = st.columns(2, gap="large")
 
-df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
+with col_left:
+    st.write("### 🏢 Profitability per Customer")
+    df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
+    
+    fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#894b9d'], template="plotly_dark")
+    fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Customer", yaxis_title="Net Profit (NOK)")
+    st.plotly_chart(fig_profit, use_container_width=True)
 
-fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#894b9d'], template="plotly_dark")
-fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-
-# Omdat we use_container_width=True gebruiken en er geen kolommen meer omheen staan, pakt hij nu de hele breedte!
-st.plotly_chart(fig_profit, use_container_width=True)
+with col_right:
+    st.write("### 📅 Profit Trend Over Time")
+    
+    # We proberen de 'received_date' uit jouw database te gebruiken voor een tijdlijn
+    if 'received_date' in df.columns:
+        # Formatteer de datum netjes
+        df['date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
+        df_trend = df.groupby('date')['profit'].sum().reset_index()
+        
+        # Maak de lijndiagram. We maken de lijn groen (#27ae60) als indicatie voor winst
+        fig_line = px.line(df_trend, x='date', y='profit', markers=True, 
+                           color_discrete_sequence=['#27ae60'], template="plotly_dark")
+        fig_line.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Date", yaxis_title="Daily Profit (NOK)")
+        st.plotly_chart(fig_line, use_container_width=True)
+    else:
+        st.info("No date data available to generate a trendline.")
 
 st.write("---")
 
 # --- CUSTOMER CARDS (ONDERAAN) ---
-st.write("### 🏢 Detailed Cost & Margin Breakdown")
+st.write("### 📋 Detailed Cost & Margin Breakdown")
 st.info("ℹ️ **How is profit calculated?** Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
 customer_group = df.groupby('company').agg({
