@@ -26,7 +26,7 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
     
-    /* VERWIJDER DE HELE BOVENBALK (Inclusief het >> icoontje) */
+    /* VERWIJDER DE HELE BOVENBALK */
     header[data-testid="stHeader"] {
         visibility: hidden;
         height: 0%;
@@ -37,7 +37,6 @@ st.markdown("""
         display: none;
     }
     
-    /* Zorg dat de content bovenaan begint nu de header weg is */
     .block-container {
         padding-top: 1rem;
         max-width: 95%;
@@ -95,7 +94,6 @@ CO2_PER_LITER = 2.68
 df['liters'] = df['co2_emission_kg'] / CO2_PER_LITER
 df['fuel_cost'] = df['liters'] * fuel_price
 
-# We simuleren omzet: een vast starttarief van 1500 NOK + 15 NOK per kg CO2 (afstand-proxy)
 df['revenue'] = 1500 + (df['co2_emission_kg'] * 15) 
 df['profit'] = df['revenue'] - df['fuel_cost']
 df['margin_pct'] = (df['profit'] / df['revenue']) * 100
@@ -113,23 +111,20 @@ k4.metric("Active Shipments", len(df))
 
 st.write("---")
 
-# --- GRAFIEKEN ---
-col_left, col_right = st.columns(2)
-with col_left:
-    st.write("### 📈 Profitability per Customer")
+# --- GRAFIEK (GECENTREERD) ---
+st.write("") # Extra ademruimte
+
+# Door [1, 2, 1] te gebruiken, is de middelste kolom twee keer zo breed als de zijkanten
+spacer_links, col_grafiek, spacer_rechts = st.columns([1, 2, 1])
+
+with col_grafiek:
+    st.markdown("<h3 style='text-align: center;'>📈 Profitability per Customer</h3>", unsafe_allow_html=True)
     df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
+    
     fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#894b9d'], template="plotly_dark")
     fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
+    
     st.plotly_chart(fig_profit, use_container_width=True)
-
-with col_right:
-    st.write("### 🍃 Emission Share (Treemap)")
-    fig_tree = px.treemap(df, path=['company'], values='co2_emission_kg',
-                          color_discrete_sequence=px.colors.sequential.Purp,
-                          template="plotly_dark")
-                          
-    fig_tree.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)")
-    st.plotly_chart(fig_tree, use_container_width=True)
 
 st.write("---")
 
