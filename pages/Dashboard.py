@@ -58,8 +58,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-if st.button("🏠 ← Go Back to Planner", type="secondary"):
-    st.switch_page("pages/Planner.py")
+c_back, c_slider = st.columns([1, 2])
+with c_back:
+    if st.button("🏠 ← Go Back to Planner", type="secondary"):
+        st.switch_page("pages/Planner.py")
+with c_slider:
+    # --- DE INTERACTIEVE SLIDER VOOR DIESELPRIJS ---
+    DIESEL_PRICE_NOK = st.slider("⛽ Actuele Dieselprijs (NOK/Liter)", min_value=15.00, max_value=30.00, value=20.50, step=0.10)
 
 # --- DATA OPHALEN & VERWERKEN ---
 with st.spinner('Fetching database records...'):
@@ -73,17 +78,13 @@ with st.spinner('Fetching database records...'):
             
         df = pd.DataFrame(orders_data)
         
-        # 1. Dummy CO2 data genereren als de kolom nog niet bestaat
         if 'co2_emission_kg' not in df.columns:
             import numpy as np
             np.random.seed(42) 
             df['co2_emission_kg'] = np.random.uniform(15.0, 120.0, size=len(df)).round(2)
         
-        # 2. FINANCIËLE BEREKENING TOEVOEGEN
-        DIESEL_PRICE_NOK = 20.50  # Gemiddelde dieselprijs in Noorwegen (pas aan indien nodig)
-        CO2_PER_LITER = 2.68      # 1 liter diesel = ~2.68 kg CO2
-        
-        # Bereken de liters en de uiteindelijke kosten
+        # BEREKENING MET DE LIVE SLIDER WAARDE
+        CO2_PER_LITER = 2.68 
         df['fuel_liters'] = df['co2_emission_kg'] / CO2_PER_LITER
         df['fuel_cost_nok'] = (df['fuel_liters'] * DIESEL_PRICE_NOK).round(2)
             
@@ -97,7 +98,6 @@ total_co2 = df['co2_emission_kg'].sum()
 total_fuel_cost = df['fuel_cost_nok'].sum()
 avg_co2 = df['co2_emission_kg'].mean()
 
-# We maken nu 4 kolommen in plaats van 3, zodat de kosten er mooi naast passen!
 col1, col2, col3, col4 = st.columns(4)
 with col1:
     st.metric(label="Total Shipments", value=total_orders)
@@ -106,8 +106,7 @@ with col2:
 with col3:
     st.metric(label="Avg. CO₂ per Shipment", value=f"{avg_co2:.1f} kg")
 with col4:
-    # Nieuwe financiële metric
-    st.metric(label="Estimated Fuel Cost", value=f"{total_fuel_cost:,.2f} NOK", delta="Based on 20.50 NOK/L", delta_color="off")
+    st.metric(label="Estimated Fuel Cost", value=f"{total_fuel_cost:,.2f} NOK", delta=f"Based on {DIESEL_PRICE_NOK:.2f} NOK/L", delta_color="off")
 
 st.write("<br><br>", unsafe_allow_html=True)
 
@@ -115,15 +114,14 @@ st.write("<br><br>", unsafe_allow_html=True)
 c_chart1, c_chart2 = st.columns(2, gap="large")
 
 with c_chart1:
-    st.markdown("### 📊 Financial Impact & CO₂ per Customer")
-    # We tonen nu de kosten in de grafiek in plaats van alleen de CO2
+    st.markdown("### 📊 Financial Impact per Customer")
     df_company = df.groupby('company').agg({'co2_emission_kg':'sum', 'fuel_cost_nok':'sum'}).reset_index()
     df_company = df_company.sort_values(by='fuel_cost_nok', ascending=False).head(10)
     
     fig1 = px.bar(df_company, x='company', y='fuel_cost_nok', 
                   color_discrete_sequence=['#894b9d'],
                   labels={'company': 'Customer', 'fuel_cost_nok': 'Estimated Fuel Cost (NOK)'},
-                  hover_data=['co2_emission_kg']) # Toon de CO2 nog wel als je er met de muis overheen gaat!
+                  hover_data=['co2_emission_kg']) 
     
     st.plotly_chart(fig1, use_container_width=True, theme="streamlit")
 
@@ -136,3 +134,25 @@ with c_chart2:
                   color_discrete_sequence=px.colors.sequential.Purp)
                   
     st.plotly_chart(fig2, use_container_width=True, theme="streamlit")
+
+# --- TABEL: KOSTEN PER KLANT ---
+st.write("---")
+st.markdown("### 🏢 Cost & Emissions Breakdown per Customer")
+st.caption("A detailed overview of total shipments, CO₂ emissions, and estimated fuel costs per client.")
+
+# Groepeer alle data per bedrijf, zodat je precies ziet wat een klant in totaal kost
+customer_breakdown = df.groupby('company').agg(
+    Total_Shipments=('id', 'count'),
+    Total_CO2_kg=('co2_emission_kg', 'sum'),
+    Total_Fuel_Cost_NOK=('fuel_cost_nok', 'sum')
+).reset_index()
+
+# Sorteer de tabel zodat de duurste klant bovenaan staat
+customer_breakdown = customer_breakdown.sort_values(by='Total_Fuel_Cost_NOK', ascending=False)
+
+# Rond de getallen mooi af voor in de tabel
+customer_breakdown['Total_CO2_kg'] = customer_breakdown['Total_CO2_kg'].round(2)
+customer_breakdown['Total_Fuel_Cost_NOK'] = customer_breakdown['Total_Fuel_Cost_NOK'].round(2)
+
+# Toon de tabel breed op het scherm
+st.dataframe(customer_breakdown, use_container_width=True, hide_index=True)
