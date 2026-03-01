@@ -3,7 +3,7 @@ from supabase import create_client
 from datetime import datetime
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Dahle Transport - Booking", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Dahle Transport - Booking", page_icon="🚚", layout="wide")
 
 # --- SUPABASE CONNECTIE ---
 @st.cache_resource
@@ -12,9 +12,12 @@ def init_connection():
     key = st.secrets["supabase"]["key"]
     return create_client(url, key)
 
-supabase = init_connection()
+try:
+    supabase = init_connection()
+except Exception:
+    pass # Voorkomt foutmeldingen als secrets.toml nog niet perfect is
 
-# --- SESSION STATE INITIALIZATION ---
+# --- SESSION STATE (Bewaar gegevens tussen stappen) ---
 if 'step' not in st.session_state:
     st.session_state.step = 1
 
@@ -27,76 +30,39 @@ if 'fd' not in st.session_state:
         'types': []
     }
 
-def next_step(): st.session_state.step += 1
-def prev_step(): st.session_state.step -= 1
 def reset_form():
     st.session_state.step = 1
     for key in st.session_state.fd.keys():
         st.session_state.fd[key] = [] if key == 'types' else ( 'Norway' if key == 'country' else '' )
 
-# --- CSS STYLING (Jouw originele donkere thema + Cirkels) ---
+# --- PAARSE KNOPPEN STYLING ---
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Inter', sans-serif; }
-    
-    header[data-testid="stHeader"] { visibility: hidden; height: 0%; }
-    [data-testid="stSidebar"] { display: none; }
-    .block-container { padding-top: 2rem; max-width: 1200px; }
-    
-    .main-title { color: #ffffff; font-weight: 700; font-size: 28px; text-align: center; margin-bottom: 10px; }
-    .sub-title { color: #8b949e; text-align: center; font-size: 14px; margin-bottom: 30px; }
-    .section-header { color: #ffffff; font-weight: 700; font-size: 22px; margin-bottom: 15px; }
-    
-    /* 3 CIRCLES STEPPER CSS */
-    .stepper-wrapper { display: flex; justify-content: center; align-items: center; margin-bottom: 40px; }
-    .step-circle { width: 40px; height: 40px; border-radius: 50%; background-color: #30363d; color: #8b949e; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; z-index: 2; transition: 0.3s; }
-    .step-circle.active { background-color: #894b9d; color: white; box-shadow: 0 0 10px rgba(137, 75, 157, 0.5); }
-    .step-line { height: 4px; width: 120px; background-color: #30363d; margin: 0 -5px; z-index: 1; transition: 0.3s; }
-    .step-line.active { background-color: #894b9d; }
-    
-    /* Knoppen (Dahle Paars) */
-    div.stButton > button { background-color: #894b9d; color: white; border-radius: 6px; font-weight: bold; border: none; padding: 0.5rem 1rem;}
+    div.stButton > button { background-color: #894b9d; color: white; border-radius: 6px; font-weight: bold; border: none; }
     div.stButton > button:hover { background-color: #723e83; }
     </style>
 """, unsafe_allow_html=True)
 
 fd = st.session_state.fd
 
-# --- LOGO & HEADER ---
-col_logo, col_title, col_empty = st.columns([1, 4, 1])
-with col_logo:
-    # Vervang dit door de link naar jouw echte logo!
-    st.image("https://via.placeholder.com/150x80.png?text=LOGO", width=120) 
-with col_title:
-    st.markdown('<div class="main-title">Send us your contact information and we will get in touch.</div>', unsafe_allow_html=True)
-    st.markdown('<div class="sub-title">All fields marked with an asterisk (*) are mandatory</div>', unsafe_allow_html=True)
+# =========================================================
+# HEADER & VOORTGANG (Zichtbaar op elke stap)
+# =========================================================
+st.title("Send us your contact information and we will get in touch.")
+st.caption("All fields marked with an asterisk (*) are mandatory")
 
-# --- 3 CIRCLES PROGRESS BAR ---
-step1_class = "active"
-step2_class = "active" if st.session_state.step >= 2 else ""
-line1_class = "active" if st.session_state.step >= 2 else ""
-step3_class = "active" if st.session_state.step >= 3 else ""
-line2_class = "active" if st.session_state.step >= 3 else ""
-
-st.markdown(f"""
-    <div class="stepper-wrapper">
-        <div class="step-circle {step1_class}">1</div>
-        <div class="step-line {line1_class}"></div>
-        <div class="step-circle {step2_class}">2</div>
-        <div class="step-line {line2_class}"></div>
-        <div class="step-circle {step3_class}">3</div>
-    </div>
-""", unsafe_allow_html=True)
+# Een simpele, betrouwbare ingebouwde progress bar van Streamlit in plaats van foutgevoelige HTML
+st.progress(st.session_state.step / 3, text=f"Step {st.session_state.step} of 3")
+st.write("---")
 
 # =========================================================
-# STAP 1: JOUW ORIGINELE LAYOUT (COMPANY & CONTACT)
+# STAP 1: COMPANY DETAILS & CONTACT PERSON (Uit je screenshot)
 # =========================================================
 if st.session_state.step == 1:
     col_left, col_right = st.columns(2, gap="large")
     
     with col_left:
-        st.markdown('<div class="section-header">Company Details</div>', unsafe_allow_html=True)
+        st.subheader("🏢 Company Details")
         fd['company_name'] = st.text_input("Company Name *", value=fd['company_name'])
         fd['reg_no'] = st.text_input("Company Registration No. (optional)", value=fd['reg_no'])
         fd['address'] = st.text_input("Company Address *", value=fd['address'])
@@ -106,26 +72,27 @@ if st.session_state.step == 1:
         fd['country'] = st.text_input("Country *", value=fd['country'])
 
     with col_right:
-        st.markdown('<div class="section-header">Contact Person</div>', unsafe_allow_html=True)
+        st.subheader("👤 Contact Person")
         c_fn, c_ln = st.columns(2)
         with c_fn: fd['first_name'] = st.text_input("First Name *", value=fd['first_name'])
         with c_ln: fd['last_name'] = st.text_input("Last Name *", value=fd['last_name'])
-        fd['email'] = st.text_input("Work Email *", value=fd['email'])
-        fd['phone'] = st.text_input("Phone *", value=fd['phone'])
+        fd['email'] = st.text_input("Work Email *", value=fd['email'], placeholder="example@email.no")
+        fd['phone'] = st.text_input("Phone *", value=fd['phone'], placeholder="+47 123 456 789")
         fd['info'] = st.text_area("Additional Information (optional)", value=fd['info'], placeholder="Describe what you ship, approx. weight, any special requirements, etc.")
 
     st.write("<br>", unsafe_allow_html=True)
-    c_btn1, c_btn2, _ = st.columns([1, 1, 4])
-    with c_btn2:
+    _, col_btn = st.columns([4, 1])
+    with col_btn:
         if st.button("Continue to Route ➔", use_container_width=True):
-            next_step()
+            st.session_state.step = 2
             st.rerun()
 
 # =========================================================
-# STAP 2: DE NIEUWE ROUTE INFORMATIE
+# STAP 2: ROUTE INFORMATIE
 # =========================================================
 elif st.session_state.step == 2:
-    st.markdown('<div class="section-header" style="text-align: center;">Route Information</div>', unsafe_allow_html=True)
+    st.subheader("📍 Route Information")
+    st.info("Please specify where the goods need to be picked up and delivered.")
     
     c_pick, c_del = st.columns(2, gap="large")
     with c_pick:
@@ -143,25 +110,27 @@ elif st.session_state.step == 2:
         with col_dc: fd['d_city'] = st.text_input("City *", value=fd['d_city'])
 
     st.write("---")
-    st.markdown("**📦 Requested Services**")
+    st.subheader("📦 Requested Services")
     options = ["Freight", "Parcels", "Express", "Warehousing"]
     default_types = [t for t in fd['types'] if t in options]
     fd['types'] = st.multiselect("Select the services you need", options, default=default_types)
 
     st.write("<br>", unsafe_allow_html=True)
-    c_btn1, c_btn2, _ = st.columns([1, 1, 4])
+    c_btn1, _, c_btn2 = st.columns([1, 3, 1])
     with c_btn1:
-        st.button("⬅ Go Back", on_click=prev_step, use_container_width=True)
+        if st.button("⬅ Go Back", use_container_width=True):
+            st.session_state.step = 1
+            st.rerun()
     with c_btn2:
         if st.button("Continue to Review ➔", use_container_width=True):
-            next_step()
+            st.session_state.step = 3
             st.rerun()
 
 # =========================================================
 # STAP 3: REVIEW & SUBMIT
 # =========================================================
 elif st.session_state.step == 3:
-    st.markdown('<div class="section-header" style="text-align: center;">Review & Confirm</div>', unsafe_allow_html=True)
+    st.subheader("✅ Review & Confirm")
     
     with st.container(border=True):
         c_rev1, c_rev2 = st.columns(2)
@@ -175,12 +144,13 @@ elif st.session_state.step == 3:
             st.markdown(f"**ℹ️ Info:** {fd['info']}")
 
     st.write("<br>", unsafe_allow_html=True)
-    c_btn1, c_btn2, _ = st.columns([1, 1, 4])
+    c_btn1, _, c_btn2 = st.columns([1, 3, 1])
     with c_btn1:
-        st.button("⬅ Go Back", on_click=prev_step, use_container_width=True)
+        if st.button("⬅ Go Back", use_container_width=True):
+            st.session_state.step = 2
+            st.rerun()
     with c_btn2:
         if st.button("🚀 Submit Booking", use_container_width=True):
-            # Bereid de data voor Supabase voor
             order_data = {
                 "company": fd['company_name'],
                 "reg_no": fd['reg_no'],
@@ -207,7 +177,7 @@ elif st.session_state.step == 3:
                 st.error(f"Something went wrong: {e}")
 
 # --- DEMO NAVIGATIE ONDERAAN ---
-st.write("<br><br><br>", unsafe_allow_html=True)
+st.write("<br><br>", unsafe_allow_html=True)
 st.markdown("---")
 spacer_nav1, col_nav1, col_nav2, spacer_nav2 = st.columns([2, 1.5, 1.5, 2])
 with col_nav1:
