@@ -351,14 +351,11 @@ with col_main:
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
-                        # Eerst de radio button tonen
                         pd_freq = st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="pd_freq")
-                        
-                        # Dynamisch het invoerveld verbergen/tonen op basis van de keuze!
                         if pd_freq != "One-time shipment":
                             pd_avg_val = st.text_input(req_lbl("pd_avg", "Average Number of Shipments *"), key="pd_avg", max_chars=50)
                         else:
-                            pd_avg_val = "1" # Dummy waarde achter de schermen
+                            pd_avg_val = "1" 
                             
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
@@ -366,7 +363,6 @@ with col_main:
                                  key="pd_ship_where")
                         
                     elif sel == "Cargo & Freight":
-                        # Eerst de radio button tonen
                         cf_type = st.radio("Shipping Type *", ["One-time shipment", "Recurring Shipment"], horizontal=True, key="cf_type")
                         
                         cf_lbl = "**Load Type ***"
@@ -378,11 +374,10 @@ with col_main:
                         cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
                         cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
                         
-                        # Dynamisch het invoerveld verbergen/tonen
                         if cf_type != "One-time shipment":
                             cf_avg_val = st.text_input(req_lbl("cf_avg", "Avg. Shipments per Year *"), key="cf_avg", max_chars=50)
                         else:
-                            cf_avg_val = "1" # Dummy waarde
+                            cf_avg_val = "1" 
                             
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
@@ -390,14 +385,12 @@ with col_main:
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
-                        # Eerst de radio button tonen
                         mdm_freq = st.radio("Shipping frequency *", ["One-time shipment", "Daily", "Weekly", "Monthly"], horizontal=True, key="mdm_freq")
                         
-                        # Dynamisch het invoerveld verbergen/tonen
                         if mdm_freq != "One-time shipment":
                             mdm_avg_val = st.text_input(req_lbl("mdm_avg", "Average Number of Shipments *"), key="mdm_avg", max_chars=50)
                         else:
-                            mdm_avg_val = "1" # Dummy waarde
+                            mdm_avg_val = "1" 
 
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
@@ -441,8 +434,31 @@ with col_main:
                 phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
             with c_phone: 
                 phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
+
+        st.markdown("<br>", unsafe_allow_html=True)
+
+        # --- NIEUWE TOEVOEGING: ROUTE INFORMATIE (PICKUP & DELIVERY) ---
+        st.markdown("#### Route Information")
+        c_route_left, c_route_right = st.columns(2, gap="large")
+        
+        with c_route_left:
+            st.markdown("**📤 Pickup Location**")
+            p_address = st.text_input(req_lbl("p_addr", "Pickup Address *"), key="p_addr", max_chars=150)
+            c_p_zip, c_p_city = st.columns(2)
+            with c_p_zip: p_zip = st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
+            with c_p_city: p_city = st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
             
-            additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
+        with c_route_right:
+            st.markdown("**📥 Delivery Destination**")
+            d_address = st.text_input(req_lbl("d_addr", "Delivery Address *"), key="d_addr", max_chars=150)
+            c_d_zip, c_d_city = st.columns(2)
+            with c_d_zip: d_zip = st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
+            with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
+            
+        st.markdown("<br>", unsafe_allow_html=True)
+        # --- EINDE TOEVOEGING ---
+
+        additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
         st.write("")
         st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
@@ -450,7 +466,8 @@ with col_main:
         error_container = st.empty()
         missing_fields = False
         
-        if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip():
+        # Check original fields AND new route fields
+        if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip() or not p_address.strip() or not p_zip.strip() or not p_city.strip() or not d_address.strip() or not d_zip.strip() or not d_city.strip():
             missing_fields = True
             
         if "Parcels & Documents" in st.session_state.selected_types and st.session_state.get('pd_freq') != "One-time shipment" and not pd_avg_val.strip():
@@ -522,7 +539,14 @@ with col_main:
                     "email": work_email,
                     "phone": f"{phone_code} {phone}",
                     "info": compiled_info,
-                    "types": st.session_state.selected_types
+                    "types": st.session_state.selected_types,
+                    # Nieuwe data opslaan in memory voor de database push
+                    "pickup_address": p_address,
+                    "pickup_zip": p_zip,
+                    "pickup_city": p_city,
+                    "delivery_address": d_address,
+                    "delivery_zip": d_zip,
+                    "delivery_city": d_city
                 }
                 st.session_state.step = 3
                 st.rerun()
@@ -554,6 +578,13 @@ with col_main:
                     st.write("")
                     st.write(f"**Additional Information & Specifications:**")
                     st.write(f"_{o['info']}_")
+                    
+            st.markdown("---")
+            col_s3, col_s4 = st.columns(2)
+            with col_s3:
+                st.write(f"**📤 Pickup Location:** {o.get('pickup_address', '')}, {o.get('pickup_zip', '')} {o.get('pickup_city', '')}")
+            with col_s4:
+                st.write(f"**📥 Delivery Destination:** {o.get('delivery_address', '')}, {o.get('delivery_zip', '')} {o.get('delivery_city', '')}")
         
         st.write("")
         
@@ -576,7 +607,14 @@ with col_main:
                         "info": o['info'],
                         "types": ", ".join(o['types']),
                         "status": "New",
-                        "received_date": datetime.now().strftime("%Y-%m-%d %H:%M")
+                        "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        # De route info toevoegen aan Supabase
+                        "pickup_address": o.get('pickup_address', ''),
+                        "pickup_zip": o.get('pickup_zip', ''),
+                        "pickup_city": o.get('pickup_city', ''),
+                        "delivery_address": o.get('delivery_address', ''),
+                        "delivery_zip": o.get('delivery_zip', ''),
+                        "delivery_city": o.get('delivery_city', '')
                     }
                     
                     try:
@@ -600,6 +638,10 @@ with col_main:
                 st.session_state.chk_parcels = False
                 st.session_state.chk_freight = False
                 st.session_state.chk_mail = False
+                # Wis de route velden uit het formulier
+                for key in ['p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
+                    if key in st.session_state:
+                        del st.session_state[key]
                 st.rerun()
 
 # =========================================================
@@ -619,5 +661,3 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
-
-
