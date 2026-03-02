@@ -401,7 +401,6 @@ with col_main:
         
         st.markdown("<br><br>", unsafe_allow_html=True)
         
-        st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>Send us your contact information and we will get in touch.</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
         
         c_form_left, c_form_right = st.columns(2, gap="large")
@@ -661,5 +660,6 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
 
 
