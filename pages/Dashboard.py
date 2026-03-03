@@ -20,7 +20,7 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- CSS STYLING GLOBAL & NAVBAR HTML (Dark Mode) ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML (Dark Mode with White Header & Centered Cards) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -28,7 +28,7 @@ st.markdown("""
 
     /* --- ALGEMENE DONKERE ACHTERGROND & LICHTE TEKST --- */
     .stApp { background-color: #111111 !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4 { color: #ffffff !important; }
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown li { color: #ffffff !important; }
     div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 
     /* --- HEADER & SIDEBAR FIX --- */
@@ -75,14 +75,18 @@ st.markdown("""
     div.stButton > button { background-color: #333333 !important; color: #ffffff !important; border: none; font-weight: bold; border-radius: 6px;}
     div.stButton > button:hover { background-color: #4f4f4f !important; }
 
-    /* Header Banner (Diepppaars) */
+    /* --- DE FIX VOOR DE WITTE BANNER --- */
     .header-banner {
-        background-color: #723e83;
+        background-color: #ffffff !important;
         padding: 30px 40px;
         border-radius: 12px;
         margin-bottom: 20px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
+    /* Tekst in de witte banner moet donker zijn */
+    .header-banner h1, .header-banner p { color: #111111 !important; }
+    .header-banner h1 { margin: 0; font-weight: 700; }
+    .header-banner p { margin: 5px 0 0 0; font-size: 14px;}
     
     /* Slider & Labels fix voor donkere achtergrond */
     .stSlider label[data-testid="stWidgetLabel"] { color: #ffffff !important; font-weight: 600; }
@@ -96,7 +100,7 @@ st.markdown("""
         padding: 15px;
     }
 
-    /* --- DE STYLING VOOR JOUW CUSTOMER CARDS (Donkere versie) --- */
+    /* --- DE STYLING VOOR JOUW CUSTOMER CARDS (Donkere versie & Gecentreerd) --- */
     .customer-card {
         background-color: #212529;
         border: 1px solid #333333;
@@ -122,6 +126,7 @@ st.markdown("""
         flex: 1;
         display: flex;
         flex-direction: column;
+        text-align: center; /* DE FIX VOOR JOUW GECENTREERDE TEKST */
     }
     .metric-label {
         font-size: 12px;
@@ -157,10 +162,10 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- HEADER ---
+# --- HEADER (Nu met witte banner in CSS) ---
 st.markdown('<div class="header-banner">'
-            '<h1 style="color: white; margin: 0;">Performance & Margin Analysis</h1>'
-            '<p style="color: #e0d0e6; margin: 0;">Financial impact and sustainability tracking</p></div>', unsafe_allow_html=True)
+            '<h1>Performance & Margin Analysis</h1>'
+            '<p>Financial impact and sustainability tracking</p></div>', unsafe_allow_html=True)
 
 # --- NAVIGATIE & INPUT ---
 c_nav, c_input = st.columns([1, 2])
