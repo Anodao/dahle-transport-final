@@ -176,18 +176,18 @@ col_inbox, col_details = st.columns([1, 2], gap="large")
 with col_inbox:
     st.markdown("<h3 style='color:#333333; margin-bottom: 10px;'>Inbox</h3>", unsafe_allow_html=True)
 
-    # 1. Status knoppen
+    # 1. Status knoppen (Verbeterde tekst)
     c_btn_new, c_btn_proc = st.columns(2)
     with c_btn_new:
-        if st.button("Not Ready", use_container_width=True, type="primary" if st.session_state.view_status == 'New' else "secondary"):
+        if st.button("Openstaand", use_container_width=True, type="primary" if st.session_state.view_status == 'New' else "secondary"):
             st.session_state.view_status = 'New'
             st.rerun()
     with c_btn_proc:
-        if st.button("Ready", use_container_width=True, type="primary" if st.session_state.view_status == 'Processed' else "secondary"):
+        if st.button("Verwerkt", use_container_width=True, type="primary" if st.session_state.view_status == 'Processed' else "secondary"):
             st.session_state.view_status = 'Processed'
             st.rerun()
             
-    # 2. Dropdown Filter MET ICOON EN DUIDELIJK LABEL
+    # 2. Dropdown Filter 
     filter_optie = st.selectbox("📅 Filter op datum:", ["Alle orders", "Vandaag", "Deze week", "Vorige week", "Aangepaste datum..."])
     
     # 3. Toon Datumkiezer ALLEEN bij "Aangepaste datum..."
@@ -220,7 +220,7 @@ with col_inbox:
         except:
             if filter_optie == "Alle orders": final_list.append(o)
 
-    st.write("") # Beetje ademruimte voor de lijst begint
+    st.write("") 
 
     # 4. Weergave lijst
     if not final_list:
@@ -228,7 +228,7 @@ with col_inbox:
     else:
         for o in final_list:
             is_active = "selected-card" if st.session_state.selected_order and o['id'] == st.session_state.selected_order['id'] else ""
-            status_label = "New" if o['status'] == 'New' else "Done"
+            status_label = "Nieuw" if o['status'] == 'New' else "Gereed"
             status_class = "status-new" if o['status'] == 'New' else "status-done"
             
             st.markdown(f"""
@@ -257,19 +257,26 @@ with col_details:
         with st.container(border=True):
             st.markdown(f"## Order #{selected['id']}")
             
-            # --- 1. KLANTINFORMATIE ---
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 20px;'>Klantinformatie</h4>", unsafe_allow_html=True)
-            st.markdown(f"**Bedrijf:** {selected['company']}")
-            st.markdown(f"**Contactpersoon:** {selected['contact_name']}")
-            st.markdown(f"**Telefoonnummer:** {selected['phone']}")
+            # --- 1. KLANTINFORMATIE (Nu strak naast elkaar in kolommen) ---
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 10px;'>Klantinformatie</h4>", unsafe_allow_html=True)
+            c_klant1, c_klant2, c_klant3 = st.columns(3)
+            with c_klant1:
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Bedrijf</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['company']}</p>", unsafe_allow_html=True)
+            with c_klant2:
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Contactpersoon</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['contact_name']}</p>", unsafe_allow_html=True)
+            with c_klant3:
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Telefoonnummer</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['phone']}</p>", unsafe_allow_html=True)
             
-            # --- 2. ROUTE DETAILS ---
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 20px;'>Route details</h4>", unsafe_allow_html=True)
-            st.markdown(f"**Van (Ophaaladres):** {selected['pickup_address']}")
-            st.markdown(f"**Naar (Afleveradres):** {selected['delivery_address']}")
+            # --- 2. ROUTE DETAILS (Nu strak naast elkaar in kolommen) ---
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Route details</h4>", unsafe_allow_html=True)
+            c_route1, c_route2 = st.columns(2)
+            with c_route1:
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Van (Ophaaladres)</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['pickup_address']}</p>", unsafe_allow_html=True)
+            with c_route2:
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Naar (Afleveradres)</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['delivery_address']}</p>", unsafe_allow_html=True)
             
             # --- 3. SPECIFICATIES ---
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 20px;'>Order specificaties</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Order specificaties</h4>", unsafe_allow_html=True)
             raw_info = selected.get('info', '')
             if raw_info:
                 # Zorgt dat enters in de tekst ook echt als enters worden getoond
