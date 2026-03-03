@@ -21,7 +21,7 @@ def init_connection():
 try:
     supabase = init_connection()
 except Exception as e:
-    st.error("⚠️ Database verbinding mislukt.")
+    st.error("⚠️ Database connection failed.")
     st.stop()
 
 # --- INITIALIZE STATE ---
@@ -35,20 +35,20 @@ try:
     resp = supabase.table("orders").select("*").order("id", desc=True).execute()
     all_orders = resp.data
 except Exception as e:
-    st.error(f"Fout bij ophalen data: {e}")
+    st.error(f"Error fetching data: {e}")
     all_orders = []
 
 # --- POP-UP VERWIJDEREN ---
 @st.dialog("Confirm Deletion")
 def confirm_delete_dialog(order_id):
-    st.write(f"Weet je zeker dat je **Order #{order_id}** wilt verwijderen?")
+    st.write(f"Are you sure you want to delete **Order #{order_id}**?")
     st.write("") 
     c1, c2 = st.columns(2)
     with c1:
-        if st.button("Annuleren", type="secondary", use_container_width=True):
+        if st.button("Cancel", type="secondary", use_container_width=True):
             st.rerun()
     with c2:
-        if st.button("Verwijderen", use_container_width=True):
+        if st.button("Delete", use_container_width=True):
             supabase.table("orders").delete().eq("id", order_id).execute()
             st.session_state.selected_order = None
             st.rerun()
@@ -176,24 +176,24 @@ col_inbox, col_details = st.columns([1, 2], gap="large")
 with col_inbox:
     st.markdown("<h3 style='color:#333333; margin-bottom: 10px;'>Inbox</h3>", unsafe_allow_html=True)
 
-    # 1. Status knoppen (Verbeterde tekst)
+    # 1. Status knoppen (Engels)
     c_btn_new, c_btn_proc = st.columns(2)
     with c_btn_new:
-        if st.button("Openstaand", use_container_width=True, type="primary" if st.session_state.view_status == 'New' else "secondary"):
+        if st.button("Pending", use_container_width=True, type="primary" if st.session_state.view_status == 'New' else "secondary"):
             st.session_state.view_status = 'New'
             st.rerun()
     with c_btn_proc:
-        if st.button("Verwerkt", use_container_width=True, type="primary" if st.session_state.view_status == 'Processed' else "secondary"):
+        if st.button("Processed", use_container_width=True, type="primary" if st.session_state.view_status == 'Processed' else "secondary"):
             st.session_state.view_status = 'Processed'
             st.rerun()
             
     # 2. Dropdown Filter 
-    filter_optie = st.selectbox("📅 Filter op datum:", ["Alle orders", "Vandaag", "Deze week", "Vorige week", "Aangepaste datum..."])
+    filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "Custom date..."])
     
-    # 3. Toon Datumkiezer ALLEEN bij "Aangepaste datum..."
+    # 3. Toon Datumkiezer ALLEEN bij "Custom date..."
     custom_dates = []
-    if filter_optie == "Aangepaste datum...":
-        custom_dates = st.date_input("Kies een specifieke dag of een periode (klik begin- en einddatum):", value=today)
+    if filter_optie == "Custom date...":
+        custom_dates = st.date_input("Select a specific day or date range:", value=today)
 
     # Filteren van de data
     filtered_orders = [o for o in all_orders if o['status'] == st.session_state.view_status]
@@ -202,15 +202,15 @@ with col_inbox:
     for o in filtered_orders:
         try:
             order_date = datetime.strptime(o['received_date'][:10], "%Y-%m-%d").date()
-            if filter_optie == "Alle orders":
+            if filter_optie == "All orders":
                 final_list.append(o)
-            elif filter_optie == "Vandaag" and order_date == today:
+            elif filter_optie == "Today" and order_date == today:
                 final_list.append(o)
-            elif filter_optie == "Deze week" and order_date >= start_of_week:
+            elif filter_optie == "This week" and order_date >= start_of_week:
                 final_list.append(o)
-            elif filter_optie == "Vorige week" and start_of_last_week <= order_date < start_of_week:
+            elif filter_optie == "Last week" and start_of_last_week <= order_date < start_of_week:
                 final_list.append(o)
-            elif filter_optie == "Aangepaste datum...":
+            elif filter_optie == "Custom date...":
                 if isinstance(custom_dates, tuple) and len(custom_dates) == 2:
                     if custom_dates[0] <= order_date <= custom_dates[1]: final_list.append(o)
                 elif isinstance(custom_dates, tuple) and len(custom_dates) == 1:
@@ -218,24 +218,24 @@ with col_inbox:
                 else:
                     if order_date == custom_dates: final_list.append(o)
         except:
-            if filter_optie == "Alle orders": final_list.append(o)
+            if filter_optie == "All orders": final_list.append(o)
 
     st.write("") 
 
     # 4. Weergave lijst
     if not final_list:
-        st.info("Geen orders gevonden in deze periode.")
+        st.info("No orders found for this period.")
     else:
         for o in final_list:
             is_active = "selected-card" if st.session_state.selected_order and o['id'] == st.session_state.selected_order['id'] else ""
-            status_label = "Nieuw" if o['status'] == 'New' else "Gereed"
+            status_label = "New" if o['status'] == 'New' else "Done"
             status_class = "status-new" if o['status'] == 'New' else "status-done"
             
             st.markdown(f"""
             <div class="inbox-card {is_active}">
                 <p style="margin:0; font-weight:700; color:#333 !important;"><span class="{status_class}">{status_label}</span> &nbsp; {o.get('company', 'Unknown')}</p>
                 <p style="margin:5px 0; font-size:13px; color:#666 !important;">{o.get('types', '')}</p>
-                <p style="margin:0; font-size:11px; color:#999 !important;">Ontvangen: {o.get('received_date', '')}</p>
+                <p style="margin:0; font-size:11px; color:#999 !important;">Received: {o.get('received_date', '')}</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -252,61 +252,61 @@ with col_details:
     selected = st.session_state.selected_order
     
     if not selected:
-        st.info("Selecteer een order uit de inbox.")
+        st.info("Select an order from the inbox.")
     else:
         with st.container(border=True):
             st.markdown(f"## Order #{selected['id']}")
             
-            # --- 1. KLANTINFORMATIE (Nu strak naast elkaar in kolommen) ---
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 10px;'>Klantinformatie</h4>", unsafe_allow_html=True)
+            # --- 1. KLANTINFORMATIE ---
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 10px;'>Customer Information</h4>", unsafe_allow_html=True)
             c_klant1, c_klant2, c_klant3 = st.columns(3)
             with c_klant1:
-                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Bedrijf</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['company']}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Company</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['company']}</p>", unsafe_allow_html=True)
             with c_klant2:
-                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Contactpersoon</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['contact_name']}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Contact Person</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['contact_name']}</p>", unsafe_allow_html=True)
             with c_klant3:
-                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Telefoonnummer</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['phone']}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Phone Number</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['phone']}</p>", unsafe_allow_html=True)
             
-            # --- 2. ROUTE DETAILS (Nu strak naast elkaar in kolommen) ---
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Route details</h4>", unsafe_allow_html=True)
-            c_route1, c_route2 = st.columns(2)
+            # --- 2. ROUTE DETAILS (Gebruikt nu óók 3 kolommen voor perfecte uitlijning) ---
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Route Details</h4>", unsafe_allow_html=True)
+            c_route1, c_route2, c_route3 = st.columns(3) 
             with c_route1:
-                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Van (Ophaaladres)</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['pickup_address']}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>From (Pickup)</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['pickup_address']}</p>", unsafe_allow_html=True)
             with c_route2:
-                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Naar (Afleveradres)</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['delivery_address']}</p>", unsafe_allow_html=True)
+                st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>To (Delivery)</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['delivery_address']}</p>", unsafe_allow_html=True)
             
             # --- 3. SPECIFICATIES ---
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Order specificaties</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Order Specifications</h4>", unsafe_allow_html=True)
             raw_info = selected.get('info', '')
             if raw_info:
                 # Zorgt dat enters in de tekst ook echt als enters worden getoond
                 formatted_info = str(raw_info).replace('\n', '\n\n')
                 st.info(formatted_info)
             else:
-                st.info("Geen extra info.")
+                st.info("No additional info.")
             
             st.write("---")
             c_btn1, c_btn2, _ = st.columns([2, 2, 3])
             
             if selected['status'] == 'New':
                 with c_btn1:
-                    if st.button("Verwerk Order", use_container_width=True):
+                    if st.button("Process Order", use_container_width=True):
                         now = datetime.now().strftime("%Y-%m-%d %H:%M")
                         supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", selected['id']).execute()
                         st.session_state.selected_order = None 
                         st.rerun()
                 with c_btn2:
-                    if st.button("Verwijder Request", type="secondary", use_container_width=True):
+                    if st.button("Delete Request", type="secondary", use_container_width=True):
                         confirm_delete_dialog(selected['id'])
             else:
                 with c_btn1:
-                    if st.button("Verwijder uit Historie", type="secondary", use_container_width=True):
+                    if st.button("Delete from History", type="secondary", use_container_width=True):
                         confirm_delete_dialog(selected['id'])
 
 # --- NAVIGATIE ---
 st.write("---")
 _, c_nav1, c_nav2 = st.columns([2, 1, 1])
 with c_nav1:
-    if st.button("Terug naar Website", type="secondary", use_container_width=True): st.switch_page("Home.py")
+    if st.button("Back to Website", type="secondary", use_container_width=True): st.switch_page("Home.py")
 with c_nav2:
     if st.button("Open Dashboard", use_container_width=True): st.switch_page("pages/Dashboard.py")
