@@ -69,27 +69,54 @@ st.markdown("""
     }
     .planner-banner h1, .planner-banner p { color: #ffffff !important; }
     
-    /* INPUT VELDEN (Datumkiezer & Dropdown lichter maken) */
+    /* INPUT VELDEN (Datumkiezer & Dropdown lichter maken met subtiele rand) */
     div[data-baseweb="select"] > div, 
     div[data-baseweb="input"] > div, 
     div[data-baseweb="base-input"] {
-        background-color: #f8f9fa !important; 
-        border: 1px solid #ced4da !important; 
+        background-color: #fcfcfc !important; 
+        border: 1px solid #dcdcdc !important; 
+        border-radius: 6px !important;
         color: #111111 !important;
     }
     input[type="text"], div[data-baseweb="select"] span { color: #111111 !important; }
     
-    /* BOXJES & KNOPPEN */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; border-radius: 8px !important;
+    /* TABBLADEN (Uit elkaar halen en vormgeven) */
+    div[data-baseweb="tab-list"] { gap: 15px; margin-bottom: 15px; }
+    button[data-baseweb="tab"] {
+        padding: 10px 20px !important;
+        background-color: #f8f9fa !important;
+        border: 1px solid #eaeaea !important;
+        border-radius: 8px !important;
+        transition: all 0.2s;
     }
-    div.stButton > button { background-color: #f0f2f6 !important; color: #111111 !important; border: 1px solid #dcdcdc !important; }
+    button[data-baseweb="tab"][aria-selected="true"] {
+        background-color: #ffffff !important;
+        border: 1px solid #dcdcdc !important;
+        border-bottom: 3px solid #894b9d !important; /* Paarse actieve lijn */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+    }
+    button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; }
+    
+    /* BOXJES & RANDEN (Subtiele schaduw en heldere randen zodat het niet smelt) */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #ffffff !important; 
+        border: 1px solid #d3d3d3 !important; /* Duidelijke maar zachte rand */
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important; /* Zacht schaduwtje */
+        padding: 15px !important;
+    }
+    
+    /* Knoppen in de boxjes */
+    div.stButton > button { 
+        background-color: #f0f2f6 !important; 
+        color: #111111 !important; 
+        border: 1px solid #dcdcdc !important; 
+        border-radius: 6px !important;
+    }
     div.stButton > button:hover { background-color: #e0e2e6 !important; }
     div.stButton > button[kind="primary"] { background-color: #894b9d !important; color: #ffffff !important; border: none !important; }
     div.stButton > button[kind="primary"]:hover { background-color: #723e83 !important; }
     
-    /* Zorg dat tabbladen netjes zwart zijn */
-    button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; }
     </style>
 
     <div class="navbar">
