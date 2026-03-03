@@ -27,6 +27,10 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
+    /* 1. FORCEER ACHTERGROND WIT EN TEKST ZWART */
+    .stApp { background-color: #ffffff !important; }
+    .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 { color: #111111 !important; }
+
     /* Verberg standaard Streamlit elementen */
     header[data-testid="stHeader"] { visibility: hidden; display: none !important; }
     [data-testid="stSidebar"] { display: none !important; }
@@ -36,32 +40,59 @@ st.markdown("""
     /* --- NAVBAR STYLE --- */
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
-        background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; 
+        background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
         display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
         padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     .nav-logo img { height: 48px; width: auto; transition: transform 0.2s; }
-    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000; justify-content: center; }
-    .nav-links a { text-decoration: none; color: inherit; }
+    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
+    .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; }
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; }
     
     .cta-btn { 
-        background-color: #894b9d; color: white !important; padding: 10px 24px; border-radius: 50px; 
+        background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; 
         text-decoration: none !important; font-weight: 600; font-size: 13px; white-space: nowrap;
     }
     .cta-btn-outline {
-        background-color: transparent; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; 
+        background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; 
         text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;
     }
 
     /* Ruimte maken voor de navbar */
     .block-container { padding-top: 110px !important; max-width: 95%; }
 
-    /* Paars Header Blok Styling */
+    /* 2. PAARS HEADER BLOK (ZORG DAT DE TEKST HIER WIT BLIJFT) */
     .planner-banner {
-        background-color: #894b9d; padding: 40px; border-radius: 12px; color: white; margin-bottom: 30px;
+        background-color: #894b9d !important; padding: 40px; border-radius: 12px; margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
+    .planner-banner h1, .planner-banner p { color: #ffffff !important; }
+    
+    /* 3. INBOX & DETAILS BOXJES (Lichte opmaak) */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #ffffff !important;
+        border: 1px solid #e0e0e0 !important;
+        border-radius: 8px !important;
+    }
+    div[data-testid="stVerticalBlockBorderWrapper"] p {
+        color: #111111 !important;
+    }
+    
+    /* Knoppen in de planner (lichte knoppen met donkere tekst) */
+    div.stButton > button {
+        background-color: #f0f2f6 !important;
+        color: #111111 !important;
+        border: 1px solid #dcdcdc !important;
+    }
+    div.stButton > button:hover { background-color: #e0e2e6 !important; }
+    
+    /* De 'Process Order' knop moet wel paars blijven */
+    div.stButton > button[kind="primary"] {
+        background-color: #894b9d !important;
+        color: #ffffff !important;
+        border: none !important;
+    }
+    div.stButton > button[kind="primary"]:hover { background-color: #723e83 !important; }
     </style>
 
     <div class="navbar">
