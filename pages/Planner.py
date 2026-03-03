@@ -80,10 +80,18 @@ st.markdown("""
     }
     input[type="text"], div[data-baseweb="select"] span { color: #111111 !important; }
     
-    /* TABBLADEN (Uit elkaar halen en vormgeven) */
-    div[data-baseweb="tab-list"] { gap: 15px; margin-bottom: 15px; }
+    /* -----------------------------------------------------------------
+       TABBLADEN VERBETERING (Breder en uit elkaar, rode lijn weg!)
+       ----------------------------------------------------------------- */
+    div[data-baseweb="tab-list"] { 
+        gap: 15px; margin-bottom: 15px; width: 100%; 
+    }
+    div[data-baseweb="tab-highlight"] { display: none !important; } /* Sloop de rode lijn eruit */
+    
     button[data-baseweb="tab"] {
-        padding: 10px 20px !important;
+        flex: 1; /* Hiermee worden ze even breed over het hele vak verdeeld */
+        justify-content: center;
+        padding: 12px 20px !important;
         background-color: #f8f9fa !important;
         border: 1px solid #eaeaea !important;
         border-radius: 8px !important;
@@ -95,15 +103,17 @@ st.markdown("""
         border-bottom: 3px solid #894b9d !important; /* Paarse actieve lijn */
         box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
     }
-    button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; }
+    button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; font-size: 15px !important;}
     
-    /* BOXJES & RANDEN (Subtiele schaduw en heldere randen zodat het niet smelt) */
+    /* -----------------------------------------------------------------
+       BOXJES & SUBTIELE RANDEN ZODAT ELEMENTEN NIET MEER 'SMELTEN'
+       ----------------------------------------------------------------- */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important; 
-        border: 1px solid #d3d3d3 !important; /* Duidelijke maar zachte rand */
-        border-radius: 8px !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04) !important; /* Zacht schaduwtje */
-        padding: 15px !important;
+        border: 1px solid #e8e8e8 !important; /* ZEER subtiele rand, net niet onzichtbaar */
+        border-radius: 10px !important;
+        box-shadow: 0 1px 6px rgba(0,0,0,0.02) !important; /* Zacht schaduwtje voor diepte */
+        padding: 20px !important;
     }
     
     /* Knoppen in de boxjes */
@@ -165,94 +175,92 @@ start_vorige_maand = eind_vorige_maand.replace(day=1)
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
-    st.subheader("📥 Inbox")
-    
-    # SNELLE FILTERS DROPDOWN
-    filter_optie = st.selectbox("⏱️ Filter Periode", ["Alle orders", "Deze week", "Vorige week", "Vorige maand", "Aangepaste datum..."])
-    
-    # Bepaal de datum op basis van de keuze
-    filter_dates = []
-    if filter_optie == "Deze week":
-        filter_dates = [start_deze_week, eind_deze_week]
-    elif filter_optie == "Vorige week":
-        filter_dates = [start_vorige_week, eind_vorige_week]
-    elif filter_optie == "Vorige maand":
-        filter_dates = [start_vorige_maand, eind_vorige_maand]
-    elif filter_optie == "Aangepaste datum...":
-        filter_dates = st.date_input("📅 Kies een periode of dag", value=[])
-
-    st.write("") # Beetje ademruimte
-    
-    # TABBLADEN
-    tab_new, tab_proc = st.tabs(["🔴 New Orders", "🟢 Processed Orders"])
-    
-    def render_order_list(status_filter):
-        filtered_orders = [o for o in orders if o.get('status') == status_filter]
+    # We zetten de hele inbox in een subtiel kader!
+    with st.container(border=True):
+        st.subheader("📥 Inbox")
         
-        if len(filter_dates) > 0:
-            date_filtered = []
-            for o in filtered_orders:
-                try:
-                    order_date = datetime.strptime(o['received_date'][:10], "%Y-%m-%d").date()
-                    if len(filter_dates) == 2: 
-                        if filter_dates[0] <= order_date <= filter_dates[1]:
-                            date_filtered.append(o)
-                    elif len(filter_dates) == 1: 
-                        if order_date == filter_dates[0]:
-                            date_filtered.append(o)
-                except Exception:
-                    date_filtered.append(o)
-            filtered_orders = date_filtered
-            
-        if not filtered_orders:
-            st.info(f"No {status_filter.lower()} orders found in this period.")
-            
-        for o in filtered_orders:
-            with st.container(border=True):
-                status_color = "#ff4b4b" if o['status'] == 'New' else "#28a745"
-                st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>● {o['status']}</span> | **{o['company']}**", unsafe_allow_html=True)
-                st.write(f"*{o['types']}*")
-                st.caption(f"Received: {o['received_date']}")
-                
-                if st.button(f"Open Order #{o['id']}", key=f"btn_{o['id']}", use_container_width=True):
-                    st.session_state.selected_order = o
-                    st.rerun()
+        filter_optie = st.selectbox("⏱️ Filter Periode", ["Alle orders", "Deze week", "Vorige week", "Vorige maand", "Aangepaste datum..."])
+        
+        filter_dates = []
+        if filter_optie == "Deze week": filter_dates = [start_deze_week, eind_deze_week]
+        elif filter_optie == "Vorige week": filter_dates = [start_vorige_week, eind_vorige_week]
+        elif filter_optie == "Vorige maand": filter_dates = [start_vorige_maand, eind_vorige_maand]
+        elif filter_optie == "Aangepaste datum...": filter_dates = st.date_input("📅 Kies een periode of dag", value=[])
 
-    with tab_new:
-        render_order_list("New")
-    with tab_proc:
-        render_order_list("Processed")
+        st.write("") 
+        
+        tab_new, tab_proc = st.tabs(["🔴 New Orders", "🟢 Processed"])
+        
+        def render_order_list(status_filter):
+            filtered_orders = [o for o in orders if o.get('status') == status_filter]
+            
+            if len(filter_dates) > 0:
+                date_filtered = []
+                for o in filtered_orders:
+                    try:
+                        order_date = datetime.strptime(o['received_date'][:10], "%Y-%m-%d").date()
+                        if len(filter_dates) == 2: 
+                            if filter_dates[0] <= order_date <= filter_dates[1]: date_filtered.append(o)
+                        elif len(filter_dates) == 1: 
+                            if order_date == filter_dates[0]: date_filtered.append(o)
+                    except Exception:
+                        date_filtered.append(o)
+                filtered_orders = date_filtered
+                
+            if not filtered_orders:
+                st.info(f"No {status_filter.lower()} orders found in this period.")
+                
+            for o in filtered_orders:
+                with st.container(border=True):
+                    status_color = "#ff4b4b" if o['status'] == 'New' else "#28a745"
+                    st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>● {o['status']}</span> | **{o['company']}**", unsafe_allow_html=True)
+                    st.write(f"*{o['types']}*")
+                    st.caption(f"Received: {o['received_date']}")
+                    
+                    if st.button(f"Open Order #{o['id']}", key=f"btn_{o['id']}", use_container_width=True):
+                        st.session_state.selected_order = o
+                        st.rerun()
+
+        with tab_new:
+            render_order_list("New")
+        with tab_proc:
+            render_order_list("Processed")
 
 with col_details:
-    st.subheader("📋 Order Details")
-    if st.session_state.selected_order:
-        o = st.session_state.selected_order
-        with st.container(border=True):
-            status_c = "🔴 New" if o['status'] == 'New' else "🟢 Processed"
-            st.write(f"### Order #{o['id']} - {o['company']}")
-            st.write(f"**Status:** {status_c}")
-            st.write("---")
-            st.write(f"**Contact:** {o['contact_name']} | {o['email']} | {o['phone']}")
-            st.write(f"**Pickup:** {o['pickup_address']}, {o['pickup_zip']} {o['pickup_city']}")
-            st.write(f"**Delivery:** {o['delivery_address']}, {o['delivery_zip']} {o['delivery_city']}")
-            st.write("---")
-            st.text(o['info'])
-            
-            if o['status'] == 'New':
-                if st.button("✅ Process Order", type="primary", use_container_width=True):
-                    supabase.table("orders").update({"status": "Processed"}).eq("id", o['id']).execute()
-                    st.session_state.selected_order['status'] = 'Processed'
-                    st.rerun()
-    else:
-        st.info("Select an order from the inbox to view details.")
+    # We zetten ook de hele detailpagina in een eigen subtiel kader!
+    with st.container(border=True):
+        st.subheader("📋 Order Details")
+        if st.session_state.selected_order:
+            o = st.session_state.selected_order
+            with st.container(border=True):
+                status_c = "🔴 New" if o['status'] == 'New' else "🟢 Processed"
+                st.write(f"### Order #{o['id']} - {o['company']}")
+                st.write(f"**Status:** {status_c}")
+                st.write("---")
+                st.write(f"**Contact:** {o['contact_name']} | {o['email']} | {o['phone']}")
+                st.write(f"**Pickup:** {o['pickup_address']}, {o['pickup_zip']} {o['pickup_city']}")
+                st.write(f"**Delivery:** {o['delivery_address']}, {o['delivery_zip']} {o['delivery_city']}")
+                st.write("---")
+                st.text(o['info'])
+                
+                if o['status'] == 'New':
+                    if st.button("✅ Process Order", type="primary", use_container_width=True):
+                        supabase.table("orders").update({"status": "Processed"}).eq("id", o['id']).execute()
+                        st.session_state.selected_order['status'] = 'Processed'
+                        st.rerun()
+        else:
+            st.info("Select an order from the inbox to view details.")
 
-# --- NAVIGATIE KNOPPEN ONDERAAN ---
+# --- NAVIGATIE KNOPPEN ONDERAAN (AAN DE RECHTERKANT!) ---
 st.write("---")
 st.write("")
-c1, c2, spacer1, spacer2 = st.columns(4)
-with c1:
+
+# Door de layout [2, 1, 1] duwen we de knoppen mooi naar de rechterkant van het scherm
+spacer, col_btn_1, col_btn_2 = st.columns([2, 1.2, 1.2])
+
+with col_btn_1:
     if st.button("🏠 ← Go Back to Website", use_container_width=True):
         st.switch_page("Home.py")
-with c2:
+with col_btn_2:
     if st.button("🟢 Open CO₂ Dashboard →", use_container_width=True):
         st.switch_page("pages/Dashboard.py")
