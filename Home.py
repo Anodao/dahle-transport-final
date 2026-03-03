@@ -133,7 +133,7 @@ st.markdown("""
     div[data-baseweb="select"] div { color: white; background-color: #333;}
     </style>
     
-    <div class="navbar">
+<div class="navbar">
         <div class="nav-logo">
             <a href="?reset=true" target="_self" title="Go back to Step 1">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
@@ -143,7 +143,8 @@ st.markdown("""
             <span>Hjem</span><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
         </div>
         <div class="nav-cta">
-            <a href="opter-portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
+            <a href="Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
+            
             <a href="?reset=true" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
@@ -636,6 +637,7 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
 
 
 
