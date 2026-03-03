@@ -31,7 +31,7 @@ st.markdown("""
     /* Achtergrond wit, teksten zwart */
     .stApp { background-color: #ffffff !important; }
     h1, h2, h3, h4, h5, h6 { color: #111111 !important; }
-    p, .stMarkdown, .stText, label { color: #111111 !important; } 
+    p, .stMarkdown, label { color: #111111 !important; } 
 
     /* Verberg standaard Streamlit elementen */
     header[data-testid="stHeader"] { visibility: hidden; display: none !important; }
@@ -61,13 +61,6 @@ st.markdown("""
     }
 
     .block-container { padding-top: 110px !important; max-width: 95%; }
-
-    /* PAARS HEADER BLOK */
-    .planner-banner {
-        background-color: #894b9d !important; padding: 40px; border-radius: 12px; margin-bottom: 30px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    }
-    .planner-banner h1, .planner-banner p { color: #ffffff !important; }
     
     /* INPUT VELDEN */
     div[data-baseweb="select"] > div, 
@@ -81,48 +74,47 @@ st.markdown("""
     input[type="text"], div[data-baseweb="select"] span { color: #111111 !important; }
     
     /* TABBLADEN */
-    div[data-baseweb="tab-list"] { 
-        gap: 15px; margin-bottom: 15px; width: 100%; 
-    }
+    div[data-baseweb="tab-list"] { gap: 15px; margin-bottom: 15px; width: 100%; }
     div[data-baseweb="tab-highlight"] { display: none !important; } 
-    
     button[data-baseweb="tab"] {
-        flex: 1; 
-        justify-content: center;
-        padding: 12px 20px !important;
-        background-color: #f8f9fa !important;
-        border: 1px solid #dcdcdc !important;
-        border-radius: 8px !important;
-        transition: all 0.2s;
+        flex: 1; justify-content: center; padding: 10px !important;
+        background-color: #f8f9fa !important; border: 1px solid #dcdcdc !important;
+        border-radius: 8px !important; transition: all 0.2s;
     }
     button[data-baseweb="tab"][aria-selected="true"] {
-        background-color: #ffffff !important;
-        border: 1px solid #b0b0b0 !important;
-        border-bottom: 3px solid #894b9d !important; 
-        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+        background-color: #ffffff !important; border: 1px solid #b0b0b0 !important;
+        border-bottom: 3px solid #894b9d !important; box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
     }
-    button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; font-size: 15px !important;}
+    button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; font-size: 14px !important;}
     
-    /* BOXJES & DUIDELIJKE RANDEN OM DE SECTIES */
+    /* BOXJES / KADERS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important; 
-        border: 1px solid #d1d5db !important; /* Duidelijkere grijze rand (balk/kader) */
+        border: 1px solid #d1d5db !important; /* Duidelijke grijze rand */
         border-radius: 10px !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important; /* Iets meer schaduw voor diepte */
-        padding: 20px !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important;
     }
     
-    /* Knoppen in de boxjes */
+    /* FIX VOOR DE ONZICHTBARE ORDER INFO TEKST (st.text) */
+    pre {
+        color: #111111 !important;
+        background-color: #f8f9fa !important;
+        border: 1px solid #e5e7eb !important;
+        padding: 15px !important;
+        border-radius: 8px !important;
+        white-space: pre-wrap !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: 14px !important;
+    }
+    
+    /* Knoppen */
     div.stButton > button { 
-        background-color: #f0f2f6 !important; 
-        color: #111111 !important; 
-        border: 1px solid #dcdcdc !important; 
-        border-radius: 6px !important;
+        background-color: #f0f2f6 !important; color: #111111 !important; 
+        border: 1px solid #dcdcdc !important; border-radius: 6px !important;
     }
     div.stButton > button:hover { background-color: #e0e2e6 !important; }
     div.stButton > button[kind="primary"] { background-color: #894b9d !important; color: #ffffff !important; border: none !important; }
     div.stButton > button[kind="primary"]:hover { background-color: #723e83 !important; }
-    
     </style>
 
     <div class="navbar">
@@ -137,11 +129,6 @@ st.markdown("""
             <a href="/Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
             <a href="/" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
-    </div>
-
-    <div class="planner-banner">
-        <h1 style="margin: 0; font-size: 42px;">🔒 Planner Dashboard</h1>
-        <p style="margin: 0; opacity: 0.8; font-size: 16px;">Internal Use Only</p>
     </div>
 """, unsafe_allow_html=True)
 
@@ -171,9 +158,9 @@ start_vorige_maand = eind_vorige_maand.replace(day=1)
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
-    # Kader rondom de HELE inbox sectie
+    # 1. Buitenste kader voor de hele inbox
     with st.container(border=True):
-        st.subheader("Inbox") # Icoon weggehaald!
+        st.subheader("Inbox")
         
         filter_optie = st.selectbox("Filter Periode", ["Alle orders", "Deze week", "Vorige week", "Vorige maand", "Aangepaste datum..."])
         
@@ -207,6 +194,7 @@ with col_inbox:
                 st.info(f"No {status_filter.lower()} orders found in this period.")
                 
             for o in filtered_orders:
+                # 2. Binnenste kaders voor de losse orders (zien er nu netjes uit)
                 with st.container(border=True):
                     status_color = "#ff4b4b" if o['status'] == 'New' else "#28a745"
                     st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>● {o['status']}</span> | **{o['company']}**", unsafe_allow_html=True)
@@ -223,37 +211,39 @@ with col_inbox:
             render_order_list("Processed")
 
 with col_details:
-    # Kader rondom de HELE detail sectie
+    # 3. Kader rondom de HELE detail sectie (geen dubbele boxjes meer hierin!)
     with st.container(border=True):
-        st.subheader("Order Details") # Icoon weggehaald!
+        st.subheader("Order Details")
         
         if st.session_state.selected_order:
             o = st.session_state.selected_order
-            with st.container(border=True):
-                status_c = "🔴 New" if o['status'] == 'New' else "🟢 Processed"
-                st.write(f"### Order #{o['id']} - {o['company']}")
-                st.write(f"**Status:** {status_c}")
-                st.write("---")
-                st.write(f"**Contact:** {o['contact_name']} | {o['email']} | {o['phone']}")
-                st.write(f"**Pickup:** {o['pickup_address']}, {o['pickup_zip']} {o['pickup_city']}")
-                st.write(f"**Delivery:** {o['delivery_address']}, {o['delivery_zip']} {o['delivery_city']}")
-                st.write("---")
-                st.text(o['info'])
-                
-                if o['status'] == 'New':
-                    if st.button("✅ Process Order", type="primary", use_container_width=True):
-                        supabase.table("orders").update({"status": "Processed"}).eq("id", o['id']).execute()
-                        st.session_state.selected_order['status'] = 'Processed'
-                        st.rerun()
+            
+            status_c = "🔴 New" if o['status'] == 'New' else "🟢 Processed"
+            st.write(f"### Order #{o['id']} - {o['company']}")
+            st.write(f"**Status:** {status_c}")
+            st.write("---")
+            st.write(f"**Contact:** {o['contact_name']} | {o['email']} | {o['phone']}")
+            st.write(f"**Pickup:** {o['pickup_address']}, {o['pickup_zip']} {o['pickup_city']}")
+            st.write(f"**Delivery:** {o['delivery_address']}, {o['delivery_zip']} {o['delivery_city']}")
+            st.write("---")
+            
+            # De info tekst wordt nu als een mooi leesbaar blok weergegeven
+            st.text(o['info'])
+            
+            if o['status'] == 'New':
+                st.write("") # Extra ruimte voor de knop
+                if st.button("✅ Process Order", type="primary", use_container_width=True):
+                    supabase.table("orders").update({"status": "Processed"}).eq("id", o['id']).execute()
+                    st.session_state.selected_order['status'] = 'Processed'
+                    st.rerun()
         else:
             st.info("Select an order from the inbox to view details.")
 
-# --- NAVIGATIE KNOPPEN ONDERAAN ---
+# --- NAVIGATIE KNOPPEN ONDERAAN (AAN DE RECHTERKANT) ---
 st.write("---")
 st.write("")
 
 spacer, col_btn_1, col_btn_2 = st.columns([2, 1.2, 1.2])
-
 with col_btn_1:
     if st.button("🏠 ← Go Back to Website", use_container_width=True):
         st.switch_page("Home.py")
