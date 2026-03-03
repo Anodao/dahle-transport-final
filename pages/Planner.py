@@ -65,81 +65,68 @@ def confirm_delete_dialog(order_id):
             st.session_state.selected_order = None
             st.rerun()
 
-# --- CSS STYLING VOOR DE PLANNER ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
-    
-    /* Verberg de sidebar en knoppen volledig */
+
+    /* --- HEADER & SIDEBAR FIX --- */
     [data-testid="collapsedControl"] { display: none !important; }
     [data-testid="stSidebar"] { display: none !important; }
-    header[data-testid="stHeader"] { display: none !important; }
+    header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
     
-    /* Algemene achtergrond voor de planner */
-    .stApp { background-color: #f8f9fa !important; }
-    .block-container { padding-top: 2rem; }
-
-    /* De donkerpaarse Dahle Transport header banner bovenaan */
-    .header-banner {
-        background-color: #894b9d; /* DAHLE PAARS */
-        padding: 30px 40px;
-        border-radius: 12px;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    /* --- NAVBAR --- */
+    .block-container { padding-top: 110px; }
+    .navbar {
+        position: fixed; top: 0; left: 0; width: 100%; height: 90px;
+        background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; 
+        display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+        padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
-    .header-banner h1 { color: #ffffff !important; margin: 0; font-weight: 700; letter-spacing: 0.5px;}
-    .header-banner p { color: #e0d0e6 !important; margin: 5px 0 0 0; font-size: 14px;}
-
-    /* --- INBOX KAARTEN STYLING --- */
-    .inbox-card {
-        background-color: #ffffff !important;
-        border: 1px solid #e0e6ed !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        margin-bottom: 5px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-        transition: all 0.2s ease-in-out;
+    .nav-logo { display: flex; justify-content: flex-start; }
+    .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
+    .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
+    .nav-logo a:hover img { transform: scale(1.05); } 
+    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; justify-content: center;}
+    .nav-links a { text-decoration: none; color: inherit; }
+    .nav-links span { cursor: pointer; transition: color 0.2s; }
+    .nav-links span:hover { color: #894b9d; }
+    .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
+    
+    /* Knoppen styling */
+    .cta-btn { 
+        background-color: #894b9d; color: white !important; padding: 10px 24px;
+        border-radius: 50px; text-decoration: none !important; font-weight: 600; 
+        font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        cursor: pointer; transition: background-color 0.2s; white-space: nowrap;
     }
-    .processed-card {
-        background-color: #f8f9fa !important;
-        border: 1px dashed #bdc3c7 !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        margin-bottom: 5px !important;
-        transition: all 0.2s ease-in-out;
-    }
+    .cta-btn:hover { background-color: #723e83; }
 
-    /* --- HIGHLIGHT EFFECT VOOR GESELECTEERDE ORDER --- */
-    .selected-card {
-        border: 2px solid #894b9d !important;
-        background-color: #faf5fc !important; 
-        box-shadow: 0 6px 12px rgba(137, 75, 157, 0.15) !important;
-        transform: translateX(8px); 
+    .cta-btn-outline {
+        background-color: transparent; color: #894b9d !important; padding: 10px 20px;
+        border-radius: 50px; text-decoration: none !important; font-weight: 600; 
+        font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d;
+        cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
-
-    .inbox-title { color: #333333 !important; font-weight: 700; font-size: 16px; margin: 0 0 8px 0; }
-    .inbox-subtitle { color: #666666 !important; font-size: 13px; margin: 0 0 8px 0; line-height: 1.4;}
-    .inbox-date { color: #888888 !important; font-size: 11px; margin: 0; }
-    .status-new { color: #e74c3c !important; font-weight: 900; }
-    .status-done { color: #27ae60 !important; font-weight: 900; }
-    
-    /* Custom styling voor de details in de box rechts */
-    .detail-label { color: #888888 !important; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 0px !important; letter-spacing: 0.5px;}
-    .detail-value { color: #333333 !important; font-size: 16px; font-weight: 500; margin-top: 2px !important; margin-bottom: 15px !important;}
-    
-    /* Container voor de 'Go Back' knop */
-    .home-btn-container { margin-bottom: 30px; }
-    .card-spacer { margin-bottom: 20px; }
-    
-    /* Streamlit Knoppen fix voor planner (Dahle Paars) */
-    div.stButton > button { background-color: #894b9d !important; color: white !important; border: none; font-weight: bold; border-radius: 6px;}
-    div.stButton > button:hover { background-color: #723e83 !important; }
-    
-    /* Secundaire knop (voor "Delete" of "Go Back") */
-    div.stButton > button[kind="secondary"] { background-color: #e0e6ed !important; color: #333 !important;}
-    div.stButton > button[kind="secondary"]:hover { background-color: #bdc3c7 !important; }
+    .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
     </style>
+    
+    <div class="navbar">
+        <div class="nav-logo">
+            <a href="/" target="_self" title="Go back to Home">
+                <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
+            </a>
+        </div>
+        <div class="nav-links">
+            <a href="/"><span>Hjem</span></a>
+            <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
+        </div>
+        <div class="nav-cta">
+            <a href="/Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
+            <a href="/" target="_self" class="cta-btn">TA KONTAKT</a>
+        </div>
+    </div>
 """, unsafe_allow_html=True)
 
 # --- HEADER BANNER ---
