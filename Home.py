@@ -143,7 +143,7 @@ st.markdown("""
             <span>Hjem</span><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
         </div>
         <div class="nav-cta">
-            <a href="2_Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
+            <a href="opter-portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
             <a href="?reset=true" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
@@ -636,5 +636,6 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
 
 
