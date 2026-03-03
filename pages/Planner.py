@@ -53,7 +53,7 @@ def confirm_delete_dialog(order_id):
             st.session_state.selected_order = None
             st.rerun()
 
-# --- CSS STYLING & NAVBAR HTML ---
+# --- CSS STYLING ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -63,11 +63,9 @@ st.markdown("""
     
     .stApp { background-color: #f8f9fa !important; }
     
-    /* --- TEKST LEESBAARHEID FIX (Forceer donkere tekst tegen Streamlit Dark Mode) --- */
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown li {
-        color: #111111 !important;
-    }
-    div[data-testid="stAlert"] * { color: #111111 !important; } /* Tekst in de blauwe/groene info boxjes */
+    /* --- TEKST LEESBAARHEID FIX --- */
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown li { color: #111111 !important; }
+    div[data-testid="stAlert"] * { color: #111111 !important; }
 
     /* --- NAVBAR STYLE --- */
     .navbar {
@@ -103,14 +101,27 @@ st.markdown("""
     .header-banner h1 { margin: 0; font-weight: 700; }
     .header-banner p { margin: 5px 0 0 0; font-size: 14px;}
 
-    /* INPUT VELDEN (Dropdown & Datumkiezer) */
+    /* --- INPUT VELDEN FIX: FORCEER ALLES NAAR ZWART --- */
     div[data-baseweb="select"] > div, div[data-baseweb="base-input"] {
         background-color: #ffffff !important;
         border: 1px solid #d1d5db !important;
         border-radius: 6px !important;
     }
-    div[data-baseweb="select"] span { color: #111111 !important; }
-    input { color: #111111 !important; }
+    
+    /* Omzeil de Streamlit Dark Mode lock door -webkit-text-fill-color te gebruiken */
+    .stSelectbox div[data-baseweb="select"] span, 
+    .stSelectbox div[data-baseweb="select"] div,
+    .stDateInput input {
+        color: #111111 !important;
+        -webkit-text-fill-color: #111111 !important;
+    }
+    
+    /* De placeholder tekst (YYYY/MM/DD) */
+    .stDateInput input::placeholder {
+        color: #666666 !important;
+        -webkit-text-fill-color: #666666 !important;
+    }
+    
     label[data-testid="stWidgetLabel"] { color: #333333 !important; font-weight: 600; font-size: 13px; }
     .stSelectbox, .stDateInput { margin-bottom: -10px !important; }
 
@@ -185,7 +196,7 @@ with col_inbox:
     # 3. Toon Datumkiezer ALLEEN bij "Aangepaste datum..."
     custom_dates = []
     if filter_optie == "Aangepaste datum...":
-        custom_dates = st.date_input("Kies een specifieke dag of een periode (klik begin- en einddatum):", value=[])
+        custom_dates = st.date_input("Kies een specifieke dag of een periode (klik begin- en einddatum):", value=today)
     else:
         st.write("") 
 
@@ -204,11 +215,13 @@ with col_inbox:
                 final_list.append(o)
             elif filter_optie == "Vorige week" and start_of_last_week <= order_date < start_of_week:
                 final_list.append(o)
-            elif filter_optie == "Aangepaste datum..." and len(custom_dates) > 0:
-                if len(custom_dates) == 2: # Periode
+            elif filter_optie == "Aangepaste datum...":
+                if isinstance(custom_dates, tuple) and len(custom_dates) == 2:
                     if custom_dates[0] <= order_date <= custom_dates[1]: final_list.append(o)
-                else: # Eén dag
+                elif isinstance(custom_dates, tuple) and len(custom_dates) == 1:
                     if order_date == custom_dates[0]: final_list.append(o)
+                else:
+                    if order_date == custom_dates: final_list.append(o)
         except:
             if filter_optie == "Alle orders": final_list.append(o)
 
@@ -248,7 +261,15 @@ with col_details:
             st.markdown(f"**Bedrijf:** {selected['company']}")
             st.markdown(f"**Contact:** {selected['contact_name']} ({selected['phone']})")
             st.markdown(f"**Route:** {selected['pickup_address']} ➔ {selected['delivery_address']}")
-            st.info(selected.get('info') or "Geen extra info.")
+            
+            # --- FIX VOOR DE REGELAFBREKINGEN IN DE EXTRA INFO ---
+            raw_info = selected.get('info', '')
+            if raw_info:
+                # We vervangen enkele enters door dubbele enters zodat Markdown ze correct onder elkaar zet.
+                formatted_info = str(raw_info).replace('\n', '\n\n')
+                st.info(formatted_info)
+            else:
+                st.info("Geen extra info.")
             
             st.write("---")
             c_btn1, c_btn2, _ = st.columns([2, 2, 3])
