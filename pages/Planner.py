@@ -90,21 +90,9 @@ st.markdown("""
     /* BOXJES / KADERS */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important; 
-        border: 1px solid #d1d5db !important; /* Duidelijke grijze rand */
+        border: 1px solid #d1d5db !important; 
         border-radius: 10px !important;
         box-shadow: 0 4px 10px rgba(0,0,0,0.03) !important;
-    }
-    
-    /* FIX VOOR DE ONZICHTBARE ORDER INFO TEKST (st.text) */
-    pre {
-        color: #111111 !important;
-        background-color: #f8f9fa !important;
-        border: 1px solid #e5e7eb !important;
-        padding: 15px !important;
-        border-radius: 8px !important;
-        white-space: pre-wrap !important;
-        font-family: 'Montserrat', sans-serif !important;
-        font-size: 14px !important;
     }
     
     /* Knoppen */
@@ -158,7 +146,7 @@ start_vorige_maand = eind_vorige_maand.replace(day=1)
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
-    # 1. Buitenste kader voor de hele inbox
+    # Kader rondom de HELE inbox
     with st.container(border=True):
         st.subheader("Inbox")
         
@@ -194,7 +182,6 @@ with col_inbox:
                 st.info(f"No {status_filter.lower()} orders found in this period.")
                 
             for o in filtered_orders:
-                # 2. Binnenste kaders voor de losse orders (zien er nu netjes uit)
                 with st.container(border=True):
                     status_color = "#ff4b4b" if o['status'] == 'New' else "#28a745"
                     st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>● {o['status']}</span> | **{o['company']}**", unsafe_allow_html=True)
@@ -211,7 +198,7 @@ with col_inbox:
             render_order_list("Processed")
 
 with col_details:
-    # 3. Kader rondom de HELE detail sectie (geen dubbele boxjes meer hierin!)
+    # Kader rondom de HELE detail sectie
     with st.container(border=True):
         st.subheader("Order Details")
         
@@ -227,11 +214,18 @@ with col_details:
             st.write(f"**Delivery:** {o['delivery_address']}, {o['delivery_zip']} {o['delivery_city']}")
             st.write("---")
             
-            # De info tekst wordt nu als een mooi leesbaar blok weergegeven
-            st.text(o['info'])
+            # --- HIER ZIT DE FIX VOOR DE TEKST ---
+            # We gebruiken nu een speciaal HTML blok met hardgecodeerde zwarte tekst en een zachte achtergrond.
+            info_html = f"""
+            <div style="background-color: #f8f9fa; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; color: #111111; font-family: monospace; white-space: pre-wrap; font-size: 14px;">
+            {o['info']}
+            </div>
+            """
+            st.markdown(info_html, unsafe_allow_html=True)
+            # -------------------------------------
             
             if o['status'] == 'New':
-                st.write("") # Extra ruimte voor de knop
+                st.write("") 
                 if st.button("✅ Process Order", type="primary", use_container_width=True):
                     supabase.table("orders").update({"status": "Processed"}).eq("id", o['id']).execute()
                     st.session_state.selected_order['status'] = 'Processed'
@@ -239,7 +233,7 @@ with col_details:
         else:
             st.info("Select an order from the inbox to view details.")
 
-# --- NAVIGATIE KNOPPEN ONDERAAN (AAN DE RECHTERKANT) ---
+# --- NAVIGATIE KNOPPEN ONDERAAN ---
 st.write("---")
 st.write("")
 
