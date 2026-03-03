@@ -50,7 +50,7 @@ if 'order_counter' not in st.session_state: st.session_state.order_counter = 100
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
-
+    
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
     <style>
@@ -68,17 +68,19 @@ st.markdown("""
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; 
-        display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-        padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+        display: grid; grid-template-columns: 1fr auto auto; align-items: center;
+        padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); gap: 20px;
     }
-    .nav-logo { display: flex; justify-content: flex-start; padding-left: 40px; }
+    .nav-logo { display: flex; justify-content: flex-start; }
     .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
     .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
     .nav-logo a:hover img { transform: scale(1.05); } 
-    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; }
+    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; justify-content: center;}
     .nav-links span { cursor: pointer; transition: color 0.2s; }
     .nav-links span:hover { color: #894b9d; }
-    .nav-cta { display: flex; justify-content: flex-end; }
+    .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
+    
+    /* Jouw originele knop */
     .cta-btn { 
         background-color: #894b9d; color: white !important; padding: 10px 24px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
@@ -86,6 +88,17 @@ st.markdown("""
         cursor: pointer; transition: background-color 0.2s;
     }
     .cta-btn:hover { background-color: #723e83; }
+
+    /* De NIEUWE Opter Login Knop */
+    .cta-btn-outline {
+        background-color: transparent; color: #894b9d !important; padding: 8px 20px;
+        border-radius: 50px; text-decoration: none !important; font-weight: 600; 
+        font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d;
+        cursor: pointer; transition: all 0.2s;
+    }
+    .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
+
+    /* Rest van je originele CSS (Step tracker etc) blijft hieronder staan... */
 
     /* --- STEP TRACKER --- */
     .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
@@ -118,17 +131,18 @@ st.markdown("""
     div[data-baseweb="select"] div { color: white; background-color: #333;}
     </style>
     
-    <div class="navbar">
+<div class="navbar">
         <div class="nav-logo">
             <a href="?reset=true" target="_self" title="Go back to Step 1">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
             </a>
         </div>
         <div class="nav-links">
-            <span>Home</span><span>About Us</span><span>Services</span><span>Gallery</span><span>Contact</span>
+            <span>Hjem</span><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
         </div>
         <div class="nav-cta">
-            <a class="cta-btn">CONTACT US</a>
+            <a href="2_Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
+            <a href="?reset=true" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -620,3 +634,4 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
