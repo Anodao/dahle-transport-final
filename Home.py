@@ -68,7 +68,6 @@ st.markdown("""
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; 
-        /* HIER IS DE FIX: 1fr (links), auto (midden), 1fr (rechts) */
         display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
         padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
@@ -76,29 +75,25 @@ st.markdown("""
     .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
     .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
     .nav-logo a:hover img { transform: scale(1.05); } 
-    
-    /* Tekst exact in het midden centreren */
     .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; justify-content: center;}
     .nav-links span { cursor: pointer; transition: color 0.2s; }
     .nav-links span:hover { color: #894b9d; }
-    
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
     
-    /* Jouw originele knop */
+    /* Knoppen styling (met nowrap zodat ze niet meer in elkaar drukken) */
     .cta-btn { 
         background-color: #894b9d; color: white !important; padding: 10px 24px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
         font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        cursor: pointer; transition: background-color 0.2s;
+        cursor: pointer; transition: background-color 0.2s; white-space: nowrap;
     }
     .cta-btn:hover { background-color: #723e83; }
 
-    /* De NIEUWE Opter Login Knop */
     .cta-btn-outline {
-        background-color: transparent; color: #894b9d !important; padding: 8px 20px;
+        background-color: transparent; color: #894b9d !important; padding: 10px 20px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
         font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d;
-        cursor: pointer; transition: all 0.2s;
+        cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
     .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
 
@@ -128,12 +123,10 @@ st.markdown("""
     div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
     label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
-    
-    /* Dropdown text kleur fix */
     div[data-baseweb="select"] div { color: white; background-color: #333;}
     </style>
     
-<div class="navbar">
+    <div class="navbar">
         <div class="nav-logo">
             <a href="?reset=true" target="_self" title="Go back to Step 1">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
@@ -144,7 +137,6 @@ st.markdown("""
         </div>
         <div class="nav-cta">
             <a href="Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
-            
             <a href="?reset=true" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
@@ -637,6 +629,7 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
 
 
 
