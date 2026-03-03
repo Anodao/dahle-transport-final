@@ -78,25 +78,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- NAVIGATIE KNOPPEN ---
-st.markdown('<div class="home-btn-container">', unsafe_allow_html=True)
-c_nav1, c_nav2 = st.columns([1, 1])
-
-with c_nav1:
-    if st.button("🏠 ← Go Back to Website", type="secondary", use_container_width=True):
-        st.switch_page("Home.py")
-
-with c_nav2:
-    if st.button("🌍 Open CO₂ Dashboard →", use_container_width=True):
-        st.switch_page("pages/Dashboard.py")
-        
-st.markdown('</div>', unsafe_allow_html=True)
-
-# --- LAYOUT VERDELING ---
-col_inbox, col_details = st.columns([1, 2], gap="large")
-
-selected_id = st.session_state.selected_order.get('id') if st.session_state.selected_order else None
-
 # =========================================================
 # LINKER KOLOM: INBOX & GESCHIEDENIS
 # =========================================================
