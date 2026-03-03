@@ -53,7 +53,7 @@ def confirm_delete_dialog(order_id):
             st.session_state.selected_order = None
             st.rerun()
 
-# --- CSS STYLING (Witruimte fix & Lichte velden) ---
+# --- CSS STYLING ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -81,9 +81,9 @@ st.markdown("""
         border-radius: 6px !important;
     }
     input { color: #111111 !important; }
-
-    /* Fix witruimte tussen filter en orders */
-    .stSelectbox, .stDateInput { margin-bottom: -10px !important; }
+    
+    /* Zorg dat de label tekst boven de datumkiezer zwart is */
+    label[data-testid="stWidgetLabel"] { color: #333333 !important; font-weight: 600; font-size: 13px; }
 
     /* Inbox Kaarten */
     .inbox-card {
@@ -136,13 +136,16 @@ with col_inbox:
             st.session_state.view_status = 'Processed'
             st.rerun()
             
-    # 2. Dropdown met nieuwe optie "Aangepaste datum..."
+    # 2. Dropdown Filter
     filter_optie = st.selectbox("Filter", ["Alle orders", "Vandaag", "Deze week", "Vorige week", "Aangepaste datum..."], label_visibility="collapsed")
     
     # 3. Toon Datumkiezer ALLEEN bij "Aangepaste datum..."
     custom_dates = []
     if filter_optie == "Aangepaste datum...":
-        custom_dates = st.date_input("Selecteer datum/periode", value=[], label_visibility="collapsed")
+        # Hier is de label_visibility='collapsed' weggehaald zodat de tekst zichtbaar is!
+        custom_dates = st.date_input("Kies een specifieke dag of een periode (klik begin- en einddatum):", value=[])
+    else:
+        st.write("") # Extra lege regel als de kalender er niet is voor een gelijke opmaak
 
     # Filteren van de data
     filtered_orders = [o for o in all_orders if o['status'] == st.session_state.view_status]
@@ -167,11 +170,9 @@ with col_inbox:
         except:
             if filter_optie == "Alle orders": final_list.append(o)
 
-    st.write("") # Minimale ruimte voor de lijst begint
-
     # 4. Weergave lijst
     if not final_list:
-        st.info("Geen orders gevonden.")
+        st.info("Geen orders gevonden in deze periode.")
     else:
         for o in final_list:
             is_active = "selected-card" if st.session_state.selected_order and o['id'] == st.session_state.selected_order['id'] else ""
