@@ -69,7 +69,7 @@ st.markdown("""
     }
     .planner-banner h1, .planner-banner p { color: #ffffff !important; }
     
-    /* INPUT VELDEN (Datumkiezer & Dropdown lichter maken met subtiele rand) */
+    /* INPUT VELDEN */
     div[data-baseweb="select"] > div, 
     div[data-baseweb="input"] > div, 
     div[data-baseweb="base-input"] {
@@ -80,39 +80,35 @@ st.markdown("""
     }
     input[type="text"], div[data-baseweb="select"] span { color: #111111 !important; }
     
-    /* -----------------------------------------------------------------
-       TABBLADEN VERBETERING (Breder en uit elkaar, rode lijn weg!)
-       ----------------------------------------------------------------- */
+    /* TABBLADEN */
     div[data-baseweb="tab-list"] { 
         gap: 15px; margin-bottom: 15px; width: 100%; 
     }
-    div[data-baseweb="tab-highlight"] { display: none !important; } /* Sloop de rode lijn eruit */
+    div[data-baseweb="tab-highlight"] { display: none !important; } 
     
     button[data-baseweb="tab"] {
-        flex: 1; /* Hiermee worden ze even breed over het hele vak verdeeld */
+        flex: 1; 
         justify-content: center;
         padding: 12px 20px !important;
         background-color: #f8f9fa !important;
-        border: 1px solid #eaeaea !important;
+        border: 1px solid #dcdcdc !important;
         border-radius: 8px !important;
         transition: all 0.2s;
     }
     button[data-baseweb="tab"][aria-selected="true"] {
         background-color: #ffffff !important;
-        border: 1px solid #dcdcdc !important;
-        border-bottom: 3px solid #894b9d !important; /* Paarse actieve lijn */
-        box-shadow: 0 2px 5px rgba(0,0,0,0.02) !important;
+        border: 1px solid #b0b0b0 !important;
+        border-bottom: 3px solid #894b9d !important; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
     }
     button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; font-size: 15px !important;}
     
-    /* -----------------------------------------------------------------
-       BOXJES & SUBTIELE RANDEN ZODAT ELEMENTEN NIET MEER 'SMELTEN'
-       ----------------------------------------------------------------- */
+    /* BOXJES & DUIDELIJKE RANDEN OM DE SECTIES */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important; 
-        border: 1px solid #e8e8e8 !important; /* ZEER subtiele rand, net niet onzichtbaar */
+        border: 1px solid #d1d5db !important; /* Duidelijkere grijze rand (balk/kader) */
         border-radius: 10px !important;
-        box-shadow: 0 1px 6px rgba(0,0,0,0.02) !important; /* Zacht schaduwtje voor diepte */
+        box-shadow: 0 4px 10px rgba(0,0,0,0.04) !important; /* Iets meer schaduw voor diepte */
         padding: 20px !important;
     }
     
@@ -175,17 +171,17 @@ start_vorige_maand = eind_vorige_maand.replace(day=1)
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
-    # We zetten de hele inbox in een subtiel kader!
+    # Kader rondom de HELE inbox sectie
     with st.container(border=True):
-        st.subheader("📥 Inbox")
+        st.subheader("Inbox") # Icoon weggehaald!
         
-        filter_optie = st.selectbox("⏱️ Filter Periode", ["Alle orders", "Deze week", "Vorige week", "Vorige maand", "Aangepaste datum..."])
+        filter_optie = st.selectbox("Filter Periode", ["Alle orders", "Deze week", "Vorige week", "Vorige maand", "Aangepaste datum..."])
         
         filter_dates = []
         if filter_optie == "Deze week": filter_dates = [start_deze_week, eind_deze_week]
         elif filter_optie == "Vorige week": filter_dates = [start_vorige_week, eind_vorige_week]
         elif filter_optie == "Vorige maand": filter_dates = [start_vorige_maand, eind_vorige_maand]
-        elif filter_optie == "Aangepaste datum...": filter_dates = st.date_input("📅 Kies een periode of dag", value=[])
+        elif filter_optie == "Aangepaste datum...": filter_dates = st.date_input("Kies een periode of dag", value=[])
 
         st.write("") 
         
@@ -227,9 +223,10 @@ with col_inbox:
             render_order_list("Processed")
 
 with col_details:
-    # We zetten ook de hele detailpagina in een eigen subtiel kader!
+    # Kader rondom de HELE detail sectie
     with st.container(border=True):
-        st.subheader("📋 Order Details")
+        st.subheader("Order Details") # Icoon weggehaald!
+        
         if st.session_state.selected_order:
             o = st.session_state.selected_order
             with st.container(border=True):
@@ -251,11 +248,10 @@ with col_details:
         else:
             st.info("Select an order from the inbox to view details.")
 
-# --- NAVIGATIE KNOPPEN ONDERAAN (AAN DE RECHTERKANT!) ---
+# --- NAVIGATIE KNOPPEN ONDERAAN ---
 st.write("---")
 st.write("")
 
-# Door de layout [2, 1, 1] duwen we de knoppen mooi naar de rechterkant van het scherm
 spacer, col_btn_1, col_btn_2 = st.columns([2, 1.2, 1.2])
 
 with col_btn_1:
