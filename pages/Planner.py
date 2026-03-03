@@ -1,5 +1,6 @@
 import streamlit as st
 from supabase import create_client
+from datetime import datetime
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -27,9 +28,10 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-    /* 1. FORCEER ACHTERGROND WIT EN TEKST ZWART */
+    /* Achtergrond wit, teksten zwart (ZONDER !important bij de p-tags zodat kleuren werken) */
     .stApp { background-color: #ffffff !important; }
-    .stMarkdown, .stText, p, h1, h2, h3, h4, h5, h6 { color: #111111 !important; }
+    h1, h2, h3, h4, h5, h6 { color: #111111 !important; }
+    p, .stMarkdown, .stText { color: #111111; } 
 
     /* Verberg standaard Streamlit elementen */
     header[data-testid="stHeader"] { visibility: hidden; display: none !important; }
@@ -58,41 +60,26 @@ st.markdown("""
         text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;
     }
 
-    /* Ruimte maken voor de navbar */
     .block-container { padding-top: 110px !important; max-width: 95%; }
 
-    /* 2. PAARS HEADER BLOK (ZORG DAT DE TEKST HIER WIT BLIJFT) */
+    /* PAARS HEADER BLOK */
     .planner-banner {
         background-color: #894b9d !important; padding: 40px; border-radius: 12px; margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
     .planner-banner h1, .planner-banner p { color: #ffffff !important; }
     
-    /* 3. INBOX & DETAILS BOXJES (Lichte opmaak) */
+    /* BOXJES & KNOPPEN */
     div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #ffffff !important;
-        border: 1px solid #e0e0e0 !important;
-        border-radius: 8px !important;
+        background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; border-radius: 8px !important;
     }
-    div[data-testid="stVerticalBlockBorderWrapper"] p {
-        color: #111111 !important;
-    }
-    
-    /* Knoppen in de planner (lichte knoppen met donkere tekst) */
-    div.stButton > button {
-        background-color: #f0f2f6 !important;
-        color: #111111 !important;
-        border: 1px solid #dcdcdc !important;
-    }
+    div.stButton > button { background-color: #f0f2f6 !important; color: #111111 !important; border: 1px solid #dcdcdc !important; }
     div.stButton > button:hover { background-color: #e0e2e6 !important; }
-    
-    /* De 'Process Order' knop moet wel paars blijven */
-    div.stButton > button[kind="primary"] {
-        background-color: #894b9d !important;
-        color: #ffffff !important;
-        border: none !important;
-    }
+    div.stButton > button[kind="primary"] { background-color: #894b9d !important; color: #ffffff !important; border: none !important; }
     div.stButton > button[kind="primary"]:hover { background-color: #723e83 !important; }
+    
+    /* Zorg dat tabbladen netjes zwart zijn */
+    button[data-baseweb="tab"] p { color: #111111 !important; font-weight: 600; }
     </style>
 
     <div class="navbar">
@@ -140,32 +127,78 @@ col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
     st.subheader("📥 Inbox")
-    for o in orders:
-        with st.container(border=True):
-            status_color = "#ff4b4b" if o['status'] == 'New' else "#28a745"
-            st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>● {o['status']}</span> | {o['company']}", unsafe_allow_html=True)
-            st.write(f"*{o['types']}*")
-            st.caption(f"Received: {o['received_date']}")
-            if st.button(f"Open Order #{o['id']}", key=f"btn_{o['id']}", use_container_width=True):
-                st.session_state.selected_order = o
-                st.rerun()
+    
+    # DATUM FILTER (Kan leeg zijn, 1 datum bevatten, of een range van 2 datums)
+    filter_dates = st.date_input("📅 Filter op Datum (Selecteer een periode of specifieke dag)", value=[])
+    
+    # TABBLADEN VOOR DUIDELIJK ONDERSCHEID
+    tab_new, tab_proc = st.tabs(["🔴 New Orders", "🟢 Processed Orders"])
+    
+    # Functie om de gefilterde lijst weer te geven per tab
+    def render_order_list(status_filter):
+        # 1. Filter eerst op status
+        filtered_orders = [o for o in orders if o.get('status') == status_filter]
+        
+        # 2. Pas de datumfilter toe als er iets gekozen is
+        if len(filter_dates) > 0:
+            date_filtered = []
+            for o in filtered_orders:
+                try:
+                    # Haal de datum uit de "YYYY-MM-DD HH:MM" string
+                    order_date = datetime.strptime(o['received_date'][:10], "%Y-%m-%d").date()
+                    
+                    if len(filter_dates) == 2: # Een periode geselecteerd
+                        if filter_dates[0] <= order_date <= filter_dates[1]:
+                            date_filtered.append(o)
+                    elif len(filter_dates) == 1: # Precies één dag geselecteerd
+                        if order_date == filter_dates[0]:
+                            date_filtered.append(o)
+                except Exception:
+                    # Als de datum niet gelezen kan worden, sluiten we hem voor de zekerheid toch in
+                    date_filtered.append(o)
+            filtered_orders = date_filtered
+            
+        # Weergave van de overgebleven orders
+        if not filtered_orders:
+            st.info(f"No {status_filter.lower()} orders found for this selection.")
+            
+        for o in filtered_orders:
+            with st.container(border=True):
+                status_color = "#ff4b4b" if o['status'] == 'New' else "#28a745"
+                # Door de aangepaste CSS blijft de inline kleur nu netjes werken
+                st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>● {o['status']}</span> | **{o['company']}**", unsafe_allow_html=True)
+                st.write(f"*{o['types']}*")
+                st.caption(f"Received: {o['received_date']}")
+                
+                if st.button(f"Open Order #{o['id']}", key=f"btn_{o['id']}", use_container_width=True):
+                    st.session_state.selected_order = o
+                    st.rerun()
+
+    # Toon de lijsten in de juiste tab
+    with tab_new:
+        render_order_list("New")
+    with tab_proc:
+        render_order_list("Processed")
 
 with col_details:
     st.subheader("📋 Order Details")
     if st.session_state.selected_order:
         o = st.session_state.selected_order
         with st.container(border=True):
+            status_c = "🔴 New" if o['status'] == 'New' else "🟢 Processed"
             st.write(f"### Order #{o['id']} - {o['company']}")
+            st.write(f"**Status:** {status_c}")
             st.write("---")
             st.write(f"**Contact:** {o['contact_name']} | {o['email']} | {o['phone']}")
             st.write(f"**Pickup:** {o['pickup_address']}, {o['pickup_zip']} {o['pickup_city']}")
             st.write(f"**Delivery:** {o['delivery_address']}, {o['delivery_zip']} {o['delivery_city']}")
             st.write("---")
             st.text(o['info'])
+            
             if o['status'] == 'New':
                 if st.button("✅ Process Order", type="primary", use_container_width=True):
                     supabase.table("orders").update({"status": "Processed"}).eq("id", o['id']).execute()
                     st.session_state.selected_order['status'] = 'Processed'
                     st.rerun()
     else:
-        st.info("Select an order to view details.")
+        st.info("Select an order from the inbox to view details.")
