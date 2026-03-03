@@ -161,8 +161,14 @@ st.markdown("""
     div.stButton > button:hover { background-color: #723e83 !important; }
     div.stButton > button[kind="secondary"] { background-color: #e0e6ed !important; color: #333 !important;}
     
-    /* Pop-up fix */
-    div[data-testid="stDialog"] { border-radius: 12px !important; }
+    /* --- POP-UP FIX (Witte achtergrond & donkere tekst) --- */
+    div[data-testid="stModal"] > div, div[data-testid="stDialog"] { 
+        background-color: #ffffff !important; 
+        border-radius: 12px !important; 
+    }
+    div[data-testid="stDialog"] h2 {
+        color: #111111 !important;
+    }
     </style>
 
     <div class="navbar">
