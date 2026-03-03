@@ -20,7 +20,7 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- CSS STYLING GLOBAL & NAVBAR HTML (Dark Mode with White Header & Centered Cards) ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -36,55 +36,54 @@ st.markdown("""
     [data-testid="stSidebar"] { display: none !important; }
     header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
     
-    /* --- NAVBAR (Donkere versie) --- */
+    /* --- NAVBAR (Wit, met het logo) --- */
     .block-container { padding-top: 110px; }
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
-        background-color: #212529; z-index: 999; border-bottom: 1px solid #333333; 
+        background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
         display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-        padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
     .nav-logo { display: flex; justify-content: flex-start; }
     .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
     .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
     .nav-logo a:hover img { transform: scale(1.05); } 
-    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #ffffff; justify-content: center;}
-    .nav-links a { text-decoration: none; color: inherit; }
-    .nav-links span { cursor: pointer; transition: color 0.2s; }
-    .nav-links span:hover { color: #c48bd6; }
+    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center;}
+    .nav-links a { text-decoration: none; color: #111111 !important; }
+    .nav-links span { cursor: pointer; transition: color 0.2s; color: #111111 !important;}
+    .nav-links span:hover { color: #894b9d !important; }
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
     
-    /* Knoppen styling (Donkere versie) */
+    /* Knoppen styling in de navbar */
     .cta-btn { 
-        background-color: #894b9d; color: white !important; padding: 10px 24px;
+        background-color: #894b9d !important; color: white !important; padding: 10px 24px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
         font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         cursor: pointer; transition: background-color 0.2s; white-space: nowrap;
     }
-    .cta-btn:hover { background-color: #723e83; }
+    .cta-btn:hover { background-color: #723e83 !important; }
 
     .cta-btn-outline {
-        background-color: transparent; color: #c48bd6 !important; padding: 10px 20px;
+        background-color: transparent !important; color: #894b9d !important; padding: 10px 20px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
         font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d;
         cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
-    .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
+    .cta-btn-outline:hover { background-color: #894b9d !important; color: white !important; }
 
     /* Streamlit Knoppen (Back knop, donkergrijs) */
     div.stButton > button { background-color: #333333 !important; color: #ffffff !important; border: none; font-weight: bold; border-radius: 6px;}
     div.stButton > button:hover { background-color: #4f4f4f !important; }
 
-    /* --- DE FIX VOOR DE WITTE BANNER --- */
+    /* --- TITEL BANNER (Weer mooi paars) --- */
     .header-banner {
-        background-color: #ffffff !important;
+        background-color: #723e83 !important;
         padding: 30px 40px;
         border-radius: 12px;
         margin-bottom: 20px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.2);
     }
-    /* Tekst in de witte banner moet donker zijn */
-    .header-banner h1, .header-banner p { color: #111111 !important; }
+    .header-banner h1, .header-banner p { color: #ffffff !important; }
     .header-banner h1 { margin: 0; font-weight: 700; }
     .header-banner p { margin: 5px 0 0 0; font-size: 14px;}
     
@@ -100,7 +99,7 @@ st.markdown("""
         padding: 15px;
     }
 
-    /* --- DE STYLING VOOR JOUW CUSTOMER CARDS (Donkere versie & Gecentreerd) --- */
+    /* --- DE STYLING VOOR JOUW CUSTOMER CARDS (Donker & Gecentreerd) --- */
     .customer-card {
         background-color: #212529;
         border: 1px solid #333333;
@@ -126,7 +125,7 @@ st.markdown("""
         flex: 1;
         display: flex;
         flex-direction: column;
-        text-align: center; /* DE FIX VOOR JOUW GECENTREERDE TEKST */
+        text-align: center; /* Hierdoor staat alles strak in het midden */
     }
     .metric-label {
         font-size: 12px;
@@ -162,7 +161,7 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- HEADER (Nu met witte banner in CSS) ---
+# --- HEADER BANNER ---
 st.markdown('<div class="header-banner">'
             '<h1>Performance & Margin Analysis</h1>'
             '<p>Financial impact and sustainability tracking</p></div>', unsafe_allow_html=True)
@@ -207,7 +206,6 @@ k1, k2, k3, k4 = st.columns(4)
 total_profit = df['profit'].sum()
 avg_margin = df['margin_pct'].mean()
 
-# Metrics hebben nu helderwitte tekst
 k1.metric("Total Fuel Cost", f"{df['fuel_cost'].sum():,.0f} NOK")
 k2.metric("Total Profit", f"{total_profit:,.0f} NOK", delta=f"{avg_margin:.1f}% Avg. Margin")
 k3.metric("CO₂ Footprint", f"{df['co2_emission_kg'].sum():,.0f} kg")
@@ -223,7 +221,6 @@ with col_left:
     st.write("### Profitability per Customer")
     df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
     
-    # Gebruik nu de donkere template voor Plotly grafieken
     fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#c48bd6'], template="plotly_dark")
     fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Customer", yaxis_title="Net Profit (NOK)")
     st.plotly_chart(fig_profit, use_container_width=True)
@@ -235,7 +232,6 @@ with col_right:
         df['date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
         df_trend = df.groupby('date')['profit'].sum().reset_index()
         
-        # Groene lijn voor winst trend
         fig_line = px.line(df_trend, x='date', y='profit', markers=True, 
                            color_discrete_sequence=['#27ae60'], template="plotly_dark")
         fig_line.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Date", yaxis_title="Daily Profit (NOK)")
@@ -261,7 +257,6 @@ for i, (index, row) in enumerate(customer_group.iterrows()):
     target_col = card_col1 if i % 2 == 0 else card_col2
     with target_col:
         margin_color = "#27ae60" if row['margin_pct'] > 85 else "#e67e22"
-        # Dankzij de toegevoegde donkere CSS zien deze kaarten er nu perfect uit!
         st.markdown(f"""
         <div class="customer-card">
             <div class="customer-name">{row['company']}</div>
