@@ -643,7 +643,7 @@ with col_main:
                         del st.session_state[key]
                 st.rerun()
 
-# =========================================================
+    # =========================================================
     # DE DEMO KNOPPEN NAAR DE PLANNER & DASHBOARD
     # =========================================================
     st.write("")
@@ -660,6 +660,3 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
-
-
-
