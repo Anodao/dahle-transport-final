@@ -68,16 +68,20 @@ st.markdown("""
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; 
-        display: grid; grid-template-columns: 1fr auto auto; align-items: center;
-        padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); gap: 20px;
+        /* HIER IS DE FIX: 1fr (links), auto (midden), 1fr (rechts) */
+        display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+        padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     .nav-logo { display: flex; justify-content: flex-start; }
     .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
     .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
     .nav-logo a:hover img { transform: scale(1.05); } 
+    
+    /* Tekst exact in het midden centreren */
     .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; justify-content: center;}
     .nav-links span { cursor: pointer; transition: color 0.2s; }
     .nav-links span:hover { color: #894b9d; }
+    
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
     
     /* Jouw originele knop */
@@ -97,8 +101,6 @@ st.markdown("""
         cursor: pointer; transition: all 0.2s;
     }
     .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
-
-    /* Rest van je originele CSS (Step tracker etc) blijft hieronder staan... */
 
     /* --- STEP TRACKER --- */
     .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
@@ -131,7 +133,7 @@ st.markdown("""
     div[data-baseweb="select"] div { color: white; background-color: #333;}
     </style>
     
-<div class="navbar">
+    <div class="navbar">
         <div class="nav-logo">
             <a href="?reset=true" target="_self" title="Go back to Step 1">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
@@ -634,4 +636,5 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
 
