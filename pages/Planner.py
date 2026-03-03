@@ -101,14 +101,13 @@ st.markdown("""
     .header-banner h1 { margin: 0; font-weight: 700; }
     .header-banner p { margin: 5px 0 0 0; font-size: 14px;}
 
-    /* --- INPUT VELDEN FIX: FORCEER ALLES NAAR ZWART --- */
+    /* --- INPUT VELDEN (Forceer alles naar zwart) --- */
     div[data-baseweb="select"] > div, div[data-baseweb="base-input"] {
         background-color: #ffffff !important;
         border: 1px solid #d1d5db !important;
         border-radius: 6px !important;
     }
     
-    /* Omzeil de Streamlit Dark Mode lock door -webkit-text-fill-color te gebruiken */
     .stSelectbox div[data-baseweb="select"] span, 
     .stSelectbox div[data-baseweb="select"] div,
     .stDateInput input {
@@ -116,14 +115,12 @@ st.markdown("""
         -webkit-text-fill-color: #111111 !important;
     }
     
-    /* De placeholder tekst (YYYY/MM/DD) */
     .stDateInput input::placeholder {
         color: #666666 !important;
         -webkit-text-fill-color: #666666 !important;
     }
     
-    label[data-testid="stWidgetLabel"] { color: #333333 !important; font-weight: 600; font-size: 13px; }
-    .stSelectbox, .stDateInput { margin-bottom: -10px !important; }
+    label[data-testid="stWidgetLabel"] { color: #333333 !important; font-weight: 600; font-size: 14px; }
 
     /* Inbox Kaarten */
     .inbox-card {
@@ -190,15 +187,13 @@ with col_inbox:
             st.session_state.view_status = 'Processed'
             st.rerun()
             
-    # 2. Dropdown Filter
-    filter_optie = st.selectbox("Filter", ["Alle orders", "Vandaag", "Deze week", "Vorige week", "Aangepaste datum..."], label_visibility="collapsed")
+    # 2. Dropdown Filter MET ICOON EN DUIDELIJK LABEL
+    filter_optie = st.selectbox("📅 Filter op datum:", ["Alle orders", "Vandaag", "Deze week", "Vorige week", "Aangepaste datum..."])
     
     # 3. Toon Datumkiezer ALLEEN bij "Aangepaste datum..."
     custom_dates = []
     if filter_optie == "Aangepaste datum...":
         custom_dates = st.date_input("Kies een specifieke dag of een periode (klik begin- en einddatum):", value=today)
-    else:
-        st.write("") 
 
     # Filteren van de data
     filtered_orders = [o for o in all_orders if o['status'] == st.session_state.view_status]
@@ -224,6 +219,8 @@ with col_inbox:
                     if order_date == custom_dates: final_list.append(o)
         except:
             if filter_optie == "Alle orders": final_list.append(o)
+
+    st.write("") # Beetje ademruimte voor de lijst begint
 
     # 4. Weergave lijst
     if not final_list:
@@ -253,19 +250,29 @@ with col_inbox:
 with col_details:
     st.markdown("<h3 style='color:#333333; margin-bottom: 10px;'>Order Details</h3>", unsafe_allow_html=True)
     selected = st.session_state.selected_order
+    
     if not selected:
         st.info("Selecteer een order uit de inbox.")
     else:
         with st.container(border=True):
             st.markdown(f"## Order #{selected['id']}")
-            st.markdown(f"**Bedrijf:** {selected['company']}")
-            st.markdown(f"**Contact:** {selected['contact_name']} ({selected['phone']})")
-            st.markdown(f"**Route:** {selected['pickup_address']} ➔ {selected['delivery_address']}")
             
-            # --- FIX VOOR DE REGELAFBREKINGEN IN DE EXTRA INFO ---
+            # --- 1. KLANTINFORMATIE ---
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 20px;'>Klantinformatie</h4>", unsafe_allow_html=True)
+            st.markdown(f"**Bedrijf:** {selected['company']}")
+            st.markdown(f"**Contactpersoon:** {selected['contact_name']}")
+            st.markdown(f"**Telefoonnummer:** {selected['phone']}")
+            
+            # --- 2. ROUTE DETAILS ---
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 20px;'>Route details</h4>", unsafe_allow_html=True)
+            st.markdown(f"**Van (Ophaaladres):** {selected['pickup_address']}")
+            st.markdown(f"**Naar (Afleveradres):** {selected['delivery_address']}")
+            
+            # --- 3. SPECIFICATIES ---
+            st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 20px;'>Order specificaties</h4>", unsafe_allow_html=True)
             raw_info = selected.get('info', '')
             if raw_info:
-                # We vervangen enkele enters door dubbele enters zodat Markdown ze correct onder elkaar zet.
+                # Zorgt dat enters in de tekst ook echt als enters worden getoond
                 formatted_info = str(raw_info).replace('\n', '\n\n')
                 st.info(formatted_info)
             else:
