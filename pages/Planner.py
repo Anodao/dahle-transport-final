@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from supabase import create_client
 
 # --- PAGE CONFIG ---
@@ -21,282 +21,192 @@ def init_connection():
 try:
     supabase = init_connection()
 except Exception as e:
-    st.error("⚠️ Database connection failed. Please check your secrets.toml file.")
+    st.error("Database connection failed.")
     st.stop()
 
-# --- HAAL DATA LIVE OP UIT DATABASE ---
-try:
-    active_resp = supabase.table("orders").select("*").eq("status", "New").order("id", desc=True).execute()
-    active_orders = active_resp.data
-    
-    processed_resp = supabase.table("orders").select("*").eq("status", "Processed").order("processed_at", desc=True).execute()
-    processed_orders = processed_resp.data
-except Exception as e:
-    st.error(f"Error fetching data: {e}")
-    active_orders = []
-    processed_orders = []
-
-# --- INITIALIZE STATE VOOR GESELECTEERDE ORDER ---
+# --- INITIALIZE STATE ---
 if 'selected_order' not in st.session_state:
     st.session_state.selected_order = None
+if 'view_status' not in st.session_state:
+    st.session_state.view_status = 'New'
 
-# Zorg dat de openstaande order geüpdatet blijft als de database verandert
-if st.session_state.selected_order:
-    curr_id = st.session_state.selected_order['id']
-    found = next((o for o in active_orders + processed_orders if o['id'] == curr_id), None)
-    st.session_state.selected_order = found
-
-# --- POP-UP WAARSCHUWING VOOR VERWIJDEREN ---
-@st.dialog("⚠️ Confirm Deletion")
+# --- POP-UP VOOR VERWIJDEREN ---
+@st.dialog("Confirm Deletion")
 def confirm_delete_dialog(order_id):
     st.write(f"Are you sure you want to permanently delete **Order #{order_id}**?")
-    st.caption("This action cannot be undone. The order will be removed from the database entirely.")
-    
-    st.write("") # Extra witregel voor ademruimte
+    st.write("")
     c1, c2 = st.columns(2)
     with c1:
-        # Annuleren sluit simpelweg de pop-up
-        if st.button("Cancel", type="secondary", use_container_width=True):
+        if st.button("Cancel", use_container_width=True):
             st.rerun()
     with c2:
-        # Definitief verwijderen
-        if st.button("🗑️ Yes, Delete", use_container_width=True):
+        if st.button("Delete", type="primary", use_container_width=True):
             supabase.table("orders").delete().eq("id", order_id).execute()
             st.session_state.selected_order = None
             st.rerun()
 
-# --- CSS STYLING VOOR DE PLANNER ---
+# --- CSS STYLING ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
     
-    /* Verberg de sidebar en knoppen volledig */
-    [data-testid="collapsedControl"] { display: none !important; }
-    [data-testid="stSidebar"] { display: none !important; }
-    header[data-testid="stHeader"] { display: none !important; }
+    [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
     
-    /* Algemene achtergrond voor de planner */
-    .stApp { background-color: #f8f9fa !important; }
+    .stApp { background-color: #ffffff !important; }
     .block-container { padding-top: 2rem; }
 
-    /* De donkerpaarse Dahle Transport header banner bovenaan */
+    /* Header Banner */
     .header-banner {
-        background-color: #894b9d; /* DAHLE PAARS */
-        padding: 30px 40px;
-        border-radius: 12px;
+        background-color: #894b9d;
+        padding: 25px 35px;
+        border-radius: 10px;
         margin-bottom: 20px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     }
-    .header-banner h1 { color: #ffffff !important; margin: 0; font-weight: 700; letter-spacing: 0.5px;}
-    .header-banner p { color: #e0d0e6 !important; margin: 5px 0 0 0; font-size: 14px;}
+    .header-banner h1 { color: #ffffff !important; margin: 0; font-size: 28px; }
+    .header-banner p { color: #f0f0f0 !important; margin: 0; font-size: 14px; opacity: 0.8; }
 
-    /* --- INBOX KAARTEN STYLING --- */
-    .inbox-card {
-        background-color: #ffffff !important;
-        border: 1px solid #e0e6ed !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        margin-bottom: 5px !important;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02) !important;
-        transition: all 0.2s ease-in-out;
+    /* Inbox Kaarten */
+    .order-card {
+        background-color: #fcfcfc;
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 10px;
     }
-    .processed-card {
-        background-color: #f8f9fa !important;
-        border: 1px dashed #bdc3c7 !important;
-        border-radius: 8px !important;
-        padding: 20px !important;
-        margin-bottom: 5px !important;
-        transition: all 0.2s ease-in-out;
-    }
-
-    /* --- HIGHLIGHT EFFECT VOOR GESELECTEERDE ORDER --- */
     .selected-card {
         border: 2px solid #894b9d !important;
-        background-color: #faf5fc !important; 
-        box-shadow: 0 6px 12px rgba(137, 75, 157, 0.15) !important;
-        transform: translateX(8px); 
+        background-color: #faf5fc !important;
     }
 
-    .inbox-title { color: #333333 !important; font-weight: 700; font-size: 16px; margin: 0 0 8px 0; }
-    .inbox-subtitle { color: #666666 !important; font-size: 13px; margin: 0 0 8px 0; line-height: 1.4;}
-    .inbox-date { color: #888888 !important; font-size: 11px; margin: 0; }
-    .status-new { color: #e74c3c !important; font-weight: 900; }
-    .status-done { color: #27ae60 !important; font-weight: 900; }
+    /* Knoppen Styling */
+    div.stButton > button { border-radius: 6px; font-weight: 600; }
     
-    /* Custom styling voor de details in de box rechts */
-    .detail-label { color: #888888 !important; font-size: 12px; font-weight: 700; text-transform: uppercase; margin-bottom: 0px !important; letter-spacing: 0.5px;}
-    .detail-value { color: #333333 !important; font-size: 16px; font-weight: 500; margin-top: 2px !important; margin-bottom: 15px !important;}
-    
-    /* Container voor de 'Go Back' knop */
-    .home-btn-container { margin-bottom: 30px; }
-    .card-spacer { margin-bottom: 20px; }
-    
-    /* Streamlit Knoppen fix voor planner (Dahle Paars) */
-    div.stButton > button { background-color: #894b9d !important; color: white !important; border: none; font-weight: bold; border-radius: 6px;}
-    div.stButton > button:hover { background-color: #723e83 !important; }
-    
-    /* Secundaire knop (voor "Delete" of "Go Back") */
-    div.stButton > button[kind="secondary"] { background-color: #e0e6ed !important; color: #333 !important;}
-    div.stButton > button[kind="secondary"]:hover { background-color: #bdc3c7 !important; }
+    /* Toggle buttons bovenaan inbox */
+    .st-emotion-cache-12w0qpk { gap: 0.5rem; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- HEADER BANNER ---
+# --- HEADER ---
 st.markdown("""
 <div class="header-banner">
-    <h1>🔒 Planner Dashboard</h1>
+    <h1>Planner Dashboard</h1>
     <p>Internal Use Only</p>
 </div>
 """, unsafe_allow_html=True)
 
-# --- NAVIGATIE KNOPPEN ---
-st.markdown('<div class="home-btn-container">', unsafe_allow_html=True)
-c_nav1, c_nav2 = st.columns([1, 1])
+# --- DATA OPHALEN ---
+try:
+    # Haal orders op basis van de gekozen status
+    resp = supabase.table("orders").select("*").eq("status", st.session_state.view_status).order("id", desc=True).execute()
+    orders = resp.data
+except:
+    orders = []
 
-with c_nav1:
-    if st.button("🏠 ← Go Back to Website", type="secondary", use_container_width=True):
-        st.switch_page("Home.py")
-
-with c_nav2:
-    if st.button("🌍 Open CO₂ Dashboard →", use_container_width=True):
-        st.switch_page("pages/Dashboard.py")
-        
-st.markdown('</div>', unsafe_allow_html=True)
-
-# --- LAYOUT VERDELING ---
+# --- LAYOUT ---
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
-selected_id = st.session_state.selected_order.get('id') if st.session_state.selected_order else None
-
 # =========================================================
-# LINKER KOLOM: INBOX & GESCHIEDENIS
+# INBOX KOLOM
 # =========================================================
 with col_inbox:
-    # --- 1. ACTIEVE ORDERS ---
-    st.markdown("<h3 style='color:#333333; margin-bottom: 15px;'>📥 Inbox</h3>", unsafe_allow_html=True)
+    st.subheader("Inbox")
     
-    if not active_orders:
-        st.info("No new requests at the moment. Waiting for customers...")
-    else:
-        for o in active_orders: 
-            is_active = "selected-card" if o.get('id') == selected_id else ""
+    # 1. STATUS SELECTIE (Twee knoppen naast elkaar)
+    c_btn_new, c_btn_proc = st.columns(2)
+    with c_btn_new:
+        if st.button("Not Ready", use_container_width=True, 
+                     type="primary" if st.session_state.view_status == 'New' else "secondary"):
+            st.session_state.view_status = 'New'
+            st.rerun()
+    with c_btn_proc:
+        if st.button("Ready", use_container_width=True, 
+                     type="primary" if st.session_state.view_status == 'Processed' else "secondary"):
+            st.session_state.view_status = 'Processed'
+            st.rerun()
             
-            st.markdown(f"""
-<div class="inbox-card {is_active}">
-    <p class="inbox-title"><span class="status-new">🔴 New</span> &nbsp; {o.get('company', 'Unknown')}</p>
-    <p class="inbox-subtitle">{o.get('types', '')}</p>
-    <p class="inbox-date">Received: {o.get('received_date', '')}</p>
-</div>
-""", unsafe_allow_html=True)
-            
-            btn_txt = f"👁️ Viewing Order #{o.get('id')}" if o.get('id') == selected_id else f"Open Order #{o.get('id')}"
-            
-            if st.button(btn_txt, key=f"btn_{o.get('id')}", use_container_width=True):
-                st.session_state.selected_order = o
-                st.rerun()
-            st.markdown('<div class="card-spacer"></div>', unsafe_allow_html=True)
+    # 2. DATUM FILTER BALK
+    date_range = st.date_input("Filter by Date Range", value=[], label_visibility="collapsed")
+    
+    st.write("---")
 
-    # --- 2. VERWERKTE ORDERS (GESCHIEDENIS) ---
-    st.markdown("<br><h3 style='color:#333333; margin-bottom: 15px; border-top: 2px solid #e0e6ed; padding-top: 15px;'>✅ Processed History</h3>", unsafe_allow_html=True)
-    
-    if not processed_orders:
-        st.write("<p style='color:#888888; font-size: 14px;'>No orders have been processed yet.</p>", unsafe_allow_html=True)
+    # 3. ORDER LIJST
+    if not orders:
+        st.info("No orders found for this selection.")
     else:
-        for po in processed_orders:
-            is_active = "selected-card" if po.get('id') == selected_id else ""
+        for o in orders:
+            # Filter op datum indien geselecteerd
+            show_order = True
+            if len(date_range) == 2:
+                o_date = datetime.strptime(o['received_date'][:10], "%Y-%m-%d").date()
+                if not (date_range[0] <= o_date <= date_range[1]):
+                    show_order = False
             
-            st.markdown(f"""
-<div class="processed-card {is_active}">
-    <p class="inbox-title" style="color: #888 !important;"><span class="status-done">✅ Done</span> &nbsp; {po.get('company', 'Unknown')}</p>
-    <p class="inbox-subtitle" style="color: #999 !important;">{po.get('types', '')}</p>
-    <p class="inbox-date">Processed on: {po.get('processed_at', '')}</p>
-</div>
-""", unsafe_allow_html=True)
-            
-            btn_txt = f"👁️ Viewing Order #{po.get('id')}" if po.get('id') == selected_id else f"View Order #{po.get('id')}"
-            
-            if st.button(btn_txt, key=f"btn_hist_{po.get('id')}", type="secondary", use_container_width=True):
-                st.session_state.selected_order = po
-                st.rerun()
-            st.markdown('<div class="card-spacer"></div>', unsafe_allow_html=True)
+            if show_order:
+                is_selected = "selected-card" if st.session_state.selected_order and st.session_state.selected_order['id'] == o['id'] else ""
+                
+                with st.container(border=True):
+                    st.markdown(f"**{o.get('company', 'Unknown')}**")
+                    st.caption(f"Received: {o.get('received_date', '')}")
+                    
+                    if st.button(f"Open Order #{o['id']}", key=f"btn_{o['id']}", use_container_width=True):
+                        st.session_state.selected_order = o
+                        st.rerun()
 
 # =========================================================
-# RECHTER KOLOM: ORDER DETAILS 
+# DETAILS KOLOM
 # =========================================================
 with col_details:
-    st.markdown("<h3 style='color:#333333; margin-bottom: 15px;'>📋 Order Details</h3>", unsafe_allow_html=True)
+    st.subheader("Order Details")
     
     selected = st.session_state.selected_order
-    
     if not selected:
-        st.info("Click on an order in the inbox or history to view the full details here.")
+        st.info("Select an order from the inbox to view the details.")
     else:
-        company = selected.get('company', 'N/A')
-        reg_no = selected.get('reg_no', '')
-        if not reg_no or not reg_no.strip(): reg_no = "Not provided"
-        address = selected.get('address', 'N/A')
-        contact_name = selected.get('contact_name', 'N/A')
-        email = selected.get('email', 'N/A')
-        phone = selected.get('phone', 'N/A')
-        info = selected.get('info', '')
-        if not info or not info.strip(): info = "None provided."
-        s_type = selected.get('types', 'N/A')
-        date = selected.get('received_date', 'N/A')
-        order_id = selected.get('id', 'N/A')
-        status = selected.get('status', 'New')
-
         with st.container(border=True):
-            if status == 'Processed':
-                st.markdown(f"<span style='background-color: #27ae60; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;'>✅ Processed on {selected.get('processed_at', '')}</span>", unsafe_allow_html=True)
-            else:
-                st.markdown("<span style='background-color: #e74c3c; color: white; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;'>🔴 Action Required</span>", unsafe_allow_html=True)
-                
-            st.markdown(f"<h2 style='color: #2c3e50; margin-top: 15px; margin-bottom: 0px;'>Order #{order_id}</h2>", unsafe_allow_html=True)
-            st.markdown(f"<p style='color: #888888; font-size: 13px; margin-bottom: 25px;'>Received on {date}</p>", unsafe_allow_html=True)
+            st.markdown(f"## Order #{selected['id']}")
+            st.write(f"**Status:** {'Not Ready' if selected['status'] == 'New' else 'Ready'}")
+            st.write("---")
             
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 2px solid #f0f3f6; padding-bottom: 5px;'>🏢 Company Information</h4>", unsafe_allow_html=True)
+            # Klant details
+            st.markdown("#### Company Information")
             c1, c2 = st.columns(2)
-            with c1:
-                st.markdown(f"<p class='detail-label'>Company Name</p><p class='detail-value'>{company}</p>", unsafe_allow_html=True)
-            with c2:
-                st.markdown(f"<p class='detail-label'>Registration No.</p><p class='detail-value'>{reg_no}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p class='detail-label'>Registered Address</p><p class='detail-value'>{address}</p>", unsafe_allow_html=True)
+            c1.markdown(f"**Name:**\n{selected['company']}")
+            c2.markdown(f"**Address:**\n{selected['address']}")
             
             st.write("")
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 2px solid #f0f3f6; padding-bottom: 5px;'>👤 Contact Person</h4>", unsafe_allow_html=True)
+            st.markdown("#### Contact Person")
             c3, c4 = st.columns(2)
-            with c3:
-                st.markdown(f"<p class='detail-label'>Name</p><p class='detail-value'>{contact_name}</p>", unsafe_allow_html=True)
-            with c4:
-                st.markdown(f"<p class='detail-label'>Phone</p><p class='detail-value'>{phone}</p>", unsafe_allow_html=True)
-            st.markdown(f"<p class='detail-label'>Email Address</p><p class='detail-value'><a href='mailto:{email}' style='color: #894b9d;'>{email}</a></p>", unsafe_allow_html=True)
+            c3.markdown(f"**Name:**\n{selected['contact_name']}")
+            c4.markdown(f"**Phone:**\n{selected['phone']}")
+            st.markdown(f"**Email:** {selected['email']}")
             
             st.write("")
-            st.markdown("<h4 style='color: #894b9d; border-bottom: 2px solid #f0f3f6; padding-bottom: 5px;'>📦 Shipment Details</h4>", unsafe_allow_html=True)
-            st.markdown(f"<p class='detail-label'>Requested Services</p><p class='detail-value' style='font-weight: 700;'>{s_type}</p>", unsafe_allow_html=True)
-            st.markdown("<p class='detail-label'>Additional Instructions / Details</p>", unsafe_allow_html=True)
-            st.info(info)
+            st.markdown("#### Shipment")
+            st.markdown(f"**Type:** {selected['types']}")
+            st.info(selected['info'] if selected['info'] else "No additional instructions.")
             
             st.write("---")
             
-            c_btn1, c_btn2, _ = st.columns([2, 2, 3])
+            # Actie knoppen
+            ca, cb = st.columns(2)
+            if selected['status'] == 'New':
+                if ca.button("Mark as Ready", use_container_width=True):
+                    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", selected['id']).execute()
+                    st.session_state.selected_order = None
+                    st.rerun()
             
-            if status != 'Processed':
-                with c_btn1:
-                    if st.button("✅ Mark as Processed", use_container_width=True):
-                        now = datetime.now().strftime("%Y-%m-%d %H:%M")
-                        supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", order_id).execute()
-                        st.session_state.selected_order = None 
-                        st.success("Order has been successfully processed!")
-                        time.sleep(1.5)
-                        st.rerun()
-                with c_btn2:
-                    # RIEPT NU DE POP-UP OP IN PLAATS VAN DIRECT TE VERWIJDEREN
-                    if st.button("🗑️ Delete Request", type="secondary", use_container_width=True):
-                        confirm_delete_dialog(order_id)
-            else:
-                with c_btn1:
-                    # RIEPT NU DE POP-UP OP IN PLAATS VAN DIRECT TE VERWIJDEREN
-                    if st.button("🗑️ Delete from History", type="secondary", use_container_width=True):
-                        confirm_delete_dialog(order_id)
+            if cb.button("Delete Request", type="secondary", use_container_width=True):
+                confirm_delete_dialog(selected['id'])
+
+# --- NAVIGATIE ONDERAAN ---
+st.write("")
+st.write("---")
+_, c_nav1, c_nav2 = st.columns([2, 1, 1])
+with c_nav1:
+    if st.button("Go Back to Website", use_container_width=True):
+        st.switch_page("Home.py")
+with c_nav2:
+    if st.button("Open Dashboard", use_container_width=True):
+        st.switch_page("pages/Dashboard.py")
