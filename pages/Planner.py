@@ -1,6 +1,6 @@
 import streamlit as st
 from supabase import create_client
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -28,10 +28,10 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-    /* Achtergrond wit, teksten zwart (ZONDER !important bij de p-tags zodat kleuren werken) */
+    /* Achtergrond wit, teksten zwart */
     .stApp { background-color: #ffffff !important; }
     h1, h2, h3, h4, h5, h6 { color: #111111 !important; }
-    p, .stMarkdown, .stText { color: #111111; } 
+    p, .stMarkdown, .stText, label { color: #111111 !important; } 
 
     /* Verberg standaard Streamlit elementen */
     header[data-testid="stHeader"] { visibility: hidden; display: none !important; }
@@ -69,6 +69,16 @@ st.markdown("""
     }
     .planner-banner h1, .planner-banner p { color: #ffffff !important; }
     
+    /* INPUT VELDEN (Datumkiezer & Dropdown lichter maken) */
+    div[data-baseweb="select"] > div, 
+    div[data-baseweb="input"] > div, 
+    div[data-baseweb="base-input"] {
+        background-color: #f8f9fa !important; 
+        border: 1px solid #ced4da !important; 
+        color: #111111 !important;
+    }
+    input[type="text"], div[data-baseweb="select"] span { color: #111111 !important; }
+    
     /* BOXJES & KNOPPEN */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; border-radius: 8px !important;
@@ -102,17 +112,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- NAVIGATIE KNOPPEN ---
-c1, c2 = st.columns(2)
-with c1:
-    if st.button("🏠 ← Go Back to Website", use_container_width=True):
-        st.switch_page("Home.py")
-with c2:
-    if st.button("🟢 Open CO₂ Dashboard →", use_container_width=True):
-        st.switch_page("pages/Dashboard.py")
-
-st.write("")
-
 # --- DATA & LOGICA ---
 if 'selected_order' not in st.session_state:
     st.session_state.selected_order = None
@@ -123,49 +122,67 @@ try:
 except:
     orders = []
 
+# --- DATUM BEREKENINGEN ---
+vandaag = datetime.now().date()
+start_deze_week = vandaag - timedelta(days=vandaag.weekday())
+eind_deze_week = start_deze_week + timedelta(days=6)
+
+start_vorige_week = start_deze_week - timedelta(days=7)
+eind_vorige_week = start_vorige_week + timedelta(days=6)
+
+eerste_dag_deze_maand = vandaag.replace(day=1)
+eind_vorige_maand = eerste_dag_deze_maand - timedelta(days=1)
+start_vorige_maand = eind_vorige_maand.replace(day=1)
+
+# --- LAYOUT ---
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
     st.subheader("📥 Inbox")
     
-    # DATUM FILTER (Kan leeg zijn, 1 datum bevatten, of een range van 2 datums)
-    filter_dates = st.date_input("📅 Filter op Datum (Selecteer een periode of specifieke dag)", value=[])
+    # SNELLE FILTERS DROPDOWN
+    filter_optie = st.selectbox("⏱️ Filter Periode", ["Alle orders", "Deze week", "Vorige week", "Vorige maand", "Aangepaste datum..."])
     
-    # TABBLADEN VOOR DUIDELIJK ONDERSCHEID
+    # Bepaal de datum op basis van de keuze
+    filter_dates = []
+    if filter_optie == "Deze week":
+        filter_dates = [start_deze_week, eind_deze_week]
+    elif filter_optie == "Vorige week":
+        filter_dates = [start_vorige_week, eind_vorige_week]
+    elif filter_optie == "Vorige maand":
+        filter_dates = [start_vorige_maand, eind_vorige_maand]
+    elif filter_optie == "Aangepaste datum...":
+        filter_dates = st.date_input("📅 Kies een periode of dag", value=[])
+
+    st.write("") # Beetje ademruimte
+    
+    # TABBLADEN
     tab_new, tab_proc = st.tabs(["🔴 New Orders", "🟢 Processed Orders"])
     
-    # Functie om de gefilterde lijst weer te geven per tab
     def render_order_list(status_filter):
-        # 1. Filter eerst op status
         filtered_orders = [o for o in orders if o.get('status') == status_filter]
         
-        # 2. Pas de datumfilter toe als er iets gekozen is
         if len(filter_dates) > 0:
             date_filtered = []
             for o in filtered_orders:
                 try:
-                    # Haal de datum uit de "YYYY-MM-DD HH:MM" string
                     order_date = datetime.strptime(o['received_date'][:10], "%Y-%m-%d").date()
-                    
-                    if len(filter_dates) == 2: # Een periode geselecteerd
+                    if len(filter_dates) == 2: 
                         if filter_dates[0] <= order_date <= filter_dates[1]:
                             date_filtered.append(o)
-                    elif len(filter_dates) == 1: # Precies één dag geselecteerd
+                    elif len(filter_dates) == 1: 
                         if order_date == filter_dates[0]:
                             date_filtered.append(o)
                 except Exception:
-                    # Als de datum niet gelezen kan worden, sluiten we hem voor de zekerheid toch in
                     date_filtered.append(o)
             filtered_orders = date_filtered
             
-        # Weergave van de overgebleven orders
         if not filtered_orders:
-            st.info(f"No {status_filter.lower()} orders found for this selection.")
+            st.info(f"No {status_filter.lower()} orders found in this period.")
             
         for o in filtered_orders:
             with st.container(border=True):
                 status_color = "#ff4b4b" if o['status'] == 'New' else "#28a745"
-                # Door de aangepaste CSS blijft de inline kleur nu netjes werken
                 st.markdown(f"<span style='color:{status_color}; font-weight:bold;'>● {o['status']}</span> | **{o['company']}**", unsafe_allow_html=True)
                 st.write(f"*{o['types']}*")
                 st.caption(f"Received: {o['received_date']}")
@@ -174,7 +191,6 @@ with col_inbox:
                     st.session_state.selected_order = o
                     st.rerun()
 
-    # Toon de lijsten in de juiste tab
     with tab_new:
         render_order_list("New")
     with tab_proc:
@@ -202,3 +218,14 @@ with col_details:
                     st.rerun()
     else:
         st.info("Select an order from the inbox to view details.")
+
+# --- NAVIGATIE KNOPPEN ONDERAAN ---
+st.write("---")
+st.write("")
+c1, c2, spacer1, spacer2 = st.columns(4)
+with c1:
+    if st.button("🏠 ← Go Back to Website", use_container_width=True):
+        st.switch_page("Home.py")
+with c2:
+    if st.button("🟢 Open CO₂ Dashboard →", use_container_width=True):
+        st.switch_page("pages/Dashboard.py")
