@@ -61,7 +61,6 @@ st.markdown("""
     [data-testid="collapsedControl"] { display: none !important; }
     [data-testid="stSidebar"] { display: none !important; }
     header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
-    footer { visibility: hidden; }
     
     /* --- NAVBAR --- */
     .block-container { padding-top: 110px; }
@@ -76,11 +75,12 @@ st.markdown("""
     .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
     .nav-logo a:hover img { transform: scale(1.05); } 
     .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; justify-content: center;}
+    .nav-links a { text-decoration: none; color: inherit; }
     .nav-links span { cursor: pointer; transition: color 0.2s; }
     .nav-links span:hover { color: #894b9d; }
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
     
-    /* Knoppen styling (met nowrap zodat ze niet meer in elkaar drukken) */
+    /* Knoppen styling */
     .cta-btn { 
         background-color: #894b9d; color: white !important; padding: 10px 24px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
@@ -96,48 +96,21 @@ st.markdown("""
         cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
     .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
-
-    /* --- STEP TRACKER --- */
-    .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
-    .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
-    .step-circle {
-        width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555; display: flex; justify-content: center; align-items: center;
-        font-weight: 700; font-size: 16px; color: #aaa; background-color: #262626; margin-bottom: 10px; z-index: 2; transition: 0.3s;
-    }
-    .step-label { font-size: 13px; font-weight: 600; color: #888; text-align: center; }
-    .step-line { height: 2px; width: 60px; background-color: #444; margin-top: 20px; }
-    .step-item.active .step-circle { border-color: #ffffff; background-color: #ffffff; color: #000000; }
-    .step-item.active .step-label { color: #ffffff; }
-    .step-item.completed .step-circle { border-color: #894b9d; background-color: #894b9d; color: white; }
-    .step-item.completed .step-label { color: #894b9d; }
-    .line-completed { background-color: #894b9d; }
-
-    /* --- ALGEMENE FORMS & BUTTONS --- */
-    div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] { 
-        background: #894b9d !important; color: white !important; border: none; border-radius: 6px; 
-        padding: 10px 28px; width: 100%; font-weight: bold;
-    }
-    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { 
-        background: #723e83 !important; color: white !important; 
-    }
-    div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
-    div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
-    label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
-    div[data-baseweb="select"] div { color: white; background-color: #333;}
     </style>
     
     <div class="navbar">
         <div class="nav-logo">
-            <a href="?reset=true" target="_self" title="Go back to Step 1">
+            <a href="/" target="_self" title="Go back to Home">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
             </a>
         </div>
         <div class="nav-links">
-            <span>Hjem</span><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
+            <a href="/"><span>Hjem</span></a>
+            <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
         </div>
         <div class="nav-cta">
-            <a href="Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
-            <a href="?reset=true" target="_self" class="cta-btn">TA KONTAKT</a>
+            <a href="/Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
+            <a href="/" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -629,6 +602,7 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
 
 
 
