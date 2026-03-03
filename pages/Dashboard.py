@@ -32,6 +32,25 @@ if 'view_status' not in st.session_state:
 if 'confirm_action' not in st.session_state:
     st.session_state.confirm_action = None
 
+# --- CALLBACK FUNCTIES (Dit garandeert dat knoppen 100% werken) ---
+def set_confirm_action(action):
+    st.session_state.confirm_action = action
+
+def execute_process_order(order_id):
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", order_id).execute()
+    st.session_state.confirm_action = None
+    st.session_state.selected_order = None
+
+def execute_delete_order(order_id):
+    supabase.table("orders").delete().eq("id", order_id).execute()
+    st.session_state.confirm_action = None
+    st.session_state.selected_order = None
+
+def open_order(order):
+    st.session_state.selected_order = order
+    st.session_state.confirm_action = None
+
 # --- DATA OPHALEN ---
 try:
     resp = supabase.table("orders").select("*").order("id", desc=True).execute()
@@ -50,11 +69,9 @@ st.markdown("""
     
     .stApp { background-color: #f8f9fa !important; }
     
-    /* --- TEKST LEESBAARHEID FIX --- */
     .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown li { color: #111111 !important; }
     div[data-testid="stAlert"] * { color: #111111 !important; }
 
-    /* --- NAVBAR STYLE --- */
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
@@ -77,7 +94,6 @@ st.markdown("""
     
     .block-container { padding-top: 110px !important; }
 
-    /* Header Banner */
     .header-banner {
         background-color: #894b9d;
         padding: 30px 40px;
@@ -88,7 +104,6 @@ st.markdown("""
     .header-banner h1 { margin: 0; font-weight: 700; }
     .header-banner p { margin: 5px 0 0 0; font-size: 14px;}
 
-    /* --- INPUT VELDEN (Forceer alles naar zwart) --- */
     div[data-baseweb="select"] > div, div[data-baseweb="base-input"] {
         background-color: #ffffff !important;
         border: 1px solid #d1d5db !important;
@@ -109,7 +124,6 @@ st.markdown("""
     
     label[data-testid="stWidgetLabel"] { color: #333333 !important; font-weight: 600; font-size: 14px; }
 
-    /* Inbox Kaarten */
     .inbox-card {
         background-color: #ffffff !important;
         border: 1px solid #e0e6ed !important;
@@ -163,28 +177,24 @@ col_inbox, col_details = st.columns([1, 2], gap="large")
 with col_inbox:
     st.markdown("<h3 style='color:#333333; margin-bottom: 10px;'>Inbox</h3>", unsafe_allow_html=True)
 
-    # 1. Status knoppen
     c_btn_new, c_btn_proc = st.columns(2)
     with c_btn_new:
         if st.button("Pending", use_container_width=True, type="primary" if st.session_state.view_status == 'New' else "secondary"):
             st.session_state.view_status = 'New'
-            st.session_state.confirm_action = None # Reset confirmation op tab wissel
+            st.session_state.confirm_action = None 
             st.rerun()
     with c_btn_proc:
         if st.button("Processed", use_container_width=True, type="primary" if st.session_state.view_status == 'Processed' else "secondary"):
             st.session_state.view_status = 'Processed'
-            st.session_state.confirm_action = None # Reset confirmation op tab wissel
+            st.session_state.confirm_action = None 
             st.rerun()
             
-    # 2. Dropdown Filter 
     filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "Custom date..."])
     
-    # 3. Toon Datumkiezer ALLEEN bij "Custom date..."
     custom_dates = []
     if filter_optie == "Custom date...":
         custom_dates = st.date_input("Select a specific day or date range:", value=today)
 
-    # Filteren van de data
     filtered_orders = [o for o in all_orders if o['status'] == st.session_state.view_status]
     final_list = []
 
@@ -211,7 +221,6 @@ with col_inbox:
 
     st.write("") 
 
-    # 4. Weergave lijst
     if not final_list:
         st.info("No orders found for this period.")
     else:
@@ -228,10 +237,8 @@ with col_inbox:
             </div>
             """, unsafe_allow_html=True)
             
-            if st.button(f"Open Order #{o['id']}", key=f"btn_open_{o['id']}", use_container_width=True):
-                st.session_state.selected_order = o
-                st.session_state.confirm_action = None # Reset confirmation op nieuwe order klik
-                st.rerun()
+            # Gebruik de robuuste on_click callback hier
+            st.button(f"Open Order #{o['id']}", key=f"btn_open_{o['id']}", use_container_width=True, on_click=open_order, args=(o,))
             st.write("")
 
 # =========================================================
@@ -247,7 +254,6 @@ with col_details:
         with st.container(border=True):
             st.markdown(f"## Order #{selected['id']}")
             
-            # --- 1. KLANTINFORMATIE ---
             st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 10px;'>Customer Information</h4>", unsafe_allow_html=True)
             c_klant1, c_klant2, c_klant3 = st.columns(3)
             with c_klant1:
@@ -257,7 +263,6 @@ with col_details:
             with c_klant3:
                 st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>Phone Number</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['phone']}</p>", unsafe_allow_html=True)
             
-            # --- 2. ROUTE DETAILS ---
             st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Route Details</h4>", unsafe_allow_html=True)
             c_route1, c_route2, c_route3 = st.columns(3) 
             with c_route1:
@@ -265,7 +270,6 @@ with col_details:
             with c_route2:
                 st.markdown(f"<p style='color:#666; font-size:13px; margin-bottom:2px;'>To (Delivery)</p><p style='font-weight:600; font-size:15px; color:#111;'>{selected['delivery_address']}</p>", unsafe_allow_html=True)
             
-            # --- 3. SPECIFICATIES ---
             st.markdown("<h4 style='color: #894b9d; border-bottom: 1px solid #eaeaea; padding-bottom: 5px; margin-top: 15px;'>Order Specifications</h4>", unsafe_allow_html=True)
             raw_info = selected.get('info', '')
             if raw_info:
@@ -276,53 +280,29 @@ with col_details:
             
             st.write("---")
             
-            # --- INLINE BEVESTIGINGSSYSTEEM (VERVANGT DE POP-UPS) ---
+            # --- 100% KOGELVRIJE INLINE BEVESTIGING (Via Callbacks) ---
             if st.session_state.confirm_action == f"process_{selected['id']}":
                 st.warning(f"Are you sure you want to mark Order #{selected['id']} as Processed?")
                 c_yes, c_no = st.columns(2)
-                if c_yes.button("✅ Yes, Process Order", use_container_width=True):
-                    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-                    supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", selected['id']).execute()
-                    st.session_state.confirm_action = None
-                    st.session_state.selected_order = None 
-                    st.success("Order processed successfully!")
-                    time.sleep(1.5)
-                    st.rerun()
-                if c_no.button("Cancel", use_container_width=True, type="secondary"):
-                    st.session_state.confirm_action = None
-                    st.rerun()
-
+                c_yes.button("✅ Yes, Process Order", use_container_width=True, on_click=execute_process_order, args=(selected['id'],))
+                c_no.button("Cancel", use_container_width=True, type="secondary", on_click=set_confirm_action, args=(None,))
+                
             elif st.session_state.confirm_action == f"delete_{selected['id']}":
                 st.error(f"Are you sure you want to permanently delete Order #{selected['id']}?")
                 c_yes, c_no = st.columns(2)
-                if c_yes.button("🗑️ Yes, Delete", use_container_width=True):
-                    supabase.table("orders").delete().eq("id", selected['id']).execute()
-                    st.session_state.confirm_action = None
-                    st.session_state.selected_order = None 
-                    st.success("Order deleted!")
-                    time.sleep(1)
-                    st.rerun()
-                if c_no.button("Cancel", use_container_width=True, type="secondary"):
-                    st.session_state.confirm_action = None
-                    st.rerun()
-
+                c_yes.button("🗑️ Yes, Delete", use_container_width=True, on_click=execute_delete_order, args=(selected['id'],))
+                c_no.button("Cancel", use_container_width=True, type="secondary", on_click=set_confirm_action, args=(None,))
+                
             else:
-                # Standaard weergave knoppen
                 c_btn1, c_btn2, _ = st.columns([2, 2, 3])
                 if selected['status'] == 'New':
                     with c_btn1:
-                        if st.button("Process Order", use_container_width=True):
-                            st.session_state.confirm_action = f"process_{selected['id']}"
-                            st.rerun()
+                        st.button("Process Order", key=f"btn_process_{selected['id']}", use_container_width=True, on_click=set_confirm_action, args=(f"process_{selected['id']}",))
                     with c_btn2:
-                        if st.button("Delete Request", type="secondary", use_container_width=True):
-                            st.session_state.confirm_action = f"delete_{selected['id']}"
-                            st.rerun()
+                        st.button("Delete Request", key=f"btn_delete_req_{selected['id']}", type="secondary", use_container_width=True, on_click=set_confirm_action, args=(f"delete_{selected['id']}",))
                 else:
                     with c_btn1:
-                        if st.button("Delete from History", type="secondary", use_container_width=True):
-                            st.session_state.confirm_action = f"delete_{selected['id']}"
-                            st.rerun()
+                        st.button("Delete from History", key=f"btn_delete_hist_{selected['id']}", type="secondary", use_container_width=True, on_click=set_confirm_action, args=(f"delete_{selected['id']}",))
 
 # --- NAVIGATIE ---
 st.write("---")
