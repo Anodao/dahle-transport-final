@@ -29,6 +29,8 @@ if 'selected_order' not in st.session_state:
     st.session_state.selected_order = None
 if 'view_status' not in st.session_state:
     st.session_state.view_status = 'New'
+if 'confirm_action' not in st.session_state:
+    st.session_state.confirm_action = None
 
 # --- DATA OPHALEN ---
 try:
@@ -37,39 +39,6 @@ try:
 except Exception as e:
     st.error(f"Error fetching data: {e}")
     all_orders = []
-
-# --- POP-UP VERWIJDEREN ---
-@st.dialog("Confirm Deletion")
-def confirm_delete_dialog(order_id):
-    st.write(f"Are you sure you want to delete **Order #{order_id}**?")
-    st.write("") 
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("Cancel", type="secondary", use_container_width=True, key=f"del_cancel_{order_id}"):
-            st.rerun()
-    with c2:
-        if st.button("Delete", use_container_width=True, key=f"del_confirm_{order_id}"):
-            supabase.table("orders").delete().eq("id", order_id).execute()
-            st.session_state.selected_order = None
-            st.rerun()
-
-# --- POP-UP VERWERKEN ---
-@st.dialog("Confirm Processing")
-def confirm_process_dialog(order_id):
-    st.write(f"Are you sure you want to mark **Order #{order_id}** as processed?")
-    st.write("") 
-    c1, c2 = st.columns(2)
-    with c1:
-        if st.button("Cancel", type="secondary", use_container_width=True, key=f"proc_cancel_{order_id}"):
-            st.rerun()
-    with c2:
-        if st.button("Process", use_container_width=True, key=f"proc_confirm_{order_id}"):
-            now = datetime.now().strftime("%Y-%m-%d %H:%M")
-            supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", order_id).execute()
-            st.success(f"Order #{order_id} processed successfully!")
-            time.sleep(1.5)
-            st.session_state.selected_order = None
-            st.rerun()
 
 # --- CSS STYLING ---
 st.markdown("""
@@ -199,10 +168,12 @@ with col_inbox:
     with c_btn_new:
         if st.button("Pending", use_container_width=True, type="primary" if st.session_state.view_status == 'New' else "secondary"):
             st.session_state.view_status = 'New'
+            st.session_state.confirm_action = None # Reset confirmation op tab wissel
             st.rerun()
     with c_btn_proc:
         if st.button("Processed", use_container_width=True, type="primary" if st.session_state.view_status == 'Processed' else "secondary"):
             st.session_state.view_status = 'Processed'
+            st.session_state.confirm_action = None # Reset confirmation op tab wissel
             st.rerun()
             
     # 2. Dropdown Filter 
@@ -259,6 +230,7 @@ with col_inbox:
             
             if st.button(f"Open Order #{o['id']}", key=f"btn_open_{o['id']}", use_container_width=True):
                 st.session_state.selected_order = o
+                st.session_state.confirm_action = None # Reset confirmation op nieuwe order klik
                 st.rerun()
             st.write("")
 
@@ -303,21 +275,54 @@ with col_details:
                 st.info("No additional info.")
             
             st.write("---")
-            c_btn1, c_btn2, _ = st.columns([2, 2, 3])
             
-            if selected['status'] == 'New':
-                with c_btn1:
-                    # De knop heeft nu een unieke 'key' gekregen
-                    if st.button("Process Order", key=f"btn_process_{selected['id']}", use_container_width=True):
-                        confirm_process_dialog(selected['id'])
-                with c_btn2:
-                    # Ook deze knop heeft een unieke 'key'
-                    if st.button("Delete Request", key=f"btn_delete_req_{selected['id']}", type="secondary", use_container_width=True):
-                        confirm_delete_dialog(selected['id'])
+            # --- INLINE BEVESTIGINGSSYSTEEM (VERVANGT DE POP-UPS) ---
+            if st.session_state.confirm_action == f"process_{selected['id']}":
+                st.warning(f"Are you sure you want to mark Order #{selected['id']} as Processed?")
+                c_yes, c_no = st.columns(2)
+                if c_yes.button("✅ Yes, Process Order", use_container_width=True):
+                    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+                    supabase.table("orders").update({"status": "Processed", "processed_at": now}).eq("id", selected['id']).execute()
+                    st.session_state.confirm_action = None
+                    st.session_state.selected_order = None 
+                    st.success("Order processed successfully!")
+                    time.sleep(1.5)
+                    st.rerun()
+                if c_no.button("Cancel", use_container_width=True, type="secondary"):
+                    st.session_state.confirm_action = None
+                    st.rerun()
+
+            elif st.session_state.confirm_action == f"delete_{selected['id']}":
+                st.error(f"Are you sure you want to permanently delete Order #{selected['id']}?")
+                c_yes, c_no = st.columns(2)
+                if c_yes.button("🗑️ Yes, Delete", use_container_width=True):
+                    supabase.table("orders").delete().eq("id", selected['id']).execute()
+                    st.session_state.confirm_action = None
+                    st.session_state.selected_order = None 
+                    st.success("Order deleted!")
+                    time.sleep(1)
+                    st.rerun()
+                if c_no.button("Cancel", use_container_width=True, type="secondary"):
+                    st.session_state.confirm_action = None
+                    st.rerun()
+
             else:
-                with c_btn1:
-                    if st.button("Delete from History", key=f"btn_delete_hist_{selected['id']}", type="secondary", use_container_width=True):
-                        confirm_delete_dialog(selected['id'])
+                # Standaard weergave knoppen
+                c_btn1, c_btn2, _ = st.columns([2, 2, 3])
+                if selected['status'] == 'New':
+                    with c_btn1:
+                        if st.button("Process Order", use_container_width=True):
+                            st.session_state.confirm_action = f"process_{selected['id']}"
+                            st.rerun()
+                    with c_btn2:
+                        if st.button("Delete Request", type="secondary", use_container_width=True):
+                            st.session_state.confirm_action = f"delete_{selected['id']}"
+                            st.rerun()
+                else:
+                    with c_btn1:
+                        if st.button("Delete from History", type="secondary", use_container_width=True):
+                            st.session_state.confirm_action = f"delete_{selected['id']}"
+                            st.rerun()
 
 # --- NAVIGATIE ---
 st.write("---")
