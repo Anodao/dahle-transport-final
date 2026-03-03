@@ -61,6 +61,7 @@ st.markdown("""
     [data-testid="collapsedControl"] { display: none !important; }
     [data-testid="stSidebar"] { display: none !important; }
     header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
+    footer { visibility: hidden; }
     
     /* --- NAVBAR --- */
     .block-container { padding-top: 110px; }
@@ -96,6 +97,34 @@ st.markdown("""
         cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
     .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
+
+    /* --- STEP TRACKER (DEZE WAS JE KWIJT!) --- */
+    .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
+    .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
+    .step-circle {
+        width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555; display: flex; justify-content: center; align-items: center;
+        font-weight: 700; font-size: 16px; color: #aaa; background-color: #262626; margin-bottom: 10px; z-index: 2; transition: 0.3s;
+    }
+    .step-label { font-size: 13px; font-weight: 600; color: #888; text-align: center; }
+    .step-line { height: 2px; width: 60px; background-color: #444; margin-top: 20px; }
+    .step-item.active .step-circle { border-color: #ffffff; background-color: #ffffff; color: #000000; }
+    .step-item.active .step-label { color: #ffffff; }
+    .step-item.completed .step-circle { border-color: #894b9d; background-color: #894b9d; color: white; }
+    .step-item.completed .step-label { color: #894b9d; }
+    .line-completed { background-color: #894b9d; }
+
+    /* --- ALGEMENE FORMS & BUTTONS --- */
+    div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] { 
+        background: #894b9d !important; color: white !important; border: none; border-radius: 6px; 
+        padding: 10px 28px; width: 100%; font-weight: bold;
+    }
+    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { 
+        background: #723e83 !important; color: white !important; 
+    }
+    div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
+    div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
+    label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
+    div[data-baseweb="select"] div { color: white; background-color: #333;}
     </style>
     
     <div class="navbar">
@@ -602,6 +631,7 @@ with col_main:
     with col_btn2:
         if st.button("Open CO₂ Dashboard", use_container_width=True):
             st.switch_page("pages/Dashboard.py")
+
 
 
 
