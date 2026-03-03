@@ -161,12 +161,13 @@ st.markdown("""
     div.stButton > button:hover { background-color: #723e83 !important; }
     div.stButton > button[kind="secondary"] { background-color: #e0e6ed !important; color: #333 !important;}
     
-    /* --- POP-UP FIX (Witte achtergrond & donkere tekst) --- */
-    div[data-testid="stModal"] > div, div[data-testid="stDialog"] { 
+    /* --- POP-UP (MODAL) FIX: Forceer witte achtergrond en zwarte tekst --- */
+    div[role="dialog"] { 
         background-color: #ffffff !important; 
         border-radius: 12px !important; 
+        border: 1px solid #e0e6ed !important;
     }
-    div[data-testid="stDialog"] h2 {
+    div[role="dialog"] h2, div[role="dialog"] p, div[role="dialog"] div {
         color: #111111 !important;
     }
     </style>
