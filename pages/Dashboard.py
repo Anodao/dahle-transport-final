@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import plotly.express as px
+from datetime import datetime, timedelta
 from supabase import create_client
 
 # --- PAGE CONFIG ---
@@ -20,7 +21,7 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- CSS STYLING GLOBAL & NAVBAR HTML ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML (Dark Mode met Filter Styling) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -36,7 +37,7 @@ st.markdown("""
     [data-testid="stSidebar"] { display: none !important; }
     header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
     
-    /* --- NAVBAR (Wit, met het logo) --- */
+    /* --- NAVBAR --- */
     .block-container { padding-top: 110px; }
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
@@ -54,7 +55,6 @@ st.markdown("""
     .nav-links span:hover { color: #894b9d !important; }
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
     
-    /* Knoppen styling in de navbar */
     .cta-btn { 
         background-color: #894b9d !important; color: white !important; padding: 10px 24px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
@@ -71,11 +71,10 @@ st.markdown("""
     }
     .cta-btn-outline:hover { background-color: #894b9d !important; color: white !important; }
 
-    /* Streamlit Knoppen (Back knop, donkergrijs) */
     div.stButton > button { background-color: #333333 !important; color: #ffffff !important; border: none; font-weight: bold; border-radius: 6px;}
     div.stButton > button:hover { background-color: #4f4f4f !important; }
 
-    /* --- TITEL BANNER (Weer mooi paars) --- */
+    /* --- TITEL BANNER --- */
     .header-banner {
         background-color: #723e83 !important;
         padding: 30px 40px;
@@ -87,11 +86,28 @@ st.markdown("""
     .header-banner h1 { margin: 0; font-weight: 700; }
     .header-banner p { margin: 5px 0 0 0; font-size: 14px;}
     
-    /* Slider & Labels fix voor donkere achtergrond */
-    .stSlider label[data-testid="stWidgetLabel"] { color: #ffffff !important; font-weight: 600; }
+    /* --- INPUT VELDEN (Speciaal voor Dark Mode Dashboard) --- */
+    div[data-baseweb="select"] > div, div[data-baseweb="base-input"] {
+        background-color: #212529 !important;
+        border: 1px solid #333333 !important;
+        border-radius: 6px !important;
+    }
+    .stSelectbox div[data-baseweb="select"] span, 
+    .stSelectbox div[data-baseweb="select"] div,
+    .stDateInput input {
+        color: #ffffff !important;
+        -webkit-text-fill-color: #ffffff !important;
+    }
+    .stDateInput input::placeholder {
+        color: #888888 !important;
+        -webkit-text-fill-color: #888888 !important;
+    }
+    label[data-testid="stWidgetLabel"] { color: #ffffff !important; font-weight: 600; font-size: 14px; }
+    
+    /* Slider & Labels */
     .stSlider div[data-baseweb="slider"] { color: #c48bd6 !important; }
 
-    /* Grafiek kaders op de zwarte achtergrond */
+    /* Grafiek kaders */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #1a1a1a;
         border: 1px solid #333333;
@@ -99,7 +115,7 @@ st.markdown("""
         padding: 15px;
     }
 
-    /* --- DE STYLING VOOR JOUW CUSTOMER CARDS (Donker & Gecentreerd) --- */
+    /* --- CUSTOMER CARDS --- */
     .customer-card {
         background-color: #212529;
         border: 1px solid #333333;
@@ -116,31 +132,11 @@ st.markdown("""
         border-bottom: 2px solid #333333;
         padding-bottom: 8px;
     }
-    .metric-row {
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-    }
-    .metric-box {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        text-align: center; /* Hierdoor staat alles strak in het midden */
-    }
-    .metric-label {
-        font-size: 12px;
-        color: #b0b0b0;
-        font-weight: 600;
-        text-transform: uppercase;
-        margin-bottom: 4px;
-    }
-    .metric-value {
-        font-size: 16px;
-        font-weight: 700;
-        color: #ffffff;
-    }
+    .metric-row { display: flex; justify-content: space-between; gap: 10px; }
+    .metric-box { flex: 1; display: flex; flex-direction: column; text-align: center; }
+    .metric-label { font-size: 12px; color: #b0b0b0; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+    .metric-value { font-size: 16px; font-weight: 700; color: #ffffff; }
 
-    /* Informatie box donkerder */
     div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c355c !important; border-color: #0c355c !important;}
     </style>
     
@@ -166,13 +162,28 @@ st.markdown('<div class="header-banner">'
             '<h1>Performance & Margin Analysis</h1>'
             '<p>Financial impact and sustainability tracking</p></div>', unsafe_allow_html=True)
 
-# --- NAVIGATIE & INPUT ---
-c_nav, c_input = st.columns([1, 2])
+# --- DATUM LOGICA ---
+today = datetime.now().date()
+start_of_week = today - timedelta(days=today.weekday())
+start_of_last_week = start_of_week - timedelta(days=7)
+
+# --- NAVIGATIE, FILTER & INPUT ---
+c_nav, c_filter, c_input = st.columns([1, 1, 2], gap="large")
 with c_nav:
-    if st.button("🏠 ← Go Back to Planner"):
+    st.write("") # Uitlijning met slider
+    if st.button("🏠 ← Go Back to Planner", use_container_width=True):
         st.switch_page("pages/Planner.py")
+
+with c_filter:
+    filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "Custom date..."])
+    custom_dates = []
+    if filter_optie == "Custom date...":
+        custom_dates = st.date_input("Select a date range:", value=today)
+
 with c_input:
     fuel_price = st.slider("Live Market Diesel Price (NOK/L)", 15.0, 30.0, 20.5)
+
+st.write("---")
 
 # --- DATA VERWERKING ---
 try:
@@ -186,12 +197,13 @@ if df.empty:
     st.info("No order data available to generate the dashboard.")
     st.stop()
 
+# Genereer random CO2 (als het er niet in zit) op de VOLLEDIGE dataset voor consistentie
 if 'co2_emission_kg' not in df.columns:
     import numpy as np
     np.random.seed(42)
     df['co2_emission_kg'] = np.random.uniform(40, 150, size=len(df))
 
-# --- DE BEREKENINGEN ---
+# Berekeningen op de volledige dataset
 CO2_PER_LITER = 2.68
 df['liters'] = df['co2_emission_kg'] / CO2_PER_LITER
 df['fuel_cost'] = df['liters'] * fuel_price
@@ -200,16 +212,43 @@ df['revenue'] = 1500 + (df['co2_emission_kg'] * 15)
 df['profit'] = df['revenue'] - df['fuel_cost']
 df['margin_pct'] = (df['profit'] / df['revenue']) * 100
 
+# Parse the dates voor de filter functionaliteit
+if 'received_date' in df.columns:
+    df['parsed_date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
+
+# --- TOEPASSEN VAN HET FILTER OP DE DATAFRAME ---
+filtered_df = df.copy()
+
+if 'parsed_date' in df.columns:
+    if filter_optie == "Today":
+        filtered_df = df[df['parsed_date'] == today]
+    elif filter_optie == "This week":
+        filtered_df = df[df['parsed_date'] >= start_of_week]
+    elif filter_optie == "Last week":
+        filtered_df = df[(df['parsed_date'] >= start_of_last_week) & (df['parsed_date'] < start_of_week)]
+    elif filter_optie == "Custom date...":
+        if isinstance(custom_dates, tuple) and len(custom_dates) == 2:
+            filtered_df = df[(df['parsed_date'] >= custom_dates[0]) & (df['parsed_date'] <= custom_dates[1])]
+        elif isinstance(custom_dates, tuple) and len(custom_dates) == 1:
+            filtered_df = df[df['parsed_date'] == custom_dates[0]]
+        else:
+            filtered_df = df[df['parsed_date'] == custom_dates]
+
+# Stop weergave als de gefilterde set leeg is
+if filtered_df.empty:
+    st.warning("📊 No orders found for this specific date range. Please adjust your filter.")
+    st.stop()
+
 # --- KPI SECTIE ---
 st.write("### Performance Summary")
 k1, k2, k3, k4 = st.columns(4)
-total_profit = df['profit'].sum()
-avg_margin = df['margin_pct'].mean()
+total_profit = filtered_df['profit'].sum()
+avg_margin = filtered_df['margin_pct'].mean()
 
-k1.metric("Total Fuel Cost", f"{df['fuel_cost'].sum():,.0f} NOK")
+k1.metric("Total Fuel Cost", f"{filtered_df['fuel_cost'].sum():,.0f} NOK")
 k2.metric("Total Profit", f"{total_profit:,.0f} NOK", delta=f"{avg_margin:.1f}% Avg. Margin")
-k3.metric("CO₂ Footprint", f"{df['co2_emission_kg'].sum():,.0f} kg")
-k4.metric("Active Shipments", len(df))
+k3.metric("CO₂ Footprint", f"{filtered_df['co2_emission_kg'].sum():,.0f} kg")
+k4.metric("Active Shipments", len(filtered_df))
 
 st.write("---")
 
@@ -219,7 +258,7 @@ col_left, col_right = st.columns(2, gap="large")
 
 with col_left:
     st.write("### Profitability per Customer")
-    df_chart = df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
+    df_chart = filtered_df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
     
     fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#c48bd6'], template="plotly_dark")
     fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Customer", yaxis_title="Net Profit (NOK)")
@@ -228,9 +267,10 @@ with col_left:
 with col_right:
     st.write("### Profit Trend Over Time")
     
-    if 'received_date' in df.columns:
-        df['date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
-        df_trend = df.groupby('date')['profit'].sum().reset_index()
+    if 'parsed_date' in filtered_df.columns:
+        df_trend = filtered_df.groupby('parsed_date')['profit'].sum().reset_index()
+        # Hernoem voor de as
+        df_trend = df_trend.rename(columns={'parsed_date': 'date'})
         
         fig_line = px.line(df_trend, x='date', y='profit', markers=True, 
                            color_discrete_sequence=['#27ae60'], template="plotly_dark")
@@ -245,7 +285,7 @@ st.write("---")
 st.write("### Detailed Cost & Margin Breakdown")
 st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
-customer_group = df.groupby('company').agg({
+customer_group = filtered_df.groupby('company').agg({
     'id': 'count',
     'fuel_cost': 'sum',
     'profit': 'sum',
