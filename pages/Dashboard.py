@@ -21,7 +21,7 @@ def init_connection():
 
 supabase = init_connection()
 
-# --- CSS STYLING GLOBAL & NAVBAR HTML (Dark Mode met Filter Styling) ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -70,9 +70,6 @@ st.markdown("""
         cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
     .cta-btn-outline:hover { background-color: #894b9d !important; color: white !important; }
-
-    div.stButton > button { background-color: #333333 !important; color: #ffffff !important; border: none; font-weight: bold; border-radius: 6px;}
-    div.stButton > button:hover { background-color: #4f4f4f !important; }
 
     /* --- TITEL BANNER --- */
     .header-banner {
@@ -166,16 +163,13 @@ st.markdown('<div class="header-banner">'
 today = datetime.now().date()
 start_of_week = today - timedelta(days=today.weekday())
 start_of_last_week = start_of_week - timedelta(days=7)
+start_of_month = today.replace(day=1) # NIEUW: Bereken de eerste dag van de huidige maand
 
-# --- NAVIGATIE, FILTER & INPUT ---
-c_nav, c_filter, c_input = st.columns([1, 1, 2], gap="large")
-with c_nav:
-    st.write("") # Uitlijning met slider
-    if st.button("🏠 ← Go Back to Planner", use_container_width=True):
-        st.switch_page("pages/Planner.py")
+# --- FILTER & INPUT ---
+c_filter, c_input = st.columns([1, 2], gap="large")
 
 with c_filter:
-    filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "Custom date..."])
+    filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "This month", "Custom date..."])
     custom_dates = []
     if filter_optie == "Custom date...":
         custom_dates = st.date_input("Select a date range:", value=today)
@@ -226,6 +220,8 @@ if 'parsed_date' in df.columns:
         filtered_df = df[df['parsed_date'] >= start_of_week]
     elif filter_optie == "Last week":
         filtered_df = df[(df['parsed_date'] >= start_of_last_week) & (df['parsed_date'] < start_of_week)]
+    elif filter_optie == "This month": # NIEUW: Filter logica voor 'Deze Maand'
+        filtered_df = df[df['parsed_date'] >= start_of_month]
     elif filter_optie == "Custom date...":
         if isinstance(custom_dates, tuple) and len(custom_dates) == 2:
             filtered_df = df[(df['parsed_date'] >= custom_dates[0]) & (df['parsed_date'] <= custom_dates[1])]
