@@ -231,7 +231,7 @@ with col_main:
         
         /* Hover effect over de vierkanten */
         div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-            border-color: #666 !important; background-color: #262626 !important; transform: translateY(-3px);
+            border-color: #894b9d !important; background-color: #262626 !important; transform: translateY(-3px);
         }
         
         /* De checkbox over de hele kaart leggen zodat je overal kan klikken */
@@ -247,43 +247,6 @@ with col_main:
         }
         </style>
         """, unsafe_allow_html=True)
-        
-        # --- HIER IS DE 100% KOGELVRIJE PYTHON FIX VOOR HET WITTE ACHTERGROND EFFECT ---
-        dynamic_css = ""
-        
-        # Kolom 1 (Parcels)
-        if st.session_state.chk_parcels:
-            dynamic_css += '''
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { 
-                background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; 
-            }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
-            '''
-        
-        # Kolom 2 (Freight)
-        if st.session_state.chk_freight:
-            dynamic_css += '''
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { 
-                background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; 
-            }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
-            '''
-            
-        # Kolom 3 (Mail)
-        if st.session_state.chk_mail:
-            dynamic_css += '''
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] { 
-                background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; 
-            }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
-            '''
-            
-        # Injecteer de dynamische CSS
-        if dynamic_css:
-            st.markdown(f"<style>{dynamic_css}</style>", unsafe_allow_html=True)
 
         st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>To find your service match, select all that you ship on a regular basis.</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #888; margin-bottom: 30px;'>Select at least one option to continue</p>", unsafe_allow_html=True)
