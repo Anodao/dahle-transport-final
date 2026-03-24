@@ -248,24 +248,40 @@ with col_main:
         </style>
         """, unsafe_allow_html=True)
         
-        # --- HIER ZIT DE 100% KOGELVRIJE PYTHON FIX VOOR HET WITTE ACHTERGROND EFFECT ---
+        # --- HIER IS DE 100% KOGELVRIJE PYTHON FIX VOOR HET WITTE ACHTERGROND EFFECT ---
         dynamic_css = ""
         
         # Kolom 1 (Parcels)
         if st.session_state.chk_parcels:
-            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } '
-            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } '
+            dynamic_css += '''
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { 
+                background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; 
+            }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
+            '''
         
         # Kolom 2 (Freight)
         if st.session_state.chk_freight:
-            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } '
-            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } '
+            dynamic_css += '''
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { 
+                background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; 
+            }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
+            '''
             
         # Kolom 3 (Mail)
         if st.session_state.chk_mail:
-            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(3) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } '
-            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } '
+            dynamic_css += '''
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] { 
+                background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; 
+            }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
+            '''
             
+        # Injecteer de dynamische CSS
         if dynamic_css:
             st.markdown(f"<style>{dynamic_css}</style>", unsafe_allow_html=True)
 
