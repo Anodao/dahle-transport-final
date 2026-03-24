@@ -3,8 +3,6 @@ import time
 from datetime import datetime
 from supabase import create_client, Client
 
-
-
 # --- PAGE CONFIG ---
 st.set_page_config(
     page_title="Dahle Transport - Home",
@@ -53,7 +51,7 @@ if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
     
-# --- CSS STYLING GLOBAL & NAVBAR HTML ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML (1 SCHOON BLOK) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -83,7 +81,7 @@ st.markdown("""
     .nav-links span:hover { color: #894b9d; }
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
     
-    /* Knoppen styling */
+    /* Knoppen styling Navbar */
     .cta-btn { 
         background-color: #894b9d; color: white !important; padding: 10px 24px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
@@ -100,7 +98,7 @@ st.markdown("""
     }
     .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
 
-    /* --- STEP TRACKER (DEZE WAS JE KWIJT!) --- */
+    /* --- STEP TRACKER --- */
     .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
     .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
     .step-circle {
@@ -115,14 +113,54 @@ st.markdown("""
     .step-item.completed .step-label { color: #894b9d; }
     .line-completed { background-color: #894b9d; }
 
-    /* --- ALGEMENE FORMS & BUTTONS --- */
-    div.stButton > button[kind="primary"], div.stButton > button[kind="secondary"] { 
-        background: #894b9d !important; color: white !important; border: none; border-radius: 6px; 
-        padding: 10px 28px; width: 100%; font-weight: bold;
+    /* --- KINETIC BUTTON STYLING (GEFIXT) --- */
+    
+    /* Primary Button (Belangrijke acties: Next, Confirm, Planner) */
+    div.stButton > button[kind="primary"] { 
+        background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; 
+        color: #ffffff !important; 
+        border: none !important; 
+        border-radius: 6px !important; 
+        padding: 16px 28px !important; 
+        font-weight: 600 !important; 
+        font-size: 15px !important;
+        letter-spacing: 0.02em !important;
+        text-transform: none !important;
+        box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        width: 100% !important;
     }
-    div.stButton > button[kind="primary"]:hover, div.stButton > button[kind="secondary"]:hover { 
-        background: #723e83 !important; color: white !important; 
+    div.stButton > button[kind="primary"]:hover { 
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important;
+        filter: brightness(1.1) !important;
     }
+    div.stButton > button[kind="primary"]:active {
+        transform: translateY(0px) !important;
+    }
+
+    /* Secondary Button (Minder belangrijke acties: Go Back, Dashboard) */
+    div.stButton > button[kind="secondary"] {
+        background: transparent !important; 
+        color: #e0c2ed !important; 
+        padding: 14px 24px !important;
+        border-radius: 6px !important; 
+        font-weight: 600 !important; 
+        font-size: 14px !important; 
+        letter-spacing: 0.02em !important; 
+        border: 2px solid #894b9d !important; 
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+    }
+    div.stButton > button[kind="secondary"]:hover { 
+        background: #894b9d !important; 
+        border-color: #894b9d !important;
+        color: #ffffff !important; 
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important;
+    }
+
+    /* --- ALGEMENE FORMS --- */
     div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
     label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
@@ -145,59 +183,7 @@ st.markdown("""
         </div>
     </div>
 """, unsafe_allow_html=True)
-st.markdown("""
-    <style>
-    /* --- KINETIC ARCHITECT BUTTON STYLING (DARK MODE FIX) --- */
-    
-    /* Main Primary Button (De grote paarse knop met gradient) */
-    div.stButton > button[kind="primary"] { 
-        background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; 
-        color: #ffffff !important; 
-        border: none !important; 
-        border-radius: 6px !important; 
-        padding: 16px 28px !important; 
-        font-weight: 600 !important; 
-        font-size: 15px !important;
-        letter-spacing: 0.02em !important;
-        text-transform: none !important;
-        box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        width: 100% !important;
-    }
 
-    div.stButton > button[kind="primary"]:hover { 
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important;
-        filter: brightness(1.1) !important;
-    }
-
-    div.stButton > button[kind="primary"]:active {
-        transform: translateY(0px) !important;
-    }
-
-    /* Secondary/Outline Style Buttons (Gefikst voor leesbaarheid op zwart) */
-    div.stButton > button[kind="secondary"] {
-        background: transparent !important; 
-        color: #e0c2ed !important; /* Mooi lichtpaars voor perfect contrast */
-        padding: 14px 24px !important;
-        border-radius: 6px !important; 
-        font-weight: 600 !important; 
-        font-size: 14px !important; 
-        letter-spacing: 0.02em !important; 
-        border: 2px solid #894b9d !important; /* Duidelijke paarse rand */
-        transition: all 0.3s ease !important;
-        width: 100% !important;
-    }
-
-    div.stButton > button[kind="secondary"]:hover { 
-        background: #894b9d !important; /* Vult zich in met paars bij hover */
-        border-color: #894b9d !important;
-        color: #ffffff !important; /* Tekst wordt wit */
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important;
-    }
-    </style>
-""", unsafe_allow_html=True)
 # =========================================================
 # DE WEBSITE LOGICA
 # =========================================================
@@ -317,7 +303,8 @@ with col_main:
         
         c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
         with c_btn2:
-            if st.button("Next Step", use_container_width=True):
+            # GEFIXT: Type primary toegevoegd zodat hij oplicht!
+            if st.button("Next Step", type="primary", use_container_width=True):
                 selected = []
                 if st.session_state.chk_parcels: selected.append("Parcels & Documents")
                 if st.session_state.chk_freight: selected.append("Cargo & Freight")
@@ -340,7 +327,7 @@ with col_main:
         # --- VERBORGEN ANKER OM NAARTOE TE SCROLLEN ---
         st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
         
-        # --- JAVASCRIPT VOOR AUTO-SCROLL (VOERT UIT ALS SCROLL_UP TRUE IS) ---
+        # --- JAVASCRIPT VOOR AUTO-SCROLL ---
         if st.session_state.get('scroll_up', False):
             st.components.v1.html(
                 """
@@ -478,7 +465,7 @@ with col_main:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- NIEUWE TOEVOEGING: ROUTE INFORMATIE (PICKUP & DELIVERY) ---
+        # --- ROUTE INFORMATIE ---
         st.markdown("#### Route Information")
         c_route_left, c_route_right = st.columns(2, gap="large")
         
@@ -497,7 +484,6 @@ with col_main:
             with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
             
         st.markdown("<br>", unsafe_allow_html=True)
-        # --- EINDE TOEVOEGING ---
 
         additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
@@ -524,12 +510,13 @@ with col_main:
                 error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
         c_back, c_next = st.columns([1, 4])
-        if c_back.button("← Go Back"):
+        # GEFIXT: Type secondary (doorzichtig) voor Go Back, Primary (paars) voor Continue
+        if c_back.button("← Go Back", type="secondary", use_container_width=True):
             st.session_state.step = 1
             st.session_state.validate_step2 = False 
             st.rerun()
             
-        if c_next.button("Continue to Review →"):
+        if c_next.button("Continue to Review →", type="primary", use_container_width=True):
             st.session_state.validate_step2 = True 
             
             if missing_fields or invalid_email:
@@ -541,7 +528,6 @@ with col_main:
                 
                 compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
                 
-                # --- SLIMME TEKST OPBOUW VOOR DE PLANNER ---
                 if "Parcels & Documents" in st.session_state.selected_types:
                     compiled_info += f"📦 Parcels: Shipment to {st.session_state.pd_ship_where}.\n"
                 
@@ -564,7 +550,6 @@ with col_main:
                     "phone": f"{phone_code} {phone}",
                     "info": compiled_info,
                     "types": st.session_state.selected_types,
-                    # Nieuwe data opslaan in memory voor de database push
                     "pickup_address": p_address,
                     "pickup_zip": p_zip,
                     "pickup_city": p_city,
@@ -615,11 +600,13 @@ with col_main:
         if not st.session_state.is_submitted:
             c_b1, c_b2 = st.columns([1, 4])
             with c_b1:
-                if st.button("← Edit Details"):
+                # GEFIXT: Secondary voor Edit
+                if st.button("← Edit Details", type="secondary", use_container_width=True):
                     st.session_state.step = 2
                     st.rerun()
             with c_b2:
-                if st.button("✅ CONFIRM & SEND REQUEST"):
+                # GEFIXT: Primary voor de Confirm knop
+                if st.button("✅ CONFIRM & SEND REQUEST", type="primary", use_container_width=True):
                     
                     db_order = {
                         "company": o['company'],
@@ -632,7 +619,6 @@ with col_main:
                         "types": ", ".join(o['types']),
                         "status": "New",
                         "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        # De route info toevoegen aan Supabase
                         "pickup_address": o.get('pickup_address', ''),
                         "pickup_zip": o.get('pickup_zip', ''),
                         "pickup_city": o.get('pickup_city', ''),
@@ -653,7 +639,7 @@ with col_main:
             st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
             st.info("You can review your submitted details above.")
             
-            if st.button("← Start a New Request"):
+            if st.button("← Start a New Request", type="primary"):
                 st.session_state.step = 1
                 st.session_state.is_submitted = False
                 st.session_state.validate_step2 = False
@@ -662,30 +648,21 @@ with col_main:
                 st.session_state.chk_parcels = False
                 st.session_state.chk_freight = False
                 st.session_state.chk_mail = False
-                # Wis de route velden uit het formulier
                 for key in ['p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
                     if key in st.session_state:
                         del st.session_state[key]
                 st.rerun()
 
-# --- DE KNOPPEN ONDERAAN DE PAGINA ---
+# =========================================================
+# DE KNOPPEN ONDERAAN DE PAGINA
+# =========================================================
+st.write("---")
+c_bottom1, c_bottom2 = st.columns(2, gap="large")
 
-# Maak twee kolommen met een beetje ruimte ertussen
-col1, col2 = st.columns(2, gap="large")
-
-with col1:
-    # De 'primary' knop krijgt de opvallende paarse gradient
+with c_bottom1:
     if st.button("Open Internal Planner System", type="primary", use_container_width=True):
         st.switch_page("pages/Planner.py")
 
-with col2:
-    # De 'secondary' knop krijgt de lichte rand en lichtpaarse tekst
+with c_bottom2:
     if st.button("Open CO2 Dashboard", type="secondary", use_container_width=True):
         st.switch_page("pages/Dashboard.py")
-
-
-
-
-
-
-
