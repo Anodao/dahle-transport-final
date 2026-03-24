@@ -3,6 +3,8 @@ import time
 from datetime import datetime
 from supabase import create_client, Client
 
+
+
 # --- PAGE CONFIG ---
 st.set_page_config(
     page_title="Dahle Transport - Home",
@@ -142,6 +144,59 @@ st.markdown("""
             <a href="/" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
+""", unsafe_allow_html=True)
+st.markdown("""
+    <style>
+    /* --- KINETIC ARCHITECT BUTTON STYLING (Dahle Transport Paars) --- */
+    
+    /* Main Primary Button (De grote paarse knop met gradient) */
+    div.stButton > button[kind="primary"] { 
+        background: linear-gradient(135deg, #9d5bb3 0%, #894b9d 100%) !important; 
+        color: white !important; 
+        border: none !important; 
+        border-radius: 6px !important; 
+        padding: 16px 28px !important; 
+        font-weight: 600 !important; 
+        font-size: 15px !important;
+        letter-spacing: 0.02em !important;
+        text-transform: none !important;
+        box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.3) !important;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+        width: 100% !important;
+    }
+
+    div.stButton > button[kind="primary"]:hover { 
+        transform: translateY(-2px) !important;
+        box-shadow: 0 8px 24px rgba(137, 75, 157, 0.4) !important;
+        filter: brightness(1.05) !important;
+    }
+
+    div.stButton > button[kind="primary"]:active {
+        transform: translateY(0px) !important;
+    }
+
+    /* Secondary/Outline Style Buttons (Licht paars met donkere rand) */
+    div.stButton > button[kind="secondary"] {
+        background: rgba(137, 75, 157, 0.05) !important; 
+        color: #894b9d !important; 
+        padding: 14px 24px !important;
+        border-radius: 6px !important; 
+        font-weight: 600 !important; 
+        font-size: 14px !important; 
+        letter-spacing: 0.02em !important; 
+        border: 1px solid rgba(137, 75, 157, 0.3) !important;
+        transition: all 0.3s ease !important;
+        width: 100% !important;
+    }
+
+    div.stButton > button[kind="secondary"]:hover { 
+        background: rgba(137, 75, 157, 0.15) !important; 
+        border-color: #894b9d !important;
+        color: #723e83 !important;
+        transform: translateY(-2px) !important;
+        box-shadow: 0 4px 12px rgba(137, 75, 157, 0.15) !important;
+    }
+    </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
