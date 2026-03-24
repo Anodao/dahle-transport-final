@@ -229,18 +229,9 @@ with col_main:
             background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%;
         }
         
-        /* Hover over de vierkanten */
+        /* Hover effect over de vierkanten */
         div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-            border-color: #894b9d !important; background-color: #262626 !important; transform: translateY(-3px);
-        }
-        
-        /* --- DIT IS DE MAGIE: Oplichtend paars effect als je vinkt! --- */
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(input:checked),
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(input[aria-checked="true"]) {
-            border: 2px solid #b070c6 !important; 
-            background-color: rgba(137, 75, 157, 0.2) !important; /* Duidelijke paarse gloed */
-            box-shadow: 0 8px 24px rgba(137, 75, 157, 0.3) !important; /* Paarse schaduw erachter */
-            transform: translateY(-5px) !important; /* Hij zweeft een stukje omhoog */
+            border-color: #666 !important; background-color: #262626 !important; transform: translateY(-3px);
         }
         
         /* De checkbox over de hele kaart leggen zodat je overal kan klikken */
@@ -256,6 +247,27 @@ with col_main:
         }
         </style>
         """, unsafe_allow_html=True)
+        
+        # --- HIER ZIT DE 100% KOGELVRIJE PYTHON FIX VOOR HET WITTE ACHTERGROND EFFECT ---
+        dynamic_css = ""
+        
+        # Kolom 1 (Parcels)
+        if st.session_state.chk_parcels:
+            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } '
+            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } '
+        
+        # Kolom 2 (Freight)
+        if st.session_state.chk_freight:
+            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } '
+            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } '
+            
+        # Kolom 3 (Mail)
+        if st.session_state.chk_mail:
+            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(3) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } '
+            dynamic_css += 'div[data-testid="column"]:nth-of-type(2) div[data-testid="column"]:nth-of-type(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } '
+            
+        if dynamic_css:
+            st.markdown(f"<style>{dynamic_css}</style>", unsafe_allow_html=True)
 
         st.markdown("<h3 style='text-align: center; margin-bottom: 5px;'>To find your service match, select all that you ship on a regular basis.</h3>", unsafe_allow_html=True)
         st.markdown("<p style='text-align: center; color: #888; margin-bottom: 30px;'>Select at least one option to continue</p>", unsafe_allow_html=True)
