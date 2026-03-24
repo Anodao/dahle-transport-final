@@ -147,12 +147,12 @@ st.markdown("""
 """, unsafe_allow_html=True)
 st.markdown("""
     <style>
-    /* --- KINETIC ARCHITECT BUTTON STYLING (Dahle Transport Paars) --- */
+    /* --- KINETIC ARCHITECT BUTTON STYLING (DARK MODE FIX) --- */
     
     /* Main Primary Button (De grote paarse knop met gradient) */
     div.stButton > button[kind="primary"] { 
-        background: linear-gradient(135deg, #9d5bb3 0%, #894b9d 100%) !important; 
-        color: white !important; 
+        background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; 
+        color: #ffffff !important; 
         border: none !important; 
         border-radius: 6px !important; 
         padding: 16px 28px !important; 
@@ -160,45 +160,44 @@ st.markdown("""
         font-size: 15px !important;
         letter-spacing: 0.02em !important;
         text-transform: none !important;
-        box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.3) !important;
+        box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         width: 100% !important;
     }
 
     div.stButton > button[kind="primary"]:hover { 
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 24px rgba(137, 75, 157, 0.4) !important;
-        filter: brightness(1.05) !important;
+        box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important;
+        filter: brightness(1.1) !important;
     }
 
     div.stButton > button[kind="primary"]:active {
         transform: translateY(0px) !important;
     }
 
-    /* Secondary/Outline Style Buttons (Licht paars met donkere rand) */
+    /* Secondary/Outline Style Buttons (Gefikst voor leesbaarheid op zwart) */
     div.stButton > button[kind="secondary"] {
-        background: rgba(137, 75, 157, 0.05) !important; 
-        color: #894b9d !important; 
+        background: transparent !important; 
+        color: #e0c2ed !important; /* Mooi lichtpaars voor perfect contrast */
         padding: 14px 24px !important;
         border-radius: 6px !important; 
         font-weight: 600 !important; 
         font-size: 14px !important; 
         letter-spacing: 0.02em !important; 
-        border: 1px solid rgba(137, 75, 157, 0.3) !important;
+        border: 2px solid #894b9d !important; /* Duidelijke paarse rand */
         transition: all 0.3s ease !important;
         width: 100% !important;
     }
 
     div.stButton > button[kind="secondary"]:hover { 
-        background: rgba(137, 75, 157, 0.15) !important; 
+        background: #894b9d !important; /* Vult zich in met paars bij hover */
         border-color: #894b9d !important;
-        color: #723e83 !important;
+        color: #ffffff !important; /* Tekst wordt wit */
         transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(137, 75, 157, 0.15) !important;
+        box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important;
     }
     </style>
 """, unsafe_allow_html=True)
-
 # =========================================================
 # DE WEBSITE LOGICA
 # =========================================================
@@ -669,23 +668,20 @@ with col_main:
                         del st.session_state[key]
                 st.rerun()
 
-    # =========================================================
-    # DE DEMO KNOPPEN NAAR DE PLANNER & DASHBOARD
-    # =========================================================
-    st.write("")
-    st.write("")
-    st.markdown("---")
-    
-    # We gebruiken 4 kolommen: [leeg, knop1, knop2, leeg] om ze te centreren
-    spacer_left, col_btn1, col_btn2, spacer_right = st.columns([1, 1.5, 1.5, 1])
-    
-    with col_btn1:
-        if st.button("Open Internal Planner System", use_container_width=True):
-            st.switch_page("pages/Planner.py")
-            
-    with col_btn2:
-        if st.button("Open CO₂ Dashboard", use_container_width=True):
-            st.switch_page("pages/Dashboard.py")
+# --- DE KNOPPEN ONDERAAN DE PAGINA ---
+
+# Maak twee kolommen met een beetje ruimte ertussen
+col1, col2 = st.columns(2, gap="large")
+
+with col1:
+    # De 'primary' knop krijgt de opvallende paarse gradient
+    if st.button("Open Internal Planner System", type="primary", use_container_width=True):
+        st.switch_page("pages/Planner.py")
+
+with col2:
+    # De 'secondary' knop krijgt de lichte rand en lichtpaarse tekst
+    if st.button("Open CO2 Dashboard", type="secondary", use_container_width=True):
+        st.switch_page("pages/Dashboard.py")
 
 
 
