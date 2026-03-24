@@ -113,13 +113,11 @@ st.markdown("""
     .step-item.completed .step-label { color: #894b9d; }
     .line-completed { background-color: #894b9d; }
 
-    /* --- KINETIC BUTTON STYLING (NEW HOVER EFFECT) --- */
-    
-    /* Primary Button (Alle actie-knoppen onderaan en in forms) */
+    /* --- KINETIC BUTTON STYLING --- */
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; 
         color: #ffffff !important; 
-        border: 2px solid transparent !important; /* Ruimte reserveren voor hover border */
+        border: 2px solid transparent !important; 
         border-radius: 6px !important; 
         padding: 14px 28px !important; 
         font-weight: 600 !important; 
@@ -131,7 +129,6 @@ st.markdown("""
         width: 100% !important;
     }
     
-    /* Het nieuwe, magische hover effect: Witte achtergrond, paarse tekst & rand */
     div.stButton > button[kind="primary"]:hover { 
         background: #ffffff !important; 
         color: #894b9d !important;
@@ -140,11 +137,8 @@ st.markdown("""
         box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important;
     }
     
-    div.stButton > button[kind="primary"]:active {
-        transform: translateY(0px) !important;
-    }
+    div.stButton > button[kind="primary"]:active { transform: translateY(0px) !important; }
 
-    /* Secondary Button (Wordt alleen nog gebruikt voor 'Go Back' knopjes) */
     div.stButton > button[kind="secondary"] {
         background: transparent !important; 
         color: #e0c2ed !important; 
@@ -229,16 +223,27 @@ with col_main:
     if st.session_state.step == 1:
         st.markdown("""
         <style>
+        /* Basis styling voor de vierkanten */
         div[data-testid="stVerticalBlockBorderWrapper"] {
             position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important;
-            background-color: #262626 !important; border: 2px solid #444 !important; padding: 25px !important; height: 100%;
+            background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%;
         }
+        
+        /* Hover over de vierkanten */
         div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-            border-color: #894b9d !important; background-color: #2e2e2e !important; transform: translateY(-5px);
+            border-color: #894b9d !important; background-color: #262626 !important; transform: translateY(-3px);
         }
-        div[data-testid="stVerticalBlockBorderWrapper"]:has(input[type="checkbox"]:checked) {
-            border-color: #894b9d !important; background-color: #2e2e2e !important;
+        
+        /* --- DIT IS DE MAGIE: Oplichtend paars effect als je vinkt! --- */
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(input:checked),
+        div[data-testid="stVerticalBlockBorderWrapper"]:has(input[aria-checked="true"]) {
+            border: 2px solid #b070c6 !important; 
+            background-color: rgba(137, 75, 157, 0.2) !important; /* Duidelijke paarse gloed */
+            box-shadow: 0 8px 24px rgba(137, 75, 157, 0.3) !important; /* Paarse schaduw erachter */
+            transform: translateY(-5px) !important; /* Hij zweeft een stukje omhoog */
         }
+        
+        /* De checkbox over de hele kaart leggen zodat je overal kan klikken */
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after {
             content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10;
         }
@@ -656,7 +661,6 @@ st.write("---")
 c_bottom1, c_bottom2 = st.columns(2, gap="large")
 
 with c_bottom1:
-    # BEIDE KNOPPEN ZIJN NU 'PRIMARY' EN GEBRUIKEN HET NIEUWE HOVER EFFECT
     if st.button("Open Internal Planner System", type="primary", use_container_width=True):
         st.switch_page("pages/Planner.py")
 
