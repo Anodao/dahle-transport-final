@@ -51,7 +51,7 @@ if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
     
-# --- CSS STYLING GLOBAL & NAVBAR HTML (1 SCHOON BLOK) ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -113,15 +113,15 @@ st.markdown("""
     .step-item.completed .step-label { color: #894b9d; }
     .line-completed { background-color: #894b9d; }
 
-    /* --- KINETIC BUTTON STYLING (GEFIXT) --- */
+    /* --- KINETIC BUTTON STYLING (NEW HOVER EFFECT) --- */
     
-    /* Primary Button (Belangrijke acties: Next, Confirm, Planner) */
+    /* Primary Button (Alle actie-knoppen onderaan en in forms) */
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; 
         color: #ffffff !important; 
-        border: none !important; 
+        border: 2px solid transparent !important; /* Ruimte reserveren voor hover border */
         border-radius: 6px !important; 
-        padding: 16px 28px !important; 
+        padding: 14px 28px !important; 
         font-weight: 600 !important; 
         font-size: 15px !important;
         letter-spacing: 0.02em !important;
@@ -130,16 +130,21 @@ st.markdown("""
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
         width: 100% !important;
     }
+    
+    /* Het nieuwe, magische hover effect: Witte achtergrond, paarse tekst & rand */
     div.stButton > button[kind="primary"]:hover { 
+        background: #ffffff !important; 
+        color: #894b9d !important;
+        border: 2px solid #894b9d !important;
         transform: translateY(-2px) !important;
         box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important;
-        filter: brightness(1.1) !important;
     }
+    
     div.stButton > button[kind="primary"]:active {
         transform: translateY(0px) !important;
     }
 
-    /* Secondary Button (Minder belangrijke acties: Go Back, Dashboard) */
+    /* Secondary Button (Wordt alleen nog gebruikt voor 'Go Back' knopjes) */
     div.stButton > button[kind="secondary"] {
         background: transparent !important; 
         color: #e0c2ed !important; 
@@ -153,9 +158,9 @@ st.markdown("""
         width: 100% !important;
     }
     div.stButton > button[kind="secondary"]:hover { 
-        background: #894b9d !important; 
+        background: #ffffff !important; 
         border-color: #894b9d !important;
-        color: #ffffff !important; 
+        color: #894b9d !important; 
         transform: translateY(-2px) !important;
         box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important;
     }
@@ -303,7 +308,6 @@ with col_main:
         
         c_btn1, c_btn2, c_btn3 = st.columns([1, 2, 1])
         with c_btn2:
-            # GEFIXT: Type primary toegevoegd zodat hij oplicht!
             if st.button("Next Step", type="primary", use_container_width=True):
                 selected = []
                 if st.session_state.chk_parcels: selected.append("Parcels & Documents")
@@ -324,10 +328,8 @@ with col_main:
     # =========================================================
     elif st.session_state.step == 2:
         
-        # --- VERBORGEN ANKER OM NAARTOE TE SCROLLEN ---
         st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
         
-        # --- JAVASCRIPT VOOR AUTO-SCROLL ---
         if st.session_state.get('scroll_up', False):
             st.components.v1.html(
                 """
@@ -354,7 +356,6 @@ with col_main:
         </style>
         """, unsafe_allow_html=True)
         
-        # --- HIGHLIGHT FUNCTIES ---
         def req_lbl(key, base_text):
             if st.session_state.get('validate_step2', False):
                 val = st.session_state.get(key, "")
@@ -465,7 +466,6 @@ with col_main:
 
         st.markdown("<br>", unsafe_allow_html=True)
 
-        # --- ROUTE INFORMATIE ---
         st.markdown("#### Route Information")
         c_route_left, c_route_right = st.columns(2, gap="large")
         
@@ -493,7 +493,6 @@ with col_main:
         error_container = st.empty()
         missing_fields = False
         
-        # Check original fields AND new route fields
         if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip() or not p_address.strip() or not p_zip.strip() or not p_city.strip() or not d_address.strip() or not d_zip.strip() or not d_city.strip():
             missing_fields = True
         
@@ -510,7 +509,6 @@ with col_main:
                 error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
         c_back, c_next = st.columns([1, 4])
-        # GEFIXT: Type secondary (doorzichtig) voor Go Back, Primary (paars) voor Continue
         if c_back.button("← Go Back", type="secondary", use_container_width=True):
             st.session_state.step = 1
             st.session_state.validate_step2 = False 
@@ -561,7 +559,7 @@ with col_main:
                 st.rerun()
 
     # =========================================================
-    # STAP 3: REVIEW (OPSLAAN IN SUPABASE!)
+    # STAP 3: REVIEW 
     # =========================================================
     elif st.session_state.step == 3:
         o = st.session_state.temp_order
@@ -600,12 +598,10 @@ with col_main:
         if not st.session_state.is_submitted:
             c_b1, c_b2 = st.columns([1, 4])
             with c_b1:
-                # GEFIXT: Secondary voor Edit
                 if st.button("← Edit Details", type="secondary", use_container_width=True):
                     st.session_state.step = 2
                     st.rerun()
             with c_b2:
-                # GEFIXT: Primary voor de Confirm knop
                 if st.button("✅ CONFIRM & SEND REQUEST", type="primary", use_container_width=True):
                     
                     db_order = {
@@ -660,9 +656,10 @@ st.write("---")
 c_bottom1, c_bottom2 = st.columns(2, gap="large")
 
 with c_bottom1:
+    # BEIDE KNOPPEN ZIJN NU 'PRIMARY' EN GEBRUIKEN HET NIEUWE HOVER EFFECT
     if st.button("Open Internal Planner System", type="primary", use_container_width=True):
         st.switch_page("pages/Planner.py")
 
 with c_bottom2:
-    if st.button("Open CO2 Dashboard", type="secondary", use_container_width=True):
+    if st.button("Open CO2 Dashboard", type="primary", use_container_width=True):
         st.switch_page("pages/Dashboard.py")
