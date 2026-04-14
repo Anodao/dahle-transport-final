@@ -332,10 +332,6 @@ st.write("---")
 st.write("### Detailed Cost & Margin Breakdown")
 st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
-# --- CUSTOMER CARDS (ONDERAAN) ---
-st.write("### Detailed Cost & Margin Breakdown")
-st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
-
 # 1. We breiden de aggregatie uit zodat hij ook de datum van de laatste order meepakt
 customer_group = filtered_df.groupby('company').agg(
     total_orders=('id', 'count'),
