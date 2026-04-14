@@ -41,6 +41,23 @@ if 'selected_order_id' not in st.session_state:
 # --- CSS STYLING (HUDFTERPROOF LIGHT MODE) ---
 st.markdown("""
     <style>
+
+    /* 1. FIX VOOR DE KPI STATISTIEKEN (Forceert de cijfers paars en tekst donkergrijs) */
+div[data-testid="stMetricValue"], div[data-testid="stMetricValue"] * { 
+    color: #894b9d !important; 
+    font-weight: 700 !important; 
+}
+div[data-testid="stMetricLabel"], div[data-testid="stMetricLabel"] * { 
+    color: #333333 !important; 
+    visibility: visible !important;
+}
+
+/* 2. FIX VOOR DROPDOWN MENU'S (Dwingt de achtergrond wit en letters zwart) */
+div[data-baseweb="select"] > div { background-color: #ffffff !important; }
+div[data-baseweb="select"] span { color: #111111 !important; }
+ul[role="listbox"] { background-color: #ffffff !important; }
+ul[role="listbox"] li { color: #111111 !important; background-color: #ffffff !important; }
+    
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
     
