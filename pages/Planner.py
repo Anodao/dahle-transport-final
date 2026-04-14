@@ -44,10 +44,10 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-/* 1. Verberg overbodige Streamlit zijbalk/header */
+/* Verberg overbodige Streamlit zijbalk/header */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 
-/* 2. Custom Navbar bovenaan (deze blijft wel wit met donkere letters voor je logo) */
+/* Custom Navbar bovenaan */
 .block-container { padding-top: 120px !important; }
 .navbar { 
     position: fixed; top: 0; left: 0; width: 100%; height: 90px; 
@@ -82,26 +82,28 @@ def fetch_all_orders():
 all_orders = fetch_all_orders()
 
 # =========================================================
-# KPI DASHBOARD
+# KPI DASHBOARD (Nu inklapbaar met bolletjes)
 # =========================================================
 count_pending = sum(1 for o in all_orders if o['status'] == 'New')
 count_progress = sum(1 for o in all_orders if o['status'] == 'In Progress')
 count_done = sum(1 for o in all_orders if o['status'] in ['Processed', 'Delivered'])
 total_orders = len(all_orders)
 
-m1, m2, m3, m4 = st.columns(4)
-with m1:
-    with st.container(border=True):
-        st.metric("Action Required", count_pending)
-with m2:
-    with st.container(border=True):
-        st.metric("Active Routes", count_progress)
-with m3:
-    with st.container(border=True):
-        st.metric("Completed", count_done)
-with m4:
-    with st.container(border=True):
-        st.metric("Total Orders", total_orders)
+# st.expander maakt het inklapbaar. expanded=False zorgt dat hij standaard dicht zit.
+with st.expander("📊 Bekijk Statistieken & KPI's", expanded=False):
+    m1, m2, m3, m4 = st.columns(4)
+    with m1:
+        with st.container(border=True):
+            st.metric("🔴 Action Required", count_pending)
+    with m2:
+        with st.container(border=True):
+            st.metric("🟡 Active Routes", count_progress)
+    with m3:
+        with st.container(border=True):
+            st.metric("🟢 Completed", count_done)
+    with m4:
+        with st.container(border=True):
+            st.metric("📋 Total Orders", total_orders)
 
 st.write("---")
 
@@ -113,14 +115,16 @@ col_list, col_details = st.columns([1, 2], gap="large")
 with col_list:
     st.markdown("<h2>Inbox</h2>", unsafe_allow_html=True)
     
-    tab_new, tab_prog, tab_done = st.tabs(["Pending", "In Progress", "Done"])
+    # Bolletjes toegevoegd aan de tabbladen
+    tab_new, tab_prog, tab_done = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done"])
     
     with tab_new:
         pending = [o for o in all_orders if o['status'] == 'New']
         if not pending: st.info("No pending orders.")
         for o in pending:
             with st.container(border=True):
-                st.markdown(f"**{o['company']}**")
+                # Bolletje toegevoegd voor de bedrijfsnaam
+                st.markdown(f"**🔴 {o['company']}**")
                 st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"p_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
@@ -131,7 +135,8 @@ with col_list:
         if not inprogress: st.info("Nothing in progress.")
         for o in inprogress:
             with st.container(border=True):
-                st.markdown(f"**{o['company']}**")
+                # Bolletje toegevoegd voor de bedrijfsnaam
+                st.markdown(f"**🟡 {o['company']}**")
                 st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"prog_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
@@ -142,7 +147,8 @@ with col_list:
         if not done: st.info("No completed orders.")
         for o in done:
             with st.container(border=True):
-                st.markdown(f"**{o['company']}**")
+                # Bolletje toegevoegd voor de bedrijfsnaam
+                st.markdown(f"**🟢 {o['company']}**")
                 proc_date = o.get('processed_date')
                 display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
                 st.caption(f"Order #{o['id']} | Afgerond | Datum: {display_date}")
@@ -162,18 +168,18 @@ with col_details:
             with st.container(border=True):
                 r1, r2 = st.columns(2)
                 with r1:
-                    st.markdown("#### Pickup Details")
+                    st.markdown("#### 📤 Pickup Details")
                     st.markdown(f"**Address:** {order.get('pickup_address', '-')}")
                     st.markdown(f"**Zip Code:** {order.get('pickup_zip', '-')}")
                     st.markdown(f"**City:** {order.get('pickup_city', '-')}")
                 with r2:
-                    st.markdown("#### Delivery Details")
+                    st.markdown("#### 📥 Delivery Details")
                     st.markdown(f"**Address:** {order.get('delivery_address', '-')}")
                     st.markdown(f"**Zip Code:** {order.get('delivery_zip', '-')}")
                     st.markdown(f"**City:** {order.get('delivery_city', '-')}")
             
             with st.container(border=True):
-                st.markdown("#### Contact Information")
+                st.markdown("#### 📞 Contact Information")
                 c1, c2, c3 = st.columns(3)
                 with c1:
                     st.markdown("**Contact Person**")
@@ -186,7 +192,7 @@ with col_details:
                     st.write(order.get('email', '-'))
 
             with st.container(border=True):
-                st.markdown("#### Specifications & Internal Notes")
+                st.markdown("#### 📝 Specifications & Internal Notes")
                 st.markdown(f"**Requested Services:** {order.get('types', '-')}")
                 if order.get('info'):
                     st.info(order['info'])
@@ -209,20 +215,20 @@ with col_details:
             
             col_b1, col_b2 = st.columns(2)
             with col_b1:
-                if st.button("Save Updates", type="primary", use_container_width=True):
+                if st.button("💾 Save Updates", type="primary", use_container_width=True):
                     update_data = {
                         "status": new_status,
                         "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "internal_notes": new_notes
                     }
                     supabase.table("orders").update(update_data).eq("id", order['id']).execute()
-                    st.success("Updates saved successfully!")
+                    st.success("✅ Updates saved successfully!")
                     time.sleep(1)
                     st.rerun()
             with col_b2:
-                if st.button("Delete Order", use_container_width=True):
+                if st.button("🗑️ Delete Order", use_container_width=True):
                     supabase.table("orders").delete().eq("id", order['id']).execute()
                     st.session_state.selected_order_id = None
                     st.rerun()
     else:
-        st.info("Select an order from the Inbox to view details and update its status.")
+        st.info("👈 Select an order from the Inbox to view details and update its status.")
