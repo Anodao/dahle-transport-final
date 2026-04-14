@@ -13,13 +13,13 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- LIVE API FUNCTIE VOOR DIESEL ---
-@st.cache_data(ttl=3600) # Haalt maximaal 1x per uur data op (bespaart je API limiet)
-def get_live_diesel_price():
+# --- LIVE API FUNCTIE VOOR DIESEL & GAS ---
+@st.cache_data(ttl=3600)
+def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
     headers = {
-        # LET OP: Plak hieronder jouw API key van CollectAPI!
-        'authorization': "apikey 45CDpqYa0mK5v7B0vLExG7:6RHFfYXba02CtLDkUH2GTI",
+        # LET OP: Plak hieronder weer jouw eigen API key!
+        'authorization': "apikey VUL_HIER_JE_API_KEY_IN",
         'content-type': "application/json"
     }
     
@@ -29,15 +29,18 @@ def get_live_diesel_price():
         
         for country in data.get('result', []):
             if country['country'].lower() == 'norway':
-                # Omrekenen van EUR naar NOK (bijv. met een actuele of vaste koers van 11.5)
-                prijs_eur = float(country['diesel'])
-                prijs_nok = round(prijs_eur * 11.5, 2) 
-                return prijs_nok
+                # Beide prijzen ophalen en omrekenen naar NOK
+                diesel_nok = round(float(country['diesel']) * 11.5, 2) 
+                gas_nok = round(float(country['gasoline']) * 11.5, 2) 
+                
+                # We sturen ze nu als een 'dictionary' (een setje) terug
+                return {"diesel": diesel_nok, "gas": gas_nok}
                 
     except Exception as e:
         print(f"API Error: {e}")
         
-    return 20.50 # Fallback prijs als de API tijdelijk faalt
+    # Fallback prijzen als de API tijdelijk faalt
+    return {"diesel": 20.50, "gas": 21.50}
 
 # --- SUPABASE CONNECTIE ---
 @st.cache_resource
@@ -199,17 +202,30 @@ with c_filter:
         custom_dates = st.date_input("Select a date range:", value=today)
 
 with c_input:
-    # Haal de live prijs op!
-    fuel_price = get_live_diesel_price()
+    # Haal beide prijzen op via de nieuwe functie
+    live_prices = get_live_fuel_prices()
     
-    # Toon dit in een mooi kader in plaats van een slider
-    with st.container(border=True):
-        st.metric(
-            label="⛽ Live Market Diesel Price (Norway)", 
-            value=f"{fuel_price:.2f} NOK / L",
-            delta="Actueel via API"
-        )
-
+    # We bewaren de dieselprijs apart voor de winst-berekeningen verderop in je code
+    fuel_price = live_prices["diesel"]
+    
+    # Maak twee kolommen ín deze sectie voor de twee blokjes
+    f1, f2 = st.columns(2)
+    
+    with f1:
+        with st.container(border=True):
+            st.metric(
+                label="⛽ Diesel (NOK/L)", 
+                value=f"{live_prices['diesel']:.2f}",
+                delta="Actueel via API"
+            )
+            
+    with f2:
+        with st.container(border=True):
+            st.metric(
+                label="🚗 Gas/Petrol (NOK/L)", 
+                value=f"{live_prices['gas']:.2f}",
+                delta="Actueel via API"
+            )
 st.write("---")
 
 # --- DATA VERWERKING ---
