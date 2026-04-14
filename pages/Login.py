@@ -39,7 +39,6 @@ if 'user' not in st.session_state:
 if 'last_order_signature' not in st.session_state:
     st.session_state.last_order_signature = None
 
-# Geheugen voor het nieuwe "Knoppen Menu"
 if 'active_tab' not in st.session_state:
     st.session_state.active_tab = "My Shipments"
 
@@ -236,7 +235,19 @@ else:
     st.write("---")
     
     # =========================================================
-    # NIEUWE MENU NAVIGATIE (Dit vervangt st.tabs en forceert een refresh)
+    # DYNAMISCHE TITELS (Boven de knoppen)
+    # =========================================================
+    if st.session_state.active_tab == "My Shipments":
+        st.markdown("### 📦 Your Shipment History")
+    elif st.session_state.active_tab == "New Order":
+        st.markdown("### ➕ Quick Order Form")
+        st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
+    elif st.session_state.active_tab == "Profile Settings":
+        st.markdown("### ⚙️ Manage Your Profile")
+        st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
+
+    # =========================================================
+    # MENU NAVIGATIE KNOPPEN
     # =========================================================
     col_menu1, col_menu2, col_menu3 = st.columns(3)
     
@@ -257,9 +268,8 @@ else:
             
     st.write("---")
 
-    # --- MENU 1: ORDER HISTORIE ---
+    # --- CONTENT 1: ORDER HISTORIE ---
     if st.session_state.active_tab == "My Shipments":
-        st.markdown("### Your Shipment History")
         
         try:
             orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
@@ -318,13 +328,23 @@ else:
                         st.write("")
                         st.markdown("#### 📝 Additional Info")
                         st.write(f"{o.get('info', '-')}")
+                    
+                    # LOGICA: Klant kan zelf een 'New' order annuleren
+                    if o['status'] == 'New':
+                        st.write("---")
+                        if st.button("❌ Cancel This Order", key=f"cancel_{o['id']}", type="secondary"):
+                            try:
+                                supabase.table("orders").update({"status": "Cancelled"}).eq("id", o['id']).execute()
+                                st.success("✅ Your order has been cancelled successfully.")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error("⚠️ Failed to cancel order. Please contact support.")
                         
                     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- MENU 2: NIEUWE ORDER ---
+    # --- CONTENT 2: NIEUWE ORDER ---
     elif st.session_state.active_tab == "New Order":
-        st.markdown("### Quick Order Form")
-        st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
         
         with st.container(border=True):
             st.markdown("#### 1. What are you shipping?")
@@ -411,10 +431,8 @@ else:
                         except Exception as e:
                             st.error(f"⚠️ Failed to send order. Error: {e}")
 
-    # --- MENU 3: PROFIEL BEHEREN ---
+    # --- CONTENT 3: PROFIEL BEHEREN ---
     elif st.session_state.active_tab == "Profile Settings":
-        st.markdown("### Manage Your Profile")
-        st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
         
         with st.container(border=True):
             st.markdown("#### General Info")
