@@ -38,16 +38,13 @@ if 'user' not in st.session_state:
 if 'selected_order_id' not in st.session_state:
     st.session_state.selected_order_id = None
 
-# --- CSS STYLING (HUDFTERPROOF LIGHT MODE) ---
+# --- CSS STYLING (ALLEEN LAYOUT, GEEN GEFORCEERDE KLEUREN) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
-.stApp { background-color: #f4f6f8 !important; }
-.stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
-div[data-testid="caption"] { color: #666666 !important; }
 
 /* NAVBAR */
 .block-container { padding-top: 130px !important; }
@@ -59,37 +56,7 @@ div[data-testid="caption"] { color: #666666 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
 
 /* CONTAINERS */
-div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important; }
-
-/* ========================================================= */
-/* ULTIEME FIX VOOR KPI METRICS */
-/* ========================================================= */
-div[data-testid="stMetricValue"], div[data-testid="stMetricValue"] * { color: #894b9d !important; font-weight: 700 !important; }
-div[data-testid="stMetricLabel"], div[data-testid="stMetricLabel"] * { color: #333333 !important; font-weight: 600 !important; visibility: visible !important; }
-
-/* FIX VOOR DROPDOWNS & POPOVERS */
-div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-div[data-baseweb="select"] span { color: #111111 !important; }
-div[data-baseweb="popover"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-ul[role="listbox"] { background-color: #ffffff !important; }
-ul[role="listbox"] li { color: #111111 !important; background-color: #ffffff !important; }
-ul[role="listbox"] li:hover { background-color: #f4f6f8 !important; }
-
-/* FIX VOOR TEXT AREA (Notities) */
-div[data-baseweb="textarea"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-div[data-baseweb="textarea"] textarea { color: #111111 !important; }
-
-/* BUTTONS */
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
-div.stButton > button[kind="primary"] p { color: #ffffff !important; }
-
-div.stButton > button[kind="secondary"] { background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
-div.stButton > button[kind="secondary"] p { color: #333333 !important; }
-
-/* TABS */
-button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
-button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
-button[data-baseweb="tab"] { background-color: transparent !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] { border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important; }
 </style>
 
 <div class="navbar">
@@ -181,7 +148,7 @@ with col_list:
                     st.rerun()
 
 with col_details:
-    st.markdown("<h2 style='color: #111111; margin-bottom: 5px;'>Order Details</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='margin-bottom: 5px;'>Order Details</h2>", unsafe_allow_html=True)
     st.write("---")
     
     if st.session_state.selected_order_id:
@@ -189,7 +156,6 @@ with col_details:
         if order:
             st.markdown(f"### Order #{order['id']} - {order['company']}")
             
-            # --- ROUTE INFO ---
             with st.container(border=True):
                 r1, r2 = st.columns(2)
                 with r1:
@@ -199,7 +165,6 @@ with col_details:
                     st.markdown("**📥 Delivery**")
                     st.write(f"{order['delivery_address']}\n{order['delivery_zip']} {order['delivery_city']}")
             
-            # --- CONTACT INFO ---
             with st.container(border=True):
                 st.markdown("#### 📞 Contact Information")
                 c1, c2, c3 = st.columns(3)
@@ -213,7 +178,6 @@ with col_details:
                     st.markdown("**Email**")
                     st.write(order.get('email', '-'))
 
-            # --- NOTES & SPECS ---
             with st.container(border=True):
                 st.markdown("#### 📝 Specifications & Internal Notes")
                 st.markdown(f"**Requested Services:** {order.get('types', '-')}")
@@ -227,7 +191,6 @@ with col_details:
             
             st.write("")
             
-            # --- STATUS UPDATE CONTROLS ---
             st.markdown("#### Control Panel")
             status_list = ["New", "In Progress", "Processed", "Delivered"]
             try:
