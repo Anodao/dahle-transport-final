@@ -40,107 +40,66 @@ if 'selected_order_id' not in st.session_state:
 
 # --- CSS STYLING (HUDFTERPROOF LIGHT MODE) ---
 st.markdown("""
-    <style>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-    /* 1. FIX VOOR DE KPI STATISTIEKEN (Forceert de cijfers paars en tekst donkergrijs) */
-div[data-testid="stMetricValue"], div[data-testid="stMetricValue"] * { 
-    color: #894b9d !important; 
-    font-weight: 700 !important; 
-}
-div[data-testid="stMetricLabel"], div[data-testid="stMetricLabel"] * { 
-    color: #333333 !important; 
-    visibility: visible !important;
-}
+[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
+.stApp { background-color: #f4f6f8 !important; }
+.stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
+div[data-testid="caption"] { color: #666666 !important; }
 
-/* 2. FIX VOOR DROPDOWN MENU'S (Dwingt de achtergrond wit en letters zwart) */
-div[data-baseweb="select"] > div { background-color: #ffffff !important; }
+/* NAVBAR */
+.block-container { padding-top: 130px !important; }
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+.nav-logo img { height: 48px; width: auto; }
+.nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
+.nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; }
+.nav-cta { display: flex; justify-content: flex-end; }
+.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
+
+/* CONTAINERS */
+div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; border-radius: 8px !important; box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important; }
+
+/* ========================================================= */
+/* ULTIEME FIX VOOR KPI METRICS */
+/* ========================================================= */
+div[data-testid="stMetricValue"], div[data-testid="stMetricValue"] * { color: #894b9d !important; font-weight: 700 !important; }
+div[data-testid="stMetricLabel"], div[data-testid="stMetricLabel"] * { color: #333333 !important; font-weight: 600 !important; visibility: visible !important; }
+
+/* FIX VOOR DROPDOWNS & POPOVERS */
+div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
 div[data-baseweb="select"] span { color: #111111 !important; }
+div[data-baseweb="popover"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
 ul[role="listbox"] { background-color: #ffffff !important; }
 ul[role="listbox"] li { color: #111111 !important; background-color: #ffffff !important; }
-    
-    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
-    
-    [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
-    
-    .stApp { background-color: #f4f6f8 !important; }
-    
-    /* Forceer algemene tekst naar donkergrijs/zwart */
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
-    div[data-testid="caption"] { color: #666666 !important; }
+ul[role="listbox"] li:hover { background-color: #f4f6f8 !important; }
 
-    /* NAVBAR */
-    .block-container { padding-top: 130px !important; }
-    .navbar {
-        position: fixed; top: 0; left: 0; width: 100%; height: 90px;
-        background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
-        display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
-        padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    }
-    .nav-logo img { height: 48px; width: auto; }
-    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
-    .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; }
-    .nav-cta { display: flex; justify-content: flex-end; }
-    .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
+/* FIX VOOR TEXT AREA (Notities) */
+div[data-baseweb="textarea"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
+div[data-baseweb="textarea"] textarea { color: #111111 !important; }
 
-    /* CONTAINERS */
-    div[data-testid="stVerticalBlockBorderWrapper"] { 
-        background-color: #ffffff !important; 
-        border: 1px solid #d1d5db !important; 
-        border-radius: 8px !important; 
-        box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
-    }
-    
-    /* ========================================================= */
-    /* ULTIEME FIX VOOR KPI METRICS (De "Nuke" Methode)          */
-    /* ========================================================= */
-    div[data-testid="stMetricValue"], div[data-testid="stMetricValue"] * { 
-        color: #894b9d !important; 
-        font-weight: 700 !important; 
-    }
-    div[data-testid="stMetricLabel"], div[data-testid="stMetricLabel"] * { 
-        color: #333333 !important; 
-        font-weight: 600 !important; 
-        visibility: visible !important;
-    }
-    
-    /* FIX VOOR DROPDOWNS & POPOVERS */
-    div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-    div[data-baseweb="select"] span { color: #111111 !important; }
-    div[data-baseweb="popover"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-    ul[role="listbox"] { background-color: #ffffff !important; }
-    ul[role="listbox"] li { color: #111111 !important; background-color: #ffffff !important; }
-    ul[role="listbox"] li:hover { background-color: #f4f6f8 !important; }
+/* BUTTONS */
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
+div.stButton > button[kind="primary"] p { color: #ffffff !important; }
 
-    /* FIX VOOR TEXT AREA (Notities) */
-    div[data-baseweb="textarea"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-    div[data-baseweb="textarea"] textarea { color: #111111 !important; }
-    
-    /* BUTTONS */
-    div.stButton > button[kind="primary"] { 
-        background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important;
-    }
-    div.stButton > button[kind="primary"] p { color: #ffffff !important; }
-    
-    div.stButton > button[kind="secondary"] { 
-        background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important;
-    }
-    div.stButton > button[kind="secondary"] p { color: #333333 !important; }
+div.stButton > button[kind="secondary"] { background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
+div.stButton > button[kind="secondary"] p { color: #333333 !important; }
 
-    /* TABS */
-    button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
-    button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
-    button[data-baseweb="tab"] { background-color: transparent !important; }
-    </style>
+/* TABS */
+button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
+button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
+button[data-baseweb="tab"] { background-color: transparent !important; }
+</style>
 
-    <div class="navbar">
-        <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
-        <div class="nav-links">
-            <a href="/"><span>Hjem</span></a>
-            <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
-        </div>
-        <div class="nav-cta"><a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a></div>
+<div class="navbar">
+    <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+    <div class="nav-links">
+        <a href="/"><span>Hjem</span></a>
+        <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
     </div>
+    <div class="nav-cta"><a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a></div>
+</div>
 """, unsafe_allow_html=True)
 
 # --- DATA OPHALEN ---
