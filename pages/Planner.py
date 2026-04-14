@@ -49,7 +49,7 @@ st.markdown("""
     /* --- LIGHT THEME ACHTERGROND --- */
     .stApp { background-color: #f4f6f8 !important; }
     
-    /* Forceer alle tekst naar donkergrijs/zwart voor maximale leesbaarheid */
+    /* Forceer alle algemene tekst naar donkergrijs/zwart */
     .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
     div[data-testid="caption"] { color: #666666 !important; }
 
@@ -76,13 +76,13 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
     }
     
-    /* METRICS STYLING (Voor de KPI's) */
-    div[data-testid="stMetricValue"] { color: #894b9d !important; font-weight: 700 !important; font-size: 32px !important;}
-    div[data-testid="stMetricLabel"] { font-weight: 600 !important; font-size: 14px !important; color: #555555 !important;}
+    /* FIX VOOR KPI METRICS TEKST (Geforceerd Zwart) */
+    div[data-testid="stMetricValue"] > div { color: #894b9d !important; font-weight: 700 !important; font-size: 32px !important;}
+    div[data-testid="stMetricLabel"] * { color: #111111 !important; font-weight: 600 !important; font-size: 14px !important; visibility: visible !important;}
     
-    /* INPUT VELDEN (Dropdowns) */
-    div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-    div[data-baseweb="select"] span { color: #111111 !important; }
+    /* FIX VOOR DROPDOWNS EN INPUTS (Geforceerd Zwart) */
+    div[data-baseweb="select"] { background-color: #ffffff !important; }
+    div[data-baseweb="select"] * { color: #111111 !important; }
     
     /* BUTTONS */
     div.stButton > button[kind="primary"] { 
@@ -97,7 +97,7 @@ st.markdown("""
     div.stButton > button[kind="secondary"] * { color: #333333 !important; }
     div.stButton > button[kind="secondary"]:hover { border-color: #894b9d !important; color: #894b9d !important;}
 
-    /* TABS FIX (Forceer duidelijke tekstkleur) */
+    /* TABS FIX */
     button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
     button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
     button[data-baseweb="tab"] { background-color: transparent !important; }
@@ -127,15 +127,13 @@ def fetch_all_orders():
 all_orders = fetch_all_orders()
 
 # =========================================================
-# KPI DASHBOARD (Nieuw onderdeel)
+# KPI DASHBOARD
 # =========================================================
-# Bereken de statistieken op basis van de opgehaalde orders
 count_pending = sum(1 for o in all_orders if o['status'] == 'New')
 count_progress = sum(1 for o in all_orders if o['status'] == 'In Progress')
 count_done = sum(1 for o in all_orders if o['status'] in ['Processed', 'Delivered'])
 total_orders = len(all_orders)
 
-# Weergave van de metrics in mooie vakken
 m1, m2, m3, m4 = st.columns(4)
 with m1:
     with st.container(border=True):
@@ -150,7 +148,7 @@ with m4:
     with st.container(border=True):
         st.metric("📋 Total All-Time", total_orders)
 
-st.write("---") # Scheidingslijn onder de KPI's
+st.write("---")
 
 # =========================================================
 # LAYOUT (2 KOLOMMEN)
