@@ -115,15 +115,14 @@ col_list, col_details = st.columns([1, 2], gap="large")
 with col_list:
     st.markdown("<h2>Inbox</h2>", unsafe_allow_html=True)
     
-    # Bolletjes toegevoegd aan de tabbladen
-    tab_new, tab_prog, tab_done = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done"])
+    # NIEUWE TAB TOEGEVOEGD: Cancelled (❌)
+    tab_new, tab_prog, tab_done, tab_fail = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done", "❌ Cancelled"])
     
     with tab_new:
         pending = [o for o in all_orders if o['status'] == 'New']
         if not pending: st.info("No pending orders.")
         for o in pending:
             with st.container(border=True):
-                # Bolletje toegevoegd voor de bedrijfsnaam
                 st.markdown(f"**🔴 {o['company']}**")
                 st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"p_{o['id']}", use_container_width=True):
@@ -135,7 +134,6 @@ with col_list:
         if not inprogress: st.info("Nothing in progress.")
         for o in inprogress:
             with st.container(border=True):
-                # Bolletje toegevoegd voor de bedrijfsnaam
                 st.markdown(f"**🟡 {o['company']}**")
                 st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"prog_{o['id']}", use_container_width=True):
@@ -147,12 +145,25 @@ with col_list:
         if not done: st.info("No completed orders.")
         for o in done:
             with st.container(border=True):
-                # Bolletje toegevoegd voor de bedrijfsnaam
                 st.markdown(f"**🟢 {o['company']}**")
                 proc_date = o.get('processed_date')
                 display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
                 st.caption(f"Order #{o['id']} | Afgerond | Datum: {display_date}")
                 if st.button(f"View #{o['id']}", key=f"d_{o['id']}", use_container_width=True):
+                    st.session_state.selected_order_id = o['id']
+                    st.rerun()
+
+    # LOGICA VOOR DE NIEUWE CANCELLED TAB
+    with tab_fail:
+        failed = [o for o in all_orders if o['status'] == 'Cancelled']
+        if not failed: st.info("No cancelled orders.")
+        for o in failed:
+            with st.container(border=True):
+                st.markdown(f"**❌ {o['company']}**")
+                proc_date = o.get('processed_date')
+                display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
+                st.caption(f"Order #{o['id']} | Niet gelukt | Datum: {display_date}")
+                if st.button(f"View #{o['id']}", key=f"f_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
 
@@ -205,7 +216,8 @@ with col_details:
             st.write("")
             
             st.markdown("#### Control Panel")
-            status_list = ["New", "In Progress", "Processed", "Delivered"]
+            # CANCELLED TOEGEVOEGD AAN DROPDOWN STATUS
+            status_list = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
             try:
                 current_idx = status_list.index(order['status'])
             except:
@@ -213,22 +225,16 @@ with col_details:
                 
             new_status = st.selectbox("Update Order Status", options=status_list, index=current_idx)
             
-            col_b1, col_b2 = st.columns(2)
-            with col_b1:
-                if st.button("💾 Save Updates", type="primary", use_container_width=True):
-                    update_data = {
-                        "status": new_status,
-                        "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "internal_notes": new_notes
-                    }
-                    supabase.table("orders").update(update_data).eq("id", order['id']).execute()
-                    st.success("✅ Updates saved successfully!")
-                    time.sleep(1)
-                    st.rerun()
-            with col_b2:
-                if st.button("🗑️ Delete Order", use_container_width=True):
-                    supabase.table("orders").delete().eq("id", order['id']).execute()
-                    st.session_state.selected_order_id = None
-                    st.rerun()
+            # DELETE KNOP VERWIJDERD, ALLEEN OPSLAAN KNOP OVERGEBLEVEN OVER VOLLE BREEDTE
+            if st.button("💾 Save Updates", type="primary", use_container_width=True):
+                update_data = {
+                    "status": new_status,
+                    "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                    "internal_notes": new_notes
+                }
+                supabase.table("orders").update(update_data).eq("id", order['id']).execute()
+                st.success("✅ Updates saved successfully!")
+                time.sleep(1)
+                st.rerun()
     else:
         st.info("👈 Select an order from the Inbox to view details and update its status.")
