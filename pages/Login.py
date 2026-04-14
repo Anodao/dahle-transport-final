@@ -24,7 +24,6 @@ except Exception as e:
     st.error("⚠️ Database connection failed.")
     st.stop()
 
-# --- INITIALIZE SESSION STATE ---
 import extra_streamlit_components as stx
 from datetime import datetime, timedelta
 
@@ -39,6 +38,10 @@ if 'user' not in st.session_state:
         st.session_state.user = session.user
     else:
         st.session_state.user = None
+
+# ANTI-DUBBELKLIK GEHEUGEN VOOR ORDERS
+if 'last_order_signature' not in st.session_state:
+    st.session_state.last_order_signature = None
 
 # --- HERSTEL SESSIE UIT COOKIE (als nog niet ingelogd) ---
 if st.session_state.user is None:
@@ -199,7 +202,6 @@ if st.session_state.user is None:
                         supabase.table("profiles").insert(profile_data).execute()
                         
                         st.success("✅ Account created successfully! You can now log in via the 'Log In' tab.")
-                        st.balloons()
                     except Exception as e:
                         if "already registered" in str(e).lower():
                             st.error("⚠️ This email address is already registered.")
@@ -263,7 +265,7 @@ else:
         else:
             total_orders = len(user_orders)
             pending_orders = sum(1 for o in user_orders if o['status'] == 'New')
-            processed_orders = sum(1 for o in user_orders if o['status'] == 'Processed')
+            processed_orders = sum(1 for o in user_orders if o['status'] in ['Processed', 'Delivered'])
             
             m1, m2, m3 = st.columns(3)
             m1.metric("Total Shipments", total_orders)
@@ -273,23 +275,44 @@ else:
             st.write("---")
             
             for o in user_orders:
-                status_icon = "🔴" if o['status'] == 'New' else "🟢"
+                # LOGICA VOOR DE JUISTE KLEUR BOLLETJES
+                if o['status'] == 'New':
+                    status_icon = "🔵"
+                elif o['status'] == 'In Progress':
+                    status_icon = "🟡"
+                elif o['status'] in ['Processed', 'Delivered']:
+                    status_icon = "🟢"
+                elif o['status'] == 'Cancelled':
+                    status_icon = "🔴"
+                else:
+                    status_icon = "⚪"
+
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} (Status: {o['status']})"):
                     st.markdown("<br>", unsafe_allow_html=True)
                     c_det1, c_det2 = st.columns(2)
+                    
+                    # LOGICA VOOR STRAKKE ADRES WEERGAVE
                     with c_det1:
-                        st.markdown("**📤 Pickup:**")
-                        st.write(f"{o.get('pickup_address', '')}, {o.get('pickup_city', '')}")
+                        st.markdown("#### 📤 Pickup Location")
+                        st.write(f"**Adres:** {o.get('pickup_address', '-')}")
+                        st.write(f"**Postcode:** {o.get('pickup_zip', '-')}")
+                        st.write(f"**Stad:** {o.get('pickup_city', '-')}")
+                        
                         st.write("")
-                        st.markdown("**📥 Delivery:**")
-                        st.write(f"{o.get('delivery_address', '')}, {o.get('delivery_city', '')}")
+                        
+                        st.markdown("#### 📥 Delivery Destination")
+                        st.write(f"**Adres:** {o.get('delivery_address', '-')}")
+                        st.write(f"**Postcode:** {o.get('delivery_zip', '-')}")
+                        st.write(f"**Stad:** {o.get('delivery_city', '-')}")
+                        
                     with c_det2:
-                        st.markdown("**🚛 Services Requested:**")
-                        st.write(f"{o.get('types', '')}")
+                        st.markdown("#### 🚛 Services Requested")
+                        st.write(f"{o.get('types', '-')}")
+                        
                         st.write("")
-                        if o.get('info'):
-                            st.markdown("**📝 Additional Info:**")
-                            st.write(f"{o.get('info')}")
+                        st.markdown("#### 📝 Additional Info")
+                        st.write(f"{o.get('info', '-')}")
+                        
                     st.markdown("<br>", unsafe_allow_html=True)
 
     # --- TAB 2: NIEUWE ORDER (Snel Bestellen) ---
@@ -321,7 +344,6 @@ else:
             rc1, rc2 = st.columns(2, gap="large")
             with rc1:
                 st.markdown("**📤 Pickup Location**")
-                # Als de klant een adres heeft in zijn profiel, vul dat alvast in als suggestie
                 q_p_address = st.text_input("Address *", value=address, key="q_p_add")
                 q_p_zip = st.text_input("Zip Code *", value=zip_code, key="q_p_zip")
                 q_p_city = st.text_input("City *", value=city, key="q_p_city")
@@ -351,33 +373,39 @@ else:
                     if q_freight and q_load_types:
                         compiled_info += f"🚛 Freight Load: {', '.join(q_load_types)}\n"
                         
-                    db_order = {
-                        "company": company_name,
-                        "reg_no": "",  
-                        "address": f"{q_p_address}, {q_p_zip} {q_p_city}", # Default pickup adres opslaan als bedrijfsadres in de planner
-                        "contact_name": contact_name,
-                        "email": email_addr,
-                        "phone": phone_nr,
-                        "types": ", ".join(selected_types),
-                        "info": compiled_info,
-                        "status": "New",
-                        "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "pickup_address": q_p_address,
-                        "pickup_zip": q_p_zip,
-                        "pickup_city": q_p_city,
-                        "delivery_address": q_d_address,
-                        "delivery_zip": q_d_zip,
-                        "delivery_city": q_d_city,
-                        "user_id": user_id 
-                    }
+                    # LOGICA: UNIEKE STEMPEL MAKEN VOOR ANTI-DUBBELKLIK
+                    current_signature = f"{q_p_address}-{q_d_address}-{compiled_info}"
                     
-                    try:
-                        supabase.table("orders").insert(db_order).execute()
-                        st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
-                        time.sleep(2)
-                        st.rerun() 
-                    except Exception as e:
-                        st.error(f"⚠️ Failed to send order. Error: {e}")
+                    if st.session_state.last_order_signature == current_signature:
+                        st.warning("⏳ Je hebt deze exacte order zojuist al verstuurd! We hebben hem in goede orde ontvangen.")
+                    else:
+                        db_order = {
+                            "company": company_name,
+                            "reg_no": "",  
+                            "address": f"{q_p_address}, {q_p_zip} {q_p_city}",
+                            "contact_name": contact_name,
+                            "email": email_addr,
+                            "phone": phone_nr,
+                            "types": ", ".join(selected_types),
+                            "info": compiled_info,
+                            "status": "New",
+                            "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "pickup_address": q_p_address,
+                            "pickup_zip": q_p_zip,
+                            "pickup_city": q_p_city,
+                            "delivery_address": q_d_address,
+                            "delivery_zip": q_d_zip,
+                            "delivery_city": q_d_city,
+                            "user_id": user_id 
+                        }
+                        
+                        try:
+                            supabase.table("orders").insert(db_order).execute()
+                            st.session_state.last_order_signature = current_signature
+                            st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
+                            # st.rerun() en st.balloons() zijn hier verwijderd zodat de melding blijft staan!
+                        except Exception as e:
+                            st.error(f"⚠️ Failed to send order. Error: {e}")
 
     # --- TAB 3: PROFIEL BEHEREN ---
     with tab_profile:
