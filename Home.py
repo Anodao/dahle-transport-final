@@ -166,7 +166,7 @@ st.markdown("""
     div[data-baseweb="select"] div { color: white; background-color: #333;}
     </style>
     
-    <div class="navbar">
+<div class="navbar">
         <div class="nav-logo">
             <a href="/" target="_self" title="Go back to Home">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
