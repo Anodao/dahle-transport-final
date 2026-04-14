@@ -1,6 +1,7 @@
 import streamlit as st
 import time
-from datetime import datetime
+import extra_streamlit_components as stx
+from datetime import datetime, timedelta
 from supabase import create_client
 
 # --- PAGE CONFIG ---
@@ -24,26 +25,33 @@ except Exception as e:
     st.error("⚠️ Database connection failed.")
     st.stop()
 
-# --- INITIALIZE SESSION STATE ---
-import extra_streamlit_components as stx
-from datetime import datetime, timedelta
-
 # --- COOKIE MANAGER ---
-cookie_manager = stx.CookieManager()
+@st.cache_resource
+def get_cookie_manager():
+    return stx.CookieManager()
+
+cookie_manager = get_cookie_manager()
 
 # --- INITIALIZE SESSION STATE ---
-st.session_state.user = auth_response.user
-expires = datetime.now() + timedelta(days=30)
-cookie_manager.set("sb_access_token", auth_response.session.access_token, expires_at=expires)
-cookie_manager.set("sb_refresh_token", auth_response.session.refresh_token, expires_at=expires)
-st.rerun()
+if 'user' not in st.session_state:
+    st.session_state.user = None
 
 # --- HERSTEL SESSIE UIT COOKIE (als nog niet ingelogd) ---
-supabase.auth.sign_out()
-st.session_state.user = None
-cookie_manager.delete("sb_access_token")
-cookie_manager.delete("sb_refresh_token")
-st.rerun()
+if st.session_state.user is None:
+    try:
+        access_token = cookie_manager.get("sb_access_token")
+        refresh_token = cookie_manager.get("sb_refresh_token")
+
+        if access_token and refresh_token:
+            try:
+                session = supabase.auth.set_session(access_token, refresh_token)
+                if session and session.user:
+                    st.session_state.user = session.user
+            except Exception:
+                cookie_manager.delete("sb_access_token")
+                cookie_manager.delete("sb_refresh_token")
+    except Exception:
+        pass
 
 # --- CSS STYLING & NAVBAR (DARK MODE) ---
 st.markdown("""
@@ -150,6 +158,12 @@ if st.session_state.user is None:
                             "password": login_pass
                         })
                         st.session_state.user = auth_response.user
+
+                        # --- SLA TOKENS OP IN COOKIE (30 DAGEN) ---
+                        expires = datetime.now() + timedelta(days=30)
+                        cookie_manager.set("sb_access_token", auth_response.session.access_token, expires_at=expires)
+                        cookie_manager.set("sb_refresh_token", auth_response.session.refresh_token, expires_at=expires)
+
                         st.rerun()
                     except Exception as e:
                         st.error("❌ Incorrect email or password. Please try again.")
@@ -216,7 +230,6 @@ else:
     phone_nr = profile.get("phone", "")
     email_addr = st.session_state.user.email
     
-    # Haal extra adres velden op (als ze nog niet bestaan, geeft hij een lege string terug)
     address = profile.get("address", "")
     zip_code = profile.get("zip_code", "")
     city = profile.get("city", "")
@@ -232,6 +245,12 @@ else:
         if st.button("🚪 Log Out", type="secondary", use_container_width=True):
             supabase.auth.sign_out()
             st.session_state.user = None
+            # --- VERWIJDER COOKIES BIJ UITLOGGEN ---
+            try:
+                cookie_manager.delete("sb_access_token")
+                cookie_manager.delete("sb_refresh_token")
+            except Exception:
+                pass
             st.rerun()
             
     st.write("---")
@@ -313,7 +332,6 @@ else:
             rc1, rc2 = st.columns(2, gap="large")
             with rc1:
                 st.markdown("**📤 Pickup Location**")
-                # Als de klant een adres heeft in zijn profiel, vul dat alvast in als suggestie
                 q_p_address = st.text_input("Address *", value=address, key="q_p_add")
                 q_p_zip = st.text_input("Zip Code *", value=zip_code, key="q_p_zip")
                 q_p_city = st.text_input("City *", value=city, key="q_p_city")
@@ -345,8 +363,8 @@ else:
                         
                     db_order = {
                         "company": company_name,
-                        "reg_no": "",  
-                        "address": f"{q_p_address}, {q_p_zip} {q_p_city}", # Default pickup adres opslaan als bedrijfsadres in de planner
+                        "reg_no": "",
+                        "address": f"{q_p_address}, {q_p_zip} {q_p_city}",
                         "contact_name": contact_name,
                         "email": email_addr,
                         "phone": phone_nr,
@@ -360,7 +378,7 @@ else:
                         "delivery_address": q_d_address,
                         "delivery_zip": q_d_zip,
                         "delivery_city": q_d_city,
-                        "user_id": user_id 
+                        "user_id": user_id
                     }
                     
                     try:
@@ -368,7 +386,7 @@ else:
                         st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
                         st.balloons()
                         time.sleep(2)
-                        st.rerun() 
+                        st.rerun()
                     except Exception as e:
                         st.error(f"⚠️ Failed to send order. Error: {e}")
 
@@ -382,8 +400,6 @@ else:
             upd_company = st.text_input("Company Name", value=company_name, key="upd_comp")
             upd_contact = st.text_input("Contact Person", value=contact_name, key="upd_cont")
             upd_phone = st.text_input("Phone Number", value=phone_nr, key="upd_phone")
-            
-            # E-mail kan niet zomaar gewijzigd worden (zit vast aan Auth)
             st.text_input("Email Address (Login ID)", value=email_addr, disabled=True, key="upd_email")
             
             st.write("---")
@@ -409,10 +425,9 @@ else:
                 }
                 
                 try:
-                    # Update de profiles tabel met de nieuwe data, pas dit alleen toe op de ingelogde user
                     supabase.table("profiles").update(update_data).eq("id", user_id).execute()
                     st.success("✅ Profile updated successfully!")
                     time.sleep(1)
-                    st.rerun() # Pagina herladen om nieuwe namen in de header te zetten
+                    st.rerun()
                 except Exception as e:
                     st.error(f"⚠️ Could not update profile: {e}")
