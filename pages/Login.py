@@ -32,21 +32,18 @@ from datetime import datetime, timedelta
 cookie_manager = stx.CookieManager()
 
 # --- INITIALIZE SESSION STATE ---
-if 'user' not in st.session_state:
-    st.session_state.user = None
+st.session_state.user = auth_response.user
+expires = datetime.now() + timedelta(days=30)
+cookie_manager.set("sb_access_token", auth_response.session.access_token, expires_at=expires)
+cookie_manager.set("sb_refresh_token", auth_response.session.refresh_token, expires_at=expires)
+st.rerun()
 
 # --- HERSTEL SESSIE UIT COOKIE (als nog niet ingelogd) ---
-if st.session_state.user is None:
-    access_token = cookie_manager.get("sb_access_token")
-    refresh_token = cookie_manager.get("sb_refresh_token")
-    
-    if access_token and refresh_token:
-        try:
-            session = supabase.auth.set_session(access_token, refresh_token)
-            st.session_state.user = session.user
-        except Exception:
-            cookie_manager.delete("sb_access_token")
-            cookie_manager.delete("sb_refresh_token")
+supabase.auth.sign_out()
+st.session_state.user = None
+cookie_manager.delete("sb_access_token")
+cookie_manager.delete("sb_refresh_token")
+st.rerun()
 
 # --- CSS STYLING & NAVBAR (DARK MODE) ---
 st.markdown("""
