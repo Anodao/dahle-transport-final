@@ -1,5 +1,6 @@
 import streamlit as st
 import time
+from datetime import datetime
 from supabase import create_client
 
 # --- PAGE CONFIG ---
@@ -109,7 +110,6 @@ col_list, col_details = st.columns([1, 2], gap="large")
 with col_list:
     st.markdown("<h2 style='color: #b070c6;'>Inbox</h2>", unsafe_allow_html=True)
     
-    # NU MET 3 TABS
     tab_new, tab_prog, tab_done = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done"])
     
     # --- 1. PENDING (Status: New) ---
@@ -119,7 +119,7 @@ with col_list:
         for o in pending:
             with st.container(border=True):
                 st.markdown(f"**{o['company']}**")
-                st.caption(f"Order #{o['id']} | Datum: {o.get('received_date', '')[:10]}")
+                st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"p_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
@@ -131,7 +131,7 @@ with col_list:
         for o in inprogress:
             with st.container(border=True):
                 st.markdown(f"**🟡 {o['company']}**")
-                st.caption(f"Order #{o['id']} | Datum: {o.get('received_date', '')[:10]}")
+                st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"prog_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
@@ -143,8 +143,12 @@ with col_list:
         for o in done:
             with st.container(border=True):
                 st.markdown(f"**🟢 {o['company']}**")
-                # DATUM TOEGEVOEGD AAN PROCESSED TAB
-                st.caption(f"Order #{o['id']} | Afgerond | Datum: {o.get('received_date', '')[:10]}")
+                
+                # Check of processed_date bestaat, anders val terug op received_date
+                proc_date = o.get('processed_date')
+                display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
+                
+                st.caption(f"Order #{o['id']} | Afgerond | Datum: {display_date}")
                 if st.button(f"View #{o['id']}", key=f"d_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
@@ -171,7 +175,6 @@ with col_details:
             
             # --- STATUS UPDATE ---
             st.markdown("#### Update Status")
-            # De opties in de dropdown
             status_list = ["New", "In Progress", "Processed", "Delivered"]
             try:
                 current_idx = status_list.index(order['status'])
@@ -183,7 +186,14 @@ with col_details:
             col_b1, col_b2 = st.columns(2)
             with col_b1:
                 if st.button("💾 Save Status", type="primary", use_container_width=True):
-                    supabase.table("orders").update({"status": new_status}).eq("id", order['id']).execute()
+                    
+                    # We maken een update-pakketje met de nieuwe status EN de verwerkingsdatum
+                    update_data = {
+                        "status": new_status,
+                        "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M")
+                    }
+                    
+                    supabase.table("orders").update(update_data).eq("id", order['id']).execute()
                     st.success(f"Status updated to {new_status}")
                     time.sleep(1)
                     st.rerun()
