@@ -199,6 +199,12 @@ else:
     phone_nr = profile.get("phone", "")
     email_addr = st.session_state.user.email
     
+    # Haal extra adres velden op (als ze nog niet bestaan, geeft hij een lege string terug)
+    address = profile.get("address", "")
+    zip_code = profile.get("zip_code", "")
+    city = profile.get("city", "")
+    country = profile.get("country", "")
+    
     # --- DASHBOARD HEADER ---
     c_head1, c_head2 = st.columns([3, 1])
     with c_head1:
@@ -290,9 +296,10 @@ else:
             rc1, rc2 = st.columns(2, gap="large")
             with rc1:
                 st.markdown("**📤 Pickup Location**")
-                q_p_address = st.text_input("Address *", key="q_p_add")
-                q_p_zip = st.text_input("Zip Code *", key="q_p_zip")
-                q_p_city = st.text_input("City *", key="q_p_city")
+                # Als de klant een adres heeft in zijn profiel, vul dat alvast in als suggestie
+                q_p_address = st.text_input("Address *", value=address, key="q_p_add")
+                q_p_zip = st.text_input("Zip Code *", value=zip_code, key="q_p_zip")
+                q_p_city = st.text_input("City *", value=city, key="q_p_city")
             with rc2:
                 st.markdown("**📥 Delivery Destination**")
                 q_d_address = st.text_input("Address *", key="q_d_add")
@@ -321,8 +328,8 @@ else:
                         
                     db_order = {
                         "company": company_name,
-                        "reg_no": "",  # Niet nodig voor quick order
-                        "address": "Registered via Portal",
+                        "reg_no": "",  
+                        "address": f"{q_p_address}, {q_p_zip} {q_p_city}", # Default pickup adres opslaan als bedrijfsadres in de planner
                         "contact_name": contact_name,
                         "email": email_addr,
                         "phone": phone_nr,
@@ -336,7 +343,7 @@ else:
                         "delivery_address": q_d_address,
                         "delivery_zip": q_d_zip,
                         "delivery_city": q_d_city,
-                        "user_id": user_id  # Hier koppelen we hem aan de klant!
+                        "user_id": user_id 
                     }
                     
                     try:
@@ -344,11 +351,51 @@ else:
                         st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
                         st.balloons()
                         time.sleep(2)
-                        st.rerun() # Pagina herladen om de tabellen te verversen
+                        st.rerun() 
                     except Exception as e:
                         st.error(f"⚠️ Failed to send order. Error: {e}")
 
-    # --- TAB 3: PROFIEL (Placeholder) ---
+    # --- TAB 3: PROFIEL BEHEREN ---
     with tab_profile:
         st.markdown("### Manage Your Profile")
-        st.info("🚧 Profile management will be available shortly.")
+        st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
+        
+        with st.container(border=True):
+            st.markdown("#### General Info")
+            upd_company = st.text_input("Company Name", value=company_name, key="upd_comp")
+            upd_contact = st.text_input("Contact Person", value=contact_name, key="upd_cont")
+            upd_phone = st.text_input("Phone Number", value=phone_nr, key="upd_phone")
+            
+            # E-mail kan niet zomaar gewijzigd worden (zit vast aan Auth)
+            st.text_input("Email Address (Login ID)", value=email_addr, disabled=True, key="upd_email")
+            
+            st.write("---")
+            st.markdown("#### Address Details (Default Pickup)")
+            st.markdown("<p style='color:#888; font-size:13px;'>We use this as your default pickup location to speed up your orders.</p>", unsafe_allow_html=True)
+            
+            upd_address = st.text_input("Street Address", value=address, key="upd_addr")
+            col_zip, col_city = st.columns(2)
+            with col_zip: upd_zip = st.text_input("Zip Code", value=zip_code, key="upd_zip")
+            with col_city: upd_city = st.text_input("City", value=city, key="upd_city")
+            upd_country = st.text_input("Country", value=country if country else "Norway", key="upd_country")
+            
+            st.write("")
+            if st.button("💾 Save Changes", type="primary"):
+                update_data = {
+                    "company_name": upd_company,
+                    "contact_name": upd_contact,
+                    "phone": upd_phone,
+                    "address": upd_address,
+                    "zip_code": upd_zip,
+                    "city": upd_city,
+                    "country": upd_country
+                }
+                
+                try:
+                    # Update de profiles tabel met de nieuwe data, pas dit alleen toe op de ingelogde user
+                    supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+                    st.success("✅ Profile updated successfully!")
+                    time.sleep(1)
+                    st.rerun() # Pagina herladen om nieuwe namen in de header te zetten
+                except Exception as e:
+                    st.error(f"⚠️ Could not update profile: {e}")
