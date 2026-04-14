@@ -25,8 +25,28 @@ except Exception as e:
     st.stop()
 
 # --- INITIALIZE SESSION STATE ---
+import extra_streamlit_components as stx
+from datetime import datetime, timedelta
+
+# --- COOKIE MANAGER ---
+cookie_manager = stx.CookieManager()
+
+# --- INITIALIZE SESSION STATE ---
 if 'user' not in st.session_state:
     st.session_state.user = None
+
+# --- HERSTEL SESSIE UIT COOKIE (als nog niet ingelogd) ---
+if st.session_state.user is None:
+    access_token = cookie_manager.get("sb_access_token")
+    refresh_token = cookie_manager.get("sb_refresh_token")
+    
+    if access_token and refresh_token:
+        try:
+            session = supabase.auth.set_session(access_token, refresh_token)
+            st.session_state.user = session.user
+        except Exception:
+            cookie_manager.delete("sb_access_token")
+            cookie_manager.delete("sb_refresh_token")
 
 # --- CSS STYLING & NAVBAR (DARK MODE) ---
 st.markdown("""
