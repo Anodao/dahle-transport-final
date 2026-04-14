@@ -444,10 +444,12 @@ else:
                 }
                 
                 try:
-                    # Update de profiles tabel met de nieuwe data, pas dit alleen toe op de ingelogde user
+                    # Update de profiles tabel met de nieuwe data
                     supabase.table("profiles").update(update_data).eq("id", user_id).execute()
-                    st.success("✅ Profile updated successfully!")
-                    time.sleep(1)
-                    st.rerun() # Pagina herladen om nieuwe namen in de header te zetten
+                    
+                    # Succesmelding! We hebben time.sleep() en st.rerun() weggehaald zodat deze mooi blijft staan.
+                    st.success("✅ Profile updated successfully! Je standaard ophaaladres wordt nu automatisch ingevuld bij een nieuwe bestelling.")
+                    
                 except Exception as e:
+                    # Mocht er toch iets misgaan, blijft de foutmelding nu ook leesbaar in beeld
                     st.error(f"⚠️ Could not update profile: {e}")
