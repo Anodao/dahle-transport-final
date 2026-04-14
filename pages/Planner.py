@@ -48,12 +48,7 @@ st.markdown("""
 /* 2. Verberg overbodige Streamlit balken */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 
-/* 3. Witte achtergrond voor alle invoervelden en dropdowns, met simpele zwarte rand */
-div[data-baseweb="select"] > div, div[data-baseweb="textarea"] > div, ul[role="listbox"], ul[role="listbox"] li { 
-    background-color: #ffffff !important; 
-    border: 1px solid #000000 !important; 
 }
-ul[role="listbox"] li:hover { background-color: #eeeeee !important; }
 
 /* 4. Duidelijke omlijning voor de kaarten (geen vage schaduwen meer) */
 div[data-testid="stVerticalBlockBorderWrapper"] { 
