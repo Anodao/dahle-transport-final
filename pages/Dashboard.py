@@ -1,3 +1,4 @@
+import requests
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -11,6 +12,32 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed"
 )
+
+# --- LIVE API FUNCTIE VOOR DIESEL ---
+@st.cache_data(ttl=3600) # Haalt maximaal 1x per uur data op (bespaart je API limiet)
+def get_live_diesel_price():
+    url = "https://api.collectapi.com/gasPrice/europeanCountries"
+    headers = {
+        # LET OP: Plak hieronder jouw API key van CollectAPI!
+        'authorization': "apikey 45CDpqYa0mK5v7B0vLExG7:6RHFfYXba02CtLDkUH2GTI",
+        'content-type': "application/json"
+    }
+    
+    try:
+        response = requests.get(url, headers=headers)
+        data = response.json()
+        
+        for country in data.get('result', []):
+            if country['country'].lower() == 'norway':
+                # Omrekenen van EUR naar NOK (bijv. met een actuele of vaste koers van 11.5)
+                prijs_eur = float(country['diesel'])
+                prijs_nok = round(prijs_eur * 11.5, 2) 
+                return prijs_nok
+                
+    except Exception as e:
+        print(f"API Error: {e}")
+        
+    return 20.50 # Fallback prijs als de API tijdelijk faalt
 
 # --- SUPABASE CONNECTIE ---
 @st.cache_resource
@@ -101,9 +128,6 @@ st.markdown("""
     }
     label[data-testid="stWidgetLabel"] { color: #ffffff !important; font-weight: 600; font-size: 14px; }
     
-    /* Slider & Labels */
-    .stSlider div[data-baseweb="slider"] { color: #c48bd6 !important; }
-
     /* Grafiek kaders */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: #1a1a1a;
@@ -163,9 +187,9 @@ st.markdown('<div class="header-banner">'
 today = datetime.now().date()
 start_of_week = today - timedelta(days=today.weekday())
 start_of_last_week = start_of_week - timedelta(days=7)
-start_of_month = today.replace(day=1) # NIEUW: Bereken de eerste dag van de huidige maand
+start_of_month = today.replace(day=1)
 
-# --- FILTER & INPUT ---
+# --- FILTER & API PRIJS ---
 c_filter, c_input = st.columns([1, 2], gap="large")
 
 with c_filter:
@@ -175,7 +199,16 @@ with c_filter:
         custom_dates = st.date_input("Select a date range:", value=today)
 
 with c_input:
-    fuel_price = st.slider("Live Market Diesel Price (NOK/L)", 15.0, 30.0, 20.5)
+    # Haal de live prijs op!
+    fuel_price = get_live_diesel_price()
+    
+    # Toon dit in een mooi kader in plaats van een slider
+    with st.container(border=True):
+        st.metric(
+            label="⛽ Live Market Diesel Price (Norway)", 
+            value=f"{fuel_price:.2f} NOK / L",
+            delta="Actueel via API"
+        )
 
 st.write("---")
 
@@ -200,6 +233,8 @@ if 'co2_emission_kg' not in df.columns:
 # Berekeningen op de volledige dataset
 CO2_PER_LITER = 2.68
 df['liters'] = df['co2_emission_kg'] / CO2_PER_LITER
+
+# Gebruikt nu automatisch de live 'fuel_price' van de API!
 df['fuel_cost'] = df['liters'] * fuel_price
 
 df['revenue'] = 1500 + (df['co2_emission_kg'] * 15) 
@@ -220,7 +255,7 @@ if 'parsed_date' in df.columns:
         filtered_df = df[df['parsed_date'] >= start_of_week]
     elif filter_optie == "Last week":
         filtered_df = df[(df['parsed_date'] >= start_of_last_week) & (df['parsed_date'] < start_of_week)]
-    elif filter_optie == "This month": # NIEUW: Filter logica voor 'Deze Maand'
+    elif filter_optie == "This month": 
         filtered_df = df[df['parsed_date'] >= start_of_month]
     elif filter_optie == "Custom date...":
         if isinstance(custom_dates, tuple) and len(custom_dates) == 2:
