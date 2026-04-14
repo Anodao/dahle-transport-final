@@ -201,6 +201,8 @@ if st.session_state.user is None:
 # =========================================================
 else:
     user_id = st.session_state.user.id
+    
+    # 1. Haal het profiel op
     try:
         prof_res = supabase.table("profiles").select("*").eq("id", user_id).execute()
         profile = prof_res.data[0] if prof_res.data else {}
@@ -215,11 +217,21 @@ else:
     address = profile.get("address", "")
     zip_code = profile.get("zip_code", "")
     city = profile.get("city", "")
-    
     del_address = profile.get("del_address", "")
     del_zip = profile.get("del_zip", "")
     del_city = profile.get("del_city", "")
-    
+
+    # 2. Haal direct alle orders op (Zodat we de metrics bovenaan kunnen tonen)
+    try:
+        orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
+        user_orders = orders_res.data
+    except Exception as e:
+        user_orders = []
+
+    total_orders = len(user_orders)
+    pending_orders = sum(1 for o in user_orders if o['status'] == 'New')
+    processed_orders = sum(1 for o in user_orders if o['status'] in ['Processed', 'Delivered'])
+
     # --- DASHBOARD HEADER ---
     c_head1, c_head2 = st.columns([3, 1])
     with c_head1:
@@ -235,7 +247,19 @@ else:
     st.write("---")
     
     # =========================================================
-    # MENU NAVIGATIE KNOPPEN (Staan nu bovenaan)
+    # VASTE DASHBOARD TITEL & STATISTIEKEN (Altijd bovenaan)
+    # =========================================================
+    st.markdown("### 📦 Your Shipment History")
+    
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Shipments", total_orders)
+    m2.metric("Pending Approval", pending_orders)
+    m3.metric("Processed", processed_orders)
+
+    st.write("---")
+
+    # =========================================================
+    # MENU NAVIGATIE KNOPPEN (Strak boven de content)
     # =========================================================
     col_menu1, col_menu2, col_menu3 = st.columns(3)
     
@@ -254,35 +278,16 @@ else:
             st.session_state.active_tab = "Profile Settings"
             st.rerun()
             
-    st.write("---")
+    st.write("") # Klein beetje ruimte tussen knoppen en content
 
-    # --- CONTENT 1: ORDER HISTORIE ---
+    # =========================================================
+    # CONTENT 1: ORDER HISTORIE
+    # =========================================================
     if st.session_state.active_tab == "My Shipments":
         
-        # Titel staat nu mooi onder de knoppen!
-        st.markdown("### 📦 Your Shipment History")
-        
-        try:
-            orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
-            user_orders = orders_res.data
-        except Exception as e:
-            st.error("Could not fetch orders at this time.")
-            user_orders = []
-
         if not user_orders:
             st.info("📊 You haven't placed any orders with this account yet. Go to 'New Order' to get started!")
         else:
-            total_orders = len(user_orders)
-            pending_orders = sum(1 for o in user_orders if o['status'] == 'New')
-            processed_orders = sum(1 for o in user_orders if o['status'] in ['Processed', 'Delivered'])
-            
-            m1, m2, m3 = st.columns(3)
-            m1.metric("Total Shipments", total_orders)
-            m2.metric("Pending Approval", pending_orders)
-            m3.metric("Processed", processed_orders)
-            
-            st.write("---")
-            
             for o in user_orders:
                 if o['status'] == 'New':
                     status_icon = "🔵"
@@ -323,7 +328,7 @@ else:
                     # LOGICA: Klant kan zelf een 'New' order annuleren (GECENTREERDE KNOP)
                     if o['status'] == 'New':
                         st.write("---")
-                        # 3 kolommen: leeg, knop, leeg. Dit centreert de knop perfect!
+                        # 3 kolommen: de middelste is 2x zo breed, dit drukt de knop perfect in het midden!
                         c_space1, c_cancel, c_space2 = st.columns([1, 2, 1])
                         with c_cancel:
                             if st.button("❌ Cancel This Order", key=f"cancel_{o['id']}", type="secondary", use_container_width=True):
@@ -337,10 +342,11 @@ else:
                         
                     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- CONTENT 2: NIEUWE ORDER ---
+    # =========================================================
+    # CONTENT 2: NIEUWE ORDER
+    # =========================================================
     elif st.session_state.active_tab == "New Order":
         
-        # Titel staat nu onder de knoppen
         st.markdown("### ➕ Quick Order Form")
         st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
         
@@ -429,10 +435,11 @@ else:
                         except Exception as e:
                             st.error(f"⚠️ Failed to send order. Error: {e}")
 
-    # --- CONTENT 3: PROFIEL BEHEREN ---
+    # =========================================================
+    # CONTENT 3: PROFIEL BEHEREN
+    # =========================================================
     elif st.session_state.active_tab == "Profile Settings":
         
-        # Titel staat nu onder de knoppen
         st.markdown("### ⚙️ Manage Your Profile")
         st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
         
