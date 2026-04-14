@@ -374,7 +374,6 @@ else:
                     try:
                         supabase.table("orders").insert(db_order).execute()
                         st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
-                        st.balloons()
                         time.sleep(2)
                         st.rerun() 
                     except Exception as e:
