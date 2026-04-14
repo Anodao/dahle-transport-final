@@ -172,16 +172,18 @@ st.markdown("""
     }
     </style>
 
-    <div class="navbar">
+<div class="navbar">
         <div class="nav-logo">
-            <a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a>
+            <a href="/" target="_self" title="Go back to Home">
+                <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
+            </a>
         </div>
         <div class="nav-links">
             <a href="/"><span>Hjem</span></a>
             <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
         </div>
         <div class="nav-cta">
-            <a href="/Opter_Portal" target="_self" class="cta-btn-outline">OPTER LOGIN</a>
+            <a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a>
             <a href="/" target="_self" class="cta-btn">TA KONTAKT</a>
         </div>
     </div>
