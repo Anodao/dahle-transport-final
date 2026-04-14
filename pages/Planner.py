@@ -38,93 +38,63 @@ if 'user' not in st.session_state:
 if 'selected_order_id' not in st.session_state:
     st.session_state.selected_order_id = None
 
-# --- THEMA WISSELAAR (Light/Dark Mode Knop) ---
-if 'theme' not in st.session_state:
-    st.session_state.theme = "dark" # Standaard begint hij in donker
-
-# Functie om thema te wisselen
-def toggle_theme():
-    if st.session_state.theme == "dark":
-        st.session_state.theme = "light"
-    else:
-        st.session_state.theme = "dark"
-
-# --- CSS STYLING GEBASEERD OP THEMA ---
-if st.session_state.theme == "light":
-    theme_css = """
-    <style>
-    /* LICHTE MODUS: Witte achtergrond, donkere letters */
-    .stApp { background-color: #f4f6f8 !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-    div[data-testid="stMetricValue"] > div { color: #894b9d !important; }
-    div[data-testid="stMetricLabel"] > div > p { color: #333333 !important; }
-    div[data-baseweb="select"] > div, div[data-baseweb="textarea"] > div { background-color: #ffffff !important; }
-    div[data-baseweb="select"] span, div[data-baseweb="textarea"] textarea { color: #111111 !important; }
-    button[data-baseweb="tab"] p { color: #666666 !important; }
-    </style>
-    """
-else:
-    theme_css = """
-    <style>
-    /* DONKERE MODUS: Zwarte achtergrond, lichte letters */
-    .stApp { background-color: #111111 !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #ffffff !important; }
-    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; }
-    div[data-testid="stMetricValue"] > div { color: #b070c6 !important; }
-    div[data-testid="stMetricLabel"] > div > p { color: #cccccc !important; }
-    div[data-baseweb="select"] > div, div[data-baseweb="textarea"] > div { background-color: #333333 !important; border-color: #444 !important;}
-    div[data-baseweb="select"] span, div[data-baseweb="textarea"] textarea { color: #ffffff !important; }
-    button[data-baseweb="tab"] p { color: #aaaaaa !important; }
-    </style>
-    """
-
-# Algemene styling (Menubalk, Knopjes, Lettertype) die voor beide thema's geldt
-st.markdown(f"""
+# --- CSS & NAVBAR (SCHONE LICHTE MODUS) ---
+st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-html, body, [class*="css"] {{ font-family: 'Montserrat', sans-serif; }}
-[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] {{ display: none !important; }}
+html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
+[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 
-/* NAVBAR (Altijd Wit) */
-.block-container {{ padding-top: 130px !important; }}
-.navbar {{ position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }}
-.nav-logo img {{ height: 48px; width: auto; }}
-.nav-links {{ display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }}
-.nav-links a, .nav-links span {{ text-decoration: none; color: #111111 !important; }}
-.nav-cta {{ display: flex; justify-content: flex-end; }}
-.cta-btn-outline {{ background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }}
+/* Forceer Lichte Achtergrond en Donkere Tekst */
+.stApp { background-color: #f4f6f8 !important; }
+.stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
+div[data-testid="caption"] { color: #666666 !important; }
 
-/* ALGEMENE BUTTONS */
-div.stButton > button[kind="primary"] {{ background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }}
-div.stButton > button[kind="primary"] p {{ color: #ffffff !important; }}
+/* Dashboard Kaarten */
+div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; border-radius: 8px !important; box-shadow: 0 2px 5px rgba(0,0,0,0.03) !important; }
+
+/* Cijfers en Labels */
+div[data-testid="stMetricValue"] > div { color: #894b9d !important; font-weight: 700 !important; }
+div[data-testid="stMetricLabel"] > div > p { color: #333333 !important; font-weight: 600 !important; }
+
+/* Input velden (Dropdown & Textarea) forceer witte achtergrond en zwarte tekst */
+div[data-baseweb="select"] > div, div[data-baseweb="textarea"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
+div[data-baseweb="select"] span, div[data-baseweb="textarea"] textarea { color: #111111 !important; }
+ul[role="listbox"] { background-color: #ffffff !important; }
+ul[role="listbox"] li { color: #111111 !important; background-color: #ffffff !important; }
+ul[role="listbox"] li:hover { background-color: #f4f6f8 !important; }
+
+/* Knoppen */
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
+div.stButton > button[kind="primary"] p { color: #ffffff !important; }
+div.stButton > button[kind="secondary"] { background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
+div.stButton > button[kind="secondary"] p { color: #333333 !important; }
+
+/* Tabs */
+button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
+button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
+button[data-baseweb="tab"] { background-color: transparent !important; }
+
+/* Navigatiebalk */
+.block-container { padding-top: 130px !important; }
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+.nav-logo img { height: 48px; width: auto; }
+.nav-links a { text-decoration: none; color: #111111 !important; font-weight: 500; margin: 0 15px; }
+.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
 </style>
-{theme_css}
-""", unsafe_allow_html=True)
 
-# --- NAVBAR ---
-st.markdown("""
 <div class="navbar">
     <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
     <div class="nav-links">
-        <a href="/"><span>Hjem</span></a>
-        <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
+        <a href="/">Hjem</a>
+        <a href="/">Om oss</a>
+        <a href="/">Tjenester</a>
+        <a href="/">Galleri</a>
+        <a href="/">Kontakt</a>
     </div>
-    <div class="nav-cta"><a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a></div>
+    <div><a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a></div>
 </div>
 """, unsafe_allow_html=True)
-
-# --- THEMA KNOP (Rechtsboven onder de navbar) ---
-c_title, c_toggle = st.columns([5, 1])
-with c_title:
-    pass # Ruimte voor titel als we die willen
-with c_toggle:
-    btn_text = "🌙 Dark Mode" if st.session_state.theme == "light" else "☀️ Light Mode"
-    if st.button(btn_text, use_container_width=True):
-        toggle_theme()
-        st.rerun()
-
-st.write("---")
 
 # --- DATA OPHALEN ---
 def fetch_all_orders():
@@ -213,7 +183,6 @@ with col_details:
         if order:
             st.markdown(f"### Order #{order['id']} - {order['company']}")
             
-            # --- ROUTE INFO (Opgeschoonde Layout) ---
             with st.container(border=True):
                 r1, r2 = st.columns(2)
                 with r1:
