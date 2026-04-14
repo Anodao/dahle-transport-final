@@ -74,12 +74,20 @@ st.markdown("""
         box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
     }
     
-    /* FIX VOOR KPI METRICS */
-    div[data-testid="stMetricValue"] > div { color: #894b9d !important; font-weight: 700 !important; }
-    div[data-testid="stMetricLabel"] { visibility: visible !important; }
-    div[data-testid="stMetricLabel"] > div > p { color: #333333 !important; font-weight: 600 !important; font-size: 15px !important; }
+    /* ========================================================= */
+    /* ULTIEME FIX VOOR KPI METRICS (De "Nuke" Methode)          */
+    /* ========================================================= */
+    div[data-testid="stMetricValue"], div[data-testid="stMetricValue"] * { 
+        color: #894b9d !important; 
+        font-weight: 700 !important; 
+    }
+    div[data-testid="stMetricLabel"], div[data-testid="stMetricLabel"] * { 
+        color: #333333 !important; 
+        font-weight: 600 !important; 
+        visibility: visible !important;
+    }
     
-    /* FIX VOOR DROPDOWNS & POPOVERS (Het zwarte menu probleem) */
+    /* FIX VOOR DROPDOWNS & POPOVERS */
     div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
     div[data-baseweb="select"] span { color: #111111 !important; }
     div[data-baseweb="popover"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
