@@ -235,19 +235,7 @@ else:
     st.write("---")
     
     # =========================================================
-    # DYNAMISCHE TITELS (Boven de knoppen)
-    # =========================================================
-    if st.session_state.active_tab == "My Shipments":
-        st.markdown("### 📦 Your Shipment History")
-    elif st.session_state.active_tab == "New Order":
-        st.markdown("### ➕ Quick Order Form")
-        st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
-    elif st.session_state.active_tab == "Profile Settings":
-        st.markdown("### ⚙️ Manage Your Profile")
-        st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
-
-    # =========================================================
-    # MENU NAVIGATIE KNOPPEN
+    # MENU NAVIGATIE KNOPPEN (Staan nu bovenaan)
     # =========================================================
     col_menu1, col_menu2, col_menu3 = st.columns(3)
     
@@ -270,6 +258,9 @@ else:
 
     # --- CONTENT 1: ORDER HISTORIE ---
     if st.session_state.active_tab == "My Shipments":
+        
+        # Titel staat nu mooi onder de knoppen!
+        st.markdown("### 📦 Your Shipment History")
         
         try:
             orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
@@ -329,22 +320,29 @@ else:
                         st.markdown("#### 📝 Additional Info")
                         st.write(f"{o.get('info', '-')}")
                     
-                    # LOGICA: Klant kan zelf een 'New' order annuleren
+                    # LOGICA: Klant kan zelf een 'New' order annuleren (GECENTREERDE KNOP)
                     if o['status'] == 'New':
                         st.write("---")
-                        if st.button("❌ Cancel This Order", key=f"cancel_{o['id']}", type="secondary"):
-                            try:
-                                supabase.table("orders").update({"status": "Cancelled"}).eq("id", o['id']).execute()
-                                st.success("✅ Your order has been cancelled successfully.")
-                                time.sleep(1)
-                                st.rerun()
-                            except Exception as e:
-                                st.error("⚠️ Failed to cancel order. Please contact support.")
+                        # 3 kolommen: leeg, knop, leeg. Dit centreert de knop perfect!
+                        c_space1, c_cancel, c_space2 = st.columns([1, 2, 1])
+                        with c_cancel:
+                            if st.button("❌ Cancel This Order", key=f"cancel_{o['id']}", type="secondary", use_container_width=True):
+                                try:
+                                    supabase.table("orders").update({"status": "Cancelled"}).eq("id", o['id']).execute()
+                                    st.success("✅ Your order has been cancelled successfully.")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error("⚠️ Failed to cancel order. Please contact support.")
                         
                     st.markdown("<br>", unsafe_allow_html=True)
 
     # --- CONTENT 2: NIEUWE ORDER ---
     elif st.session_state.active_tab == "New Order":
+        
+        # Titel staat nu onder de knoppen
+        st.markdown("### ➕ Quick Order Form")
+        st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
         
         with st.container(border=True):
             st.markdown("#### 1. What are you shipping?")
@@ -433,6 +431,10 @@ else:
 
     # --- CONTENT 3: PROFIEL BEHEREN ---
     elif st.session_state.active_tab == "Profile Settings":
+        
+        # Titel staat nu onder de knoppen
+        st.markdown("### ⚙️ Manage Your Profile")
+        st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
         
         with st.container(border=True):
             st.markdown("#### General Info")
