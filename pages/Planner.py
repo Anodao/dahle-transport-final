@@ -41,6 +41,9 @@ if 'selected_order_id' not in st.session_state:
 # --- CSS (100% WIT EN ZWART) ---
 st.markdown("""
 <style>
+/* 1. Alles verplicht ZWART op WIT */
+.stApp, .block-container { background-color: #ffffff !important; }
+* { color: #000000 !important; }
 
 /* 2. Verberg overbodige Streamlit balken */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
