@@ -33,7 +33,12 @@ cookie_manager = stx.CookieManager()
 
 # --- INITIALIZE SESSION STATE ---
 if 'user' not in st.session_state:
-    st.session_state.user = None
+    # Check of er nog een actieve sessie in de 'achtergrond' leeft bij Supabase
+    session = supabase.auth.get_session()
+    if session:
+        st.session_state.user = session.user
+    else:
+        st.session_state.user = None
 
 # --- HERSTEL SESSIE UIT COOKIE (als nog niet ingelogd) ---
 if st.session_state.user is None:
