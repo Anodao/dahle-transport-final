@@ -1,4 +1,6 @@
 import streamlit as st
+import time
+from datetime import datetime
 from supabase import create_client
 
 # --- PAGE CONFIG ---
@@ -37,7 +39,7 @@ st.markdown("""
     
     /* --- DARK THEME ACHTERGROND --- */
     .stApp { background-color: #111111 !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color: #ffffff !important; }
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #ffffff !important; }
     div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 
     /* --- NAVBAR (WIT MET ZWARTE TEKST) --- */
@@ -58,8 +60,8 @@ st.markdown("""
 
     /* --- FORM & CONTAINER STYLING VOOR DARK MODE --- */
     div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 12px !important; padding: 20px !important; }
-    div[data-baseweb="input"] > div { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
-    div[data-baseweb="input"] input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+    div[data-baseweb="input"] > div, div[data-baseweb="textarea"] { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
+    div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
     label[data-testid="stWidgetLabel"] p { color: #cccccc !important; font-weight: 600; font-size: 14px !important;}
     
     /* Primary Button */
@@ -193,12 +195,15 @@ else:
         profile = {}
 
     company_name = profile.get("company_name", "Valued Customer")
+    contact_name = profile.get("contact_name", "")
+    phone_nr = profile.get("phone", "")
+    email_addr = st.session_state.user.email
     
     # --- DASHBOARD HEADER ---
     c_head1, c_head2 = st.columns([3, 1])
     with c_head1:
         st.markdown(f"<h2 style='color: #b070c6; margin-bottom: 0px;'>Welcome back, {company_name}!</h2>", unsafe_allow_html=True)
-        st.markdown(f"<p style='color: #888; font-size: 14px;'>Logged in as: {st.session_state.user.email}</p>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #888; font-size: 14px;'>Logged in as: {email_addr}</p>", unsafe_allow_html=True)
     with c_head2:
         st.write("")
         if st.button("🚪 Log Out", type="secondary", use_container_width=True):
@@ -215,7 +220,6 @@ else:
     with tab_history:
         st.markdown("### Your Shipment History")
         
-        # Haal ALLEEN de orders op van deze specifieke ingelogde gebruiker
         try:
             orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
             user_orders = orders_res.data
@@ -226,7 +230,6 @@ else:
         if not user_orders:
             st.info("📊 You haven't placed any orders with this account yet. Go to 'New Order' to get started!")
         else:
-            # Genereer de metrics
             total_orders = len(user_orders)
             pending_orders = sum(1 for o in user_orders if o['status'] == 'New')
             processed_orders = sum(1 for o in user_orders if o['status'] == 'Processed')
@@ -238,22 +241,17 @@ else:
             
             st.write("---")
             
-            # Laat de orders zien in inklapbare balken (Expanders)
             for o in user_orders:
-                # Bepaal het icoon/kleur op basis van de status
                 status_icon = "🔴" if o['status'] == 'New' else "🟢"
-                
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} (Status: {o['status']})"):
                     st.markdown("<br>", unsafe_allow_html=True)
                     c_det1, c_det2 = st.columns(2)
-                    
                     with c_det1:
                         st.markdown("**📤 Pickup:**")
                         st.write(f"{o.get('pickup_address', '')}, {o.get('pickup_city', '')}")
                         st.write("")
                         st.markdown("**📥 Delivery:**")
                         st.write(f"{o.get('delivery_address', '')}, {o.get('delivery_city', '')}")
-                        
                     with c_det2:
                         st.markdown("**🚛 Services Requested:**")
                         st.write(f"{o.get('types', '')}")
@@ -261,13 +259,94 @@ else:
                         if o.get('info'):
                             st.markdown("**📝 Additional Info:**")
                             st.write(f"{o.get('info')}")
-                    
                     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- TAB 2: NIEUWE ORDER (Placeholder) ---
+    # --- TAB 2: NIEUWE ORDER (Snel Bestellen) ---
     with tab_new_order:
         st.markdown("### Quick Order Form")
-        st.info("🚧 This feature is currently under construction. Soon you will be able to book shipments directly from here without filling in your company details again!")
+        st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
+        
+        with st.container(border=True):
+            st.markdown("#### 1. What are you shipping?")
+            
+            c_ship1, c_ship2, c_ship3 = st.columns(3)
+            with c_ship1: q_parcels = st.checkbox("Parcels & Documents", key="q_parcels")
+            with c_ship2: q_freight = st.checkbox("Cargo & Freight", key="q_freight")
+            with c_ship3: q_mail = st.checkbox("Mail & Marketing", key="q_mail")
+            
+            q_load_types = []
+            if q_freight:
+                st.markdown("<p style='color:#b070c6; font-size:14px; font-weight:600;'>Select Freight Options:</p>", unsafe_allow_html=True)
+                fc1, fc2, fc3 = st.columns(3)
+                with fc1: q_pal = st.checkbox("Pallet", key="q_pal")
+                with fc2: q_full = st.checkbox("Full Container/Truck", key="q_full")
+                with fc3: q_lc = st.checkbox("Loose Cargo", key="q_lc")
+                if q_pal: q_load_types.append("Pallet")
+                if q_full: q_load_types.append("Full Container")
+                if q_lc: q_load_types.append("Loose Cargo")
+            
+            st.write("---")
+            st.markdown("#### 2. Route Information")
+            rc1, rc2 = st.columns(2, gap="large")
+            with rc1:
+                st.markdown("**📤 Pickup Location**")
+                q_p_address = st.text_input("Address *", key="q_p_add")
+                q_p_zip = st.text_input("Zip Code *", key="q_p_zip")
+                q_p_city = st.text_input("City *", key="q_p_city")
+            with rc2:
+                st.markdown("**📥 Delivery Destination**")
+                q_d_address = st.text_input("Address *", key="q_d_add")
+                q_d_zip = st.text_input("Zip Code *", key="q_d_zip")
+                q_d_city = st.text_input("City *", key="q_d_city")
+            
+            st.write("---")
+            st.markdown("#### 3. Order Specifications")
+            q_info = st.text_area("Describe what you ship, approx. weight, special requirements, etc.", key="q_info")
+            
+            st.write("")
+            if st.button("🚀 Submit Quick Order", type="primary", use_container_width=True):
+                selected_types = []
+                if q_parcels: selected_types.append("Parcels & Documents")
+                if q_freight: selected_types.append("Cargo & Freight")
+                if q_mail: selected_types.append("Mail & Direct Marketing")
+                
+                if not selected_types:
+                    st.error("⚠️ Please select at least one shipment type.")
+                elif not (q_p_address and q_p_zip and q_p_city and q_d_address and q_d_zip and q_d_city):
+                    st.error("⚠️ Please fill in all the Route Information fields.")
+                else:
+                    compiled_info = q_info + "\n\n--- Quick Order Specs ---\n" if q_info else "--- Quick Order Specs ---\n"
+                    if q_freight and q_load_types:
+                        compiled_info += f"🚛 Freight Load: {', '.join(q_load_types)}\n"
+                        
+                    db_order = {
+                        "company": company_name,
+                        "reg_no": "",  # Niet nodig voor quick order
+                        "address": "Registered via Portal",
+                        "contact_name": contact_name,
+                        "email": email_addr,
+                        "phone": phone_nr,
+                        "types": ", ".join(selected_types),
+                        "info": compiled_info,
+                        "status": "New",
+                        "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "pickup_address": q_p_address,
+                        "pickup_zip": q_p_zip,
+                        "pickup_city": q_p_city,
+                        "delivery_address": q_d_address,
+                        "delivery_zip": q_d_zip,
+                        "delivery_city": q_d_city,
+                        "user_id": user_id  # Hier koppelen we hem aan de klant!
+                    }
+                    
+                    try:
+                        supabase.table("orders").insert(db_order).execute()
+                        st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
+                        st.balloons()
+                        time.sleep(2)
+                        st.rerun() # Pagina herladen om de tabellen te verversen
+                    except Exception as e:
+                        st.error(f"⚠️ Failed to send order. Error: {e}")
 
     # --- TAB 3: PROFIEL (Placeholder) ---
     with tab_profile:
