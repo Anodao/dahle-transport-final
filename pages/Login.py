@@ -32,7 +32,6 @@ cookie_manager = stx.CookieManager()
 
 # --- INITIALIZE SESSION STATE ---
 if 'user' not in st.session_state:
-    # Check of er nog een actieve sessie in de 'achtergrond' leeft bij Supabase
     session = supabase.auth.get_session()
     if session:
         st.session_state.user = session.user
@@ -62,15 +61,12 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
     
-    /* Verberg standaard elementen */
     [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
     
-    /* --- DARK THEME ACHTERGROND --- */
     .stApp { background-color: #111111 !important; }
     .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #ffffff !important; }
     div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 
-    /* --- NAVBAR (WIT MET ZWARTE TEKST) --- */
     .block-container { padding-top: 130px !important; max-width: 900px; }
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
@@ -86,13 +82,11 @@ st.markdown("""
     .cta-btn { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; white-space: nowrap;}
     .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
 
-    /* --- FORM & CONTAINER STYLING VOOR DARK MODE --- */
     div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 12px !important; padding: 20px !important; }
     div[data-baseweb="input"] > div, div[data-baseweb="textarea"] { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
     div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
     label[data-testid="stWidgetLabel"] p { color: #cccccc !important; font-weight: 600; font-size: 14px !important;}
     
-    /* Primary Button */
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; 
         color: #ffffff !important; border: none !important; border-radius: 6px !important; 
@@ -102,7 +96,6 @@ st.markdown("""
     }
     div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
     
-    /* Secondary Button */
     div.stButton > button[kind="secondary"] { 
         background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; 
         padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important;
@@ -110,11 +103,9 @@ st.markdown("""
     }
     div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}
 
-    /* Tabs styling */
     button[data-baseweb="tab"] { background-color: transparent !important; color: #888888 !important; font-weight: 600; font-size: 16px;}
     button[data-baseweb="tab"][aria-selected="true"] { color: #b070c6 !important; border-bottom: 3px solid #b070c6 !important; }
     
-    /* Expander styling */
     div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
     div[data-testid="stExpander"] p { color: #ffffff !important; }
     div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
@@ -146,7 +137,6 @@ if st.session_state.user is None:
     with st.container(border=True):
         tab_login, tab_register = st.tabs(["🔒 Log In", "📝 Create Account"])
 
-        # --- TAB 1: INLOGGEN ---
         with tab_login:
             st.write("")
             login_email = st.text_input("Email Address", key="log_email")
@@ -167,7 +157,6 @@ if st.session_state.user is None:
                 else:
                     st.warning("⚠️ Please fill in both fields.")
 
-        # --- TAB 2: ACCOUNT AANMAKEN ---
         with tab_register:
             st.write("")
             reg_company = st.text_input("Company Name *", key="reg_comp")
@@ -226,11 +215,15 @@ else:
     phone_nr = profile.get("phone", "")
     email_addr = st.session_state.user.email
     
-    # Haal extra adres velden op (als ze nog niet bestaan, geeft hij een lege string terug)
+    # Haal OPHAAL adres velden op
     address = profile.get("address", "")
     zip_code = profile.get("zip_code", "")
     city = profile.get("city", "")
-    country = profile.get("country", "")
+    
+    # Haal AFLEVER adres velden op (De 3 nieuwe kolommen!)
+    del_address = profile.get("del_address", "")
+    del_zip = profile.get("del_zip", "")
+    del_city = profile.get("del_city", "")
     
     # --- DASHBOARD HEADER ---
     c_head1, c_head2 = st.columns([3, 1])
@@ -275,7 +268,6 @@ else:
             st.write("---")
             
             for o in user_orders:
-                # LOGICA VOOR DE JUISTE KLEUR BOLLETJES
                 if o['status'] == 'New':
                     status_icon = "🔵"
                 elif o['status'] == 'In Progress':
@@ -291,7 +283,6 @@ else:
                     st.markdown("<br>", unsafe_allow_html=True)
                     c_det1, c_det2 = st.columns(2)
                     
-                    # LOGICA VOOR STRAKKE ADRES WEERGAVE
                     with c_det1:
                         st.markdown("#### 📤 Pickup Location")
                         st.write(f"**Adres:** {o.get('pickup_address', '-')}")
@@ -315,7 +306,7 @@ else:
                         
                     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- TAB 2: NIEUWE ORDER (Snel Bestellen) ---
+    # --- TAB 2: NIEUWE ORDER ---
     with tab_new_order:
         st.markdown("### Quick Order Form")
         st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
@@ -344,14 +335,16 @@ else:
             rc1, rc2 = st.columns(2, gap="large")
             with rc1:
                 st.markdown("**📤 Pickup Location**")
+                # Vult nu automatisch OPHAAL gegevens in
                 q_p_address = st.text_input("Address *", value=address, key="q_p_add")
                 q_p_zip = st.text_input("Zip Code *", value=zip_code, key="q_p_zip")
                 q_p_city = st.text_input("City *", value=city, key="q_p_city")
             with rc2:
                 st.markdown("**📥 Delivery Destination**")
-                q_d_address = st.text_input("Address *", key="q_d_add")
-                q_d_zip = st.text_input("Zip Code *", key="q_d_zip")
-                q_d_city = st.text_input("City *", key="q_d_city")
+                # Vult nu automatisch AFLEVER gegevens in
+                q_d_address = st.text_input("Address *", value=del_address, key="q_d_add")
+                q_d_zip = st.text_input("Zip Code *", value=del_zip, key="q_d_zip")
+                q_d_city = st.text_input("City *", value=del_city, key="q_d_city")
             
             st.write("---")
             st.markdown("#### 3. Order Specifications")
@@ -373,7 +366,6 @@ else:
                     if q_freight and q_load_types:
                         compiled_info += f"🚛 Freight Load: {', '.join(q_load_types)}\n"
                         
-                    # LOGICA: UNIEKE STEMPEL MAKEN VOOR ANTI-DUBBELKLIK
                     current_signature = f"{q_p_address}-{q_d_address}-{compiled_info}"
                     
                     if st.session_state.last_order_signature == current_signature:
@@ -403,7 +395,6 @@ else:
                             supabase.table("orders").insert(db_order).execute()
                             st.session_state.last_order_signature = current_signature
                             st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
-                            # st.rerun() en st.balloons() zijn hier verwijderd zodat de melding blijft staan!
                         except Exception as e:
                             st.error(f"⚠️ Failed to send order. Error: {e}")
 
@@ -417,19 +408,23 @@ else:
             upd_company = st.text_input("Company Name", value=company_name, key="upd_comp")
             upd_contact = st.text_input("Contact Person", value=contact_name, key="upd_cont")
             upd_phone = st.text_input("Phone Number", value=phone_nr, key="upd_phone")
-            
-            # E-mail kan niet zomaar gewijzigd worden (zit vast aan Auth)
             st.text_input("Email Address (Login ID)", value=email_addr, disabled=True, key="upd_email")
             
             st.write("---")
-            st.markdown("#### Address Details (Default Pickup)")
-            st.markdown("<p style='color:#888; font-size:13px;'>We use this as your default pickup location to speed up your orders.</p>", unsafe_allow_html=True)
-            
+            st.markdown("#### Default Pickup Location 📤")
+            st.markdown("<p style='color:#888; font-size:13px;'>We use this to speed up your orders.</p>", unsafe_allow_html=True)
             upd_address = st.text_input("Street Address", value=address, key="upd_addr")
             col_zip, col_city = st.columns(2)
             with col_zip: upd_zip = st.text_input("Zip Code", value=zip_code, key="upd_zip")
             with col_city: upd_city = st.text_input("City", value=city, key="upd_city")
-            upd_country = st.text_input("Country", value=country if country else "Norway", key="upd_country")
+            
+            st.write("---")
+            st.markdown("#### Default Delivery Destination 📥")
+            st.markdown("<p style='color:#888; font-size:13px;'>We use this to speed up your orders.</p>", unsafe_allow_html=True)
+            upd_del_address = st.text_input("Street Address", value=del_address, key="upd_del_addr")
+            col_d_zip, col_d_city = st.columns(2)
+            with col_d_zip: upd_del_zip = st.text_input("Zip Code", value=del_zip, key="upd_del_zip")
+            with col_d_city: upd_del_city = st.text_input("City", value=del_city, key="upd_del_city")
             
             st.write("")
             if st.button("💾 Save Changes", type="primary"):
@@ -440,16 +435,15 @@ else:
                     "address": upd_address,
                     "zip_code": upd_zip,
                     "city": upd_city,
-                    "country": upd_country
+                    "del_address": upd_del_address,
+                    "del_zip": upd_del_zip,
+                    "del_city": upd_del_city
                 }
                 
                 try:
-                    # Update de profiles tabel met de nieuwe data
                     supabase.table("profiles").update(update_data).eq("id", user_id).execute()
-                    
-                    # Succesmelding! We hebben time.sleep() en st.rerun() weggehaald zodat deze mooi blijft staan.
-                    st.success("✅ Profile updated successfully! Je standaard ophaaladres wordt nu automatisch ingevuld bij een nieuwe bestelling.")
-                    
+                    st.success("✅ Profile updated successfully! Je standaard adressen worden nu automatisch ingevuld bij een nieuwe bestelling.")
+                    time.sleep(2.5)
+                    st.rerun() 
                 except Exception as e:
-                    # Mocht er toch iets misgaan, blijft de foutmelding nu ook leesbaar in beeld
                     st.error(f"⚠️ Could not update profile: {e}")
