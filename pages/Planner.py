@@ -76,6 +76,10 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
     }
     
+    /* METRICS STYLING (Voor de KPI's) */
+    div[data-testid="stMetricValue"] { color: #894b9d !important; font-weight: 700 !important; font-size: 32px !important;}
+    div[data-testid="stMetricLabel"] { font-weight: 600 !important; font-size: 14px !important; color: #555555 !important;}
+    
     /* INPUT VELDEN (Dropdowns) */
     div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
     div[data-baseweb="select"] span { color: #111111 !important; }
@@ -97,10 +101,6 @@ st.markdown("""
     button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
     button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
     button[data-baseweb="tab"] { background-color: transparent !important; }
-    
-    /* Blauwe info box fix */
-    div[data-testid="stAlert"] { background-color: #e6f0fa !important; border: 1px solid #b3d4f5 !important; }
-    div[data-testid="stAlert"] * { color: #004085 !important; }
     </style>
 
     <div class="navbar">
@@ -125,6 +125,32 @@ def fetch_all_orders():
     except: return []
 
 all_orders = fetch_all_orders()
+
+# =========================================================
+# KPI DASHBOARD (Nieuw onderdeel)
+# =========================================================
+# Bereken de statistieken op basis van de opgehaalde orders
+count_pending = sum(1 for o in all_orders if o['status'] == 'New')
+count_progress = sum(1 for o in all_orders if o['status'] == 'In Progress')
+count_done = sum(1 for o in all_orders if o['status'] in ['Processed', 'Delivered'])
+total_orders = len(all_orders)
+
+# Weergave van de metrics in mooie vakken
+m1, m2, m3, m4 = st.columns(4)
+with m1:
+    with st.container(border=True):
+        st.metric("🔴 Action Required (New)", count_pending)
+with m2:
+    with st.container(border=True):
+        st.metric("🟡 Active Routes", count_progress)
+with m3:
+    with st.container(border=True):
+        st.metric("🟢 Completed", count_done)
+with m4:
+    with st.container(border=True):
+        st.metric("📋 Total All-Time", total_orders)
+
+st.write("---") # Scheidingslijn onder de KPI's
 
 # =========================================================
 # LAYOUT (2 KOLOMMEN)
@@ -167,11 +193,8 @@ with col_list:
         for o in done:
             with st.container(border=True):
                 st.markdown(f"**🟢 {o['company']}**")
-                
-                # Check of processed_date bestaat, anders val terug op received_date
                 proc_date = o.get('processed_date')
                 display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
-                
                 st.caption(f"Order #{o['id']} | Afgerond | Datum: {display_date}")
                 if st.button(f"View #{o['id']}", key=f"d_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
@@ -210,13 +233,10 @@ with col_details:
             col_b1, col_b2 = st.columns(2)
             with col_b1:
                 if st.button("💾 Save Status", type="primary", use_container_width=True):
-                    
-                    # We maken een update-pakketje met de nieuwe status EN de verwerkingsdatum
                     update_data = {
                         "status": new_status,
                         "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M")
                     }
-                    
                     supabase.table("orders").update(update_data).eq("id", order['id']).execute()
                     st.success(f"Status updated to {new_status}")
                     time.sleep(1)
