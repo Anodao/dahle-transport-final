@@ -38,7 +38,7 @@ if 'user' not in st.session_state:
 if 'selected_order_id' not in st.session_state:
     st.session_state.selected_order_id = None
 
-# --- CSS STYLING & NAVBAR (LIGHT MODE) ---
+# --- CSS STYLING & NAVBAR (CRISP LIGHT MODE) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -48,7 +48,10 @@ st.markdown("""
     
     /* --- LIGHT THEME ACHTERGROND --- */
     .stApp { background-color: #f4f6f8 !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #111111 !important; }
+    
+    /* Forceer alle tekst naar donkergrijs/zwart voor maximale leesbaarheid */
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
+    div[data-testid="caption"] { color: #666666 !important; }
 
     /* NAVBAR */
     .block-container { padding-top: 130px !important; }
@@ -59,37 +62,58 @@ st.markdown("""
         padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     .nav-logo img { height: 48px; width: auto; }
-    .nav-links a { text-decoration: none; color: #111111 !important; font-weight: 500; transition: color 0.2s;}
-    .nav-links a:hover { color: #894b9d !important; }
+    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
+    .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
+    .nav-links span:hover { color: #894b9d !important; }
     .nav-cta { display: flex; justify-content: flex-end; }
-    .cta-btn-outline { color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: 600; border: 2px solid #894b9d; }
+    .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
 
-    /* CONTAINERS (Witte kaarten in light mode) */
-    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important;}
+    /* CONTAINERS (Witte kaarten met lichte schaduw) */
+    div[data-testid="stVerticalBlockBorderWrapper"] { 
+        background-color: #ffffff !important; 
+        border: 1px solid #d1d5db !important; 
+        border-radius: 8px !important; 
+        box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
+    }
     
-    /* INPUT VELDEN (Dropdowns e.d.) */
+    /* INPUT VELDEN (Dropdowns) */
     div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
+    div[data-baseweb="select"] span { color: #111111 !important; }
     
     /* BUTTONS */
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; transition: all 0.3s ease !important;
     }
+    div.stButton > button[kind="primary"] * { color: #ffffff !important; }
     div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 16px rgba(137, 75, 157, 0.3) !important; }
     
     div.stButton > button[kind="secondary"] { 
         background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; transition: all 0.2s ease !important;
     }
+    div.stButton > button[kind="secondary"] * { color: #333333 !important; }
     div.stButton > button[kind="secondary"]:hover { border-color: #894b9d !important; color: #894b9d !important;}
 
-    /* TABS */
-    button[data-baseweb="tab"] { color: #666666 !important; font-weight: 600;}
-    button[aria-selected="true"] { color: #b070c6 !important; border-bottom-color: #b070c6 !important; }
+    /* TABS FIX (Forceer duidelijke tekstkleur) */
+    button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
+    button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
+    button[data-baseweb="tab"] { background-color: transparent !important; }
+    
+    /* Blauwe info box fix */
+    div[data-testid="stAlert"] { background-color: #e6f0fa !important; border: 1px solid #b3d4f5 !important; }
+    div[data-testid="stAlert"] * { color: #004085 !important; }
     </style>
 
     <div class="navbar">
-        <div class="nav-logo"><a href="/"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
-        <div class="nav-links"><a href="/">Hjem</a></div>
-        <div class="nav-cta"><a href="/" class="cta-btn-outline">← BACK TO HOME</a></div>
+        <div class="nav-logo">
+            <a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a>
+        </div>
+        <div class="nav-links">
+            <a href="/"><span>Hjem</span></a>
+            <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
+        </div>
+        <div class="nav-cta">
+            <a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -154,7 +178,7 @@ with col_list:
                     st.rerun()
 
 with col_details:
-    st.markdown("<h2 style='color: #111111;'>Order Details</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>Order Details</h2>", unsafe_allow_html=True)
     st.write("---")
     
     if st.session_state.selected_order_id:
