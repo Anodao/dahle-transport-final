@@ -26,17 +26,20 @@ except Exception as e:
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-# --- CSS STYLING & NAVBAR ---
+# --- CSS STYLING & NAVBAR (DARK MODE) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
     
+    /* Verberg standaard elementen */
     [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
-    .stApp { background-color: #f8f9fa !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color: #111111 !important; }
+    
+    /* --- DARK THEME ACHTERGROND --- */
+    .stApp { background-color: #111111 !important; }
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color: #ffffff !important; }
 
-    /* --- NAVBAR --- */
+    /* --- NAVBAR (WIT MET ZWARTE TEKST) --- */
     .block-container { padding-top: 130px !important; max-width: 800px; }
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
@@ -46,16 +49,27 @@ st.markdown("""
     }
     .nav-logo img { height: 48px; width: auto; transition: transform 0.2s; }
     .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
-    .nav-links a { text-decoration: none; color: #111111 !important; cursor: pointer; }
-    .nav-cta { display: flex; justify-content: flex-end; gap: 15px; }
     
+    /* Forceer zwarte tekst in de witte navigatiebalk */
+    .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
+    .nav-links span:hover { color: #894b9d !important; }
+    
+    .nav-cta { display: flex; justify-content: flex-end; gap: 15px; }
     .cta-btn { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; white-space: nowrap;}
     .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
 
-    /* --- FORM & BUTTON STYLING (GEFIXT VOOR LIGHT MODE) --- */
-    div[data-baseweb="input"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; }
-    div[data-baseweb="input"] input { color: #111111 !important; -webkit-text-fill-color: #111111 !important; }
-    label[data-testid="stWidgetLabel"] p { color: #333333 !important; font-weight: 600; font-size: 14px !important;}
+    /* --- FORM & CONTAINER STYLING VOOR DARK MODE --- */
+    div[data-testid="stVerticalBlockBorderWrapper"] {
+        background-color: #1e1e1e !important;
+        border: 1px solid #333333 !important;
+        border-radius: 12px !important;
+        padding: 20px !important;
+    }
+
+    /* Input velden */
+    div[data-baseweb="input"] > div { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
+    div[data-baseweb="input"] input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+    label[data-testid="stWidgetLabel"] p { color: #cccccc !important; font-weight: 600; font-size: 14px !important;}
     
     /* Primary Button */
     div.stButton > button[kind="primary"] { 
@@ -69,15 +83,15 @@ st.markdown("""
     
     /* Secondary Button */
     div.stButton > button[kind="secondary"] { 
-        background: transparent !important; color: #894b9d !important; border: 2px solid #894b9d !important; border-radius: 6px !important; 
+        background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; 
         padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important;
         width: 100% !important; transition: all 0.3s ease !important;
     }
-    div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; }
+    div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}
 
-    /* Tabs styling */
-    button[data-baseweb="tab"] { background-color: transparent !important; color: #666 !important; font-weight: 600; font-size: 16px;}
-    button[data-baseweb="tab"][aria-selected="true"] { color: #894b9d !important; border-bottom: 3px solid #894b9d !important; }
+    /* Tabs styling (Aangepast voor dark mode) */
+    button[data-baseweb="tab"] { background-color: transparent !important; color: #888888 !important; font-weight: 600; font-size: 16px;}
+    button[data-baseweb="tab"][aria-selected="true"] { color: #b070c6 !important; border-bottom: 3px solid #b070c6 !important; }
     </style>
 
     <div class="navbar">
@@ -100,8 +114,8 @@ st.markdown("""
 # =========================================================
 if st.session_state.user is None:
     
-    st.markdown("<h2 style='text-align: center; color: #894b9d;'>Customer Portal</h2>", unsafe_allow_html=True)
-    st.markdown("<p style='text-align: center; color: #666; margin-bottom: 30px;'>Log in to manage your shipments and details.</p>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #b070c6;'>Customer Portal</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>Log in to manage your shipments and details.</p>", unsafe_allow_html=True)
 
     with st.container(border=True):
         tab_login, tab_register = st.tabs(["🔒 Log In", "📝 Create Account"])
@@ -184,7 +198,7 @@ else:
 
     company_name = profile.get("company_name", "Valued Customer")
     
-    st.markdown(f"<h2 style='color: #894b9d;'>Welcome back, {company_name}!</h2>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='color: #b070c6;'>Welcome back, {company_name}!</h2>", unsafe_allow_html=True)
     st.write(f"Logged in as: {st.session_state.user.email}")
     
     st.write("---")
