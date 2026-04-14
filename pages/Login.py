@@ -2,6 +2,7 @@ import streamlit as st
 import time
 from datetime import datetime
 from supabase import create_client
+import extra_streamlit_components as stx
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -24,9 +25,6 @@ except Exception as e:
     st.error("⚠️ Database connection failed.")
     st.stop()
 
-import extra_streamlit_components as stx
-from datetime import datetime, timedelta
-
 # --- COOKIE MANAGER ---
 cookie_manager = stx.CookieManager()
 
@@ -38,9 +36,12 @@ if 'user' not in st.session_state:
     else:
         st.session_state.user = None
 
-# ANTI-DUBBELKLIK GEHEUGEN VOOR ORDERS
 if 'last_order_signature' not in st.session_state:
     st.session_state.last_order_signature = None
+
+# Geheugen voor het nieuwe "Knoppen Menu"
+if 'active_tab' not in st.session_state:
+    st.session_state.active_tab = "My Shipments"
 
 # --- HERSTEL SESSIE UIT COOKIE (als nog niet ingelogd) ---
 if st.session_state.user is None:
@@ -103,9 +104,6 @@ st.markdown("""
     }
     div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}
 
-    button[data-baseweb="tab"] { background-color: transparent !important; color: #888888 !important; font-weight: 600; font-size: 16px;}
-    button[data-baseweb="tab"][aria-selected="true"] { color: #b070c6 !important; border-bottom: 3px solid #b070c6 !important; }
-    
     div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
     div[data-testid="stExpander"] p { color: #ffffff !important; }
     div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
@@ -215,12 +213,10 @@ else:
     phone_nr = profile.get("phone", "")
     email_addr = st.session_state.user.email
     
-    # Haal OPHAAL adres velden op
     address = profile.get("address", "")
     zip_code = profile.get("zip_code", "")
     city = profile.get("city", "")
     
-    # Haal AFLEVER adres velden op (De 3 nieuwe kolommen!)
     del_address = profile.get("del_address", "")
     del_zip = profile.get("del_zip", "")
     del_city = profile.get("del_city", "")
@@ -239,11 +235,30 @@ else:
             
     st.write("---")
     
-    # --- DASHBOARD TABS ---
-    tab_history, tab_new_order, tab_profile = st.tabs(["📦 My Shipments", "➕ New Order", "⚙️ Profile Settings"])
+    # =========================================================
+    # NIEUWE MENU NAVIGATIE (Dit vervangt st.tabs en forceert een refresh)
+    # =========================================================
+    col_menu1, col_menu2, col_menu3 = st.columns(3)
+    
+    with col_menu1:
+        if st.button("📦 My Shipments", type="primary" if st.session_state.active_tab == "My Shipments" else "secondary", use_container_width=True):
+            st.session_state.active_tab = "My Shipments"
+            st.rerun()
+            
+    with col_menu2:
+        if st.button("➕ New Order", type="primary" if st.session_state.active_tab == "New Order" else "secondary", use_container_width=True):
+            st.session_state.active_tab = "New Order"
+            st.rerun()
+            
+    with col_menu3:
+        if st.button("⚙️ Profile Settings", type="primary" if st.session_state.active_tab == "Profile Settings" else "secondary", use_container_width=True):
+            st.session_state.active_tab = "Profile Settings"
+            st.rerun()
+            
+    st.write("---")
 
-    # --- TAB 1: ORDER HISTORIE ---
-    with tab_history:
+    # --- MENU 1: ORDER HISTORIE ---
+    if st.session_state.active_tab == "My Shipments":
         st.markdown("### Your Shipment History")
         
         try:
@@ -306,8 +321,8 @@ else:
                         
                     st.markdown("<br>", unsafe_allow_html=True)
 
-    # --- TAB 2: NIEUWE ORDER ---
-    with tab_new_order:
+    # --- MENU 2: NIEUWE ORDER ---
+    elif st.session_state.active_tab == "New Order":
         st.markdown("### Quick Order Form")
         st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
         
@@ -335,13 +350,11 @@ else:
             rc1, rc2 = st.columns(2, gap="large")
             with rc1:
                 st.markdown("**📤 Pickup Location**")
-                # Vult nu automatisch OPHAAL gegevens in
                 q_p_address = st.text_input("Address *", value=address, key="q_p_add")
                 q_p_zip = st.text_input("Zip Code *", value=zip_code, key="q_p_zip")
                 q_p_city = st.text_input("City *", value=city, key="q_p_city")
             with rc2:
                 st.markdown("**📥 Delivery Destination**")
-                # Vult nu automatisch AFLEVER gegevens in
                 q_d_address = st.text_input("Address *", value=del_address, key="q_d_add")
                 q_d_zip = st.text_input("Zip Code *", value=del_zip, key="q_d_zip")
                 q_d_city = st.text_input("City *", value=del_city, key="q_d_city")
@@ -398,8 +411,8 @@ else:
                         except Exception as e:
                             st.error(f"⚠️ Failed to send order. Error: {e}")
 
-    # --- TAB 3: PROFIEL BEHEREN ---
-    with tab_profile:
+    # --- MENU 3: PROFIEL BEHEREN ---
+    elif st.session_state.active_tab == "Profile Settings":
         st.markdown("### Manage Your Profile")
         st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
         
