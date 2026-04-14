@@ -38,49 +38,25 @@ if 'user' not in st.session_state:
 if 'selected_order_id' not in st.session_state:
     st.session_state.selected_order_id = None
 
-# --- CSS & NAVBAR (SCHONE LICHTE MODUS) ---
+# --- CSS (ALLEEN LAYOUT, GEEN KLEUREN GEFORCEERD) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
+
+/* 1. Verberg overbodige Streamlit zijbalk/header */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 
-/* Forceer Lichte Achtergrond en Donkere Tekst */
-.stApp { background-color: #f4f6f8 !important; }
-.stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
-div[data-testid="caption"] { color: #666666 !important; }
-
-/* Dashboard Kaarten */
-div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; border-radius: 8px !important; box-shadow: 0 2px 5px rgba(0,0,0,0.03) !important; }
-
-/* Cijfers en Labels */
-div[data-testid="stMetricValue"] > div { color: #894b9d !important; font-weight: 700 !important; }
-div[data-testid="stMetricLabel"] > div > p { color: #333333 !important; font-weight: 600 !important; }
-
-/* Input velden (Dropdown & Textarea) forceer witte achtergrond en zwarte tekst */
-div[data-baseweb="select"] > div, div[data-baseweb="textarea"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
-div[data-baseweb="select"] span, div[data-baseweb="textarea"] textarea { color: #111111 !important; }
-ul[role="listbox"] { background-color: #ffffff !important; }
-ul[role="listbox"] li { color: #111111 !important; background-color: #ffffff !important; }
-ul[role="listbox"] li:hover { background-color: #f4f6f8 !important; }
-
-/* Knoppen */
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
-div.stButton > button[kind="primary"] p { color: #ffffff !important; }
-div.stButton > button[kind="secondary"] { background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; }
-div.stButton > button[kind="secondary"] p { color: #333333 !important; }
-
-/* Tabs */
-button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
-button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
-button[data-baseweb="tab"] { background-color: transparent !important; }
-
-/* Navigatiebalk */
-.block-container { padding-top: 130px !important; }
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+/* 2. Custom Navbar bovenaan (deze blijft wel wit met donkere letters voor je logo) */
+.block-container { padding-top: 120px !important; }
+.navbar { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 90px; 
+    background-color: #ffffff !important; border-bottom: 1px solid #eaeaea !important; 
+    z-index: 999; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; 
+}
 .nav-logo img { height: 48px; width: auto; }
-.nav-links a { text-decoration: none; color: #111111 !important; font-weight: 500; margin: 0 15px; }
-.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
+.nav-links a { text-decoration: none; font-weight: bold; margin: 0 15px; color: #111111 !important; }
+.cta-btn-outline { border: 2px solid #894b9d !important; color: #894b9d !important; border-radius: 50px; padding: 10px 20px; text-decoration: none; font-weight: bold; }
 </style>
 
 <div class="navbar">
@@ -116,16 +92,16 @@ total_orders = len(all_orders)
 m1, m2, m3, m4 = st.columns(4)
 with m1:
     with st.container(border=True):
-        st.metric("🔴 Action Required", count_pending)
+        st.metric("Action Required", count_pending)
 with m2:
     with st.container(border=True):
-        st.metric("🟡 Active Routes", count_progress)
+        st.metric("Active Routes", count_progress)
 with m3:
     with st.container(border=True):
-        st.metric("🟢 Completed", count_done)
+        st.metric("Completed", count_done)
 with m4:
     with st.container(border=True):
-        st.metric("📋 Total Orders", total_orders)
+        st.metric("Total Orders", total_orders)
 
 st.write("---")
 
@@ -135,9 +111,9 @@ st.write("---")
 col_list, col_details = st.columns([1, 2], gap="large")
 
 with col_list:
-    st.markdown("<h2 style='color: #b070c6; margin-bottom: 5px;'>Inbox</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>Inbox</h2>", unsafe_allow_html=True)
     
-    tab_new, tab_prog, tab_done = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done"])
+    tab_new, tab_prog, tab_done = st.tabs(["Pending", "In Progress", "Done"])
     
     with tab_new:
         pending = [o for o in all_orders if o['status'] == 'New']
@@ -155,7 +131,7 @@ with col_list:
         if not inprogress: st.info("Nothing in progress.")
         for o in inprogress:
             with st.container(border=True):
-                st.markdown(f"**🟡 {o['company']}**")
+                st.markdown(f"**{o['company']}**")
                 st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"prog_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
@@ -166,7 +142,7 @@ with col_list:
         if not done: st.info("No completed orders.")
         for o in done:
             with st.container(border=True):
-                st.markdown(f"**🟢 {o['company']}**")
+                st.markdown(f"**{o['company']}**")
                 proc_date = o.get('processed_date')
                 display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
                 st.caption(f"Order #{o['id']} | Afgerond | Datum: {display_date}")
@@ -175,7 +151,7 @@ with col_list:
                     st.rerun()
 
 with col_details:
-    st.markdown("<h2 style='margin-bottom: 5px;'>Order Details</h2>", unsafe_allow_html=True)
+    st.markdown("<h2>Order Details</h2>", unsafe_allow_html=True)
     st.write("---")
     
     if st.session_state.selected_order_id:
@@ -186,18 +162,18 @@ with col_details:
             with st.container(border=True):
                 r1, r2 = st.columns(2)
                 with r1:
-                    st.markdown("#### 📤 Pickup Details")
+                    st.markdown("#### Pickup Details")
                     st.markdown(f"**Address:** {order.get('pickup_address', '-')}")
                     st.markdown(f"**Zip Code:** {order.get('pickup_zip', '-')}")
                     st.markdown(f"**City:** {order.get('pickup_city', '-')}")
                 with r2:
-                    st.markdown("#### 📥 Delivery Details")
+                    st.markdown("#### Delivery Details")
                     st.markdown(f"**Address:** {order.get('delivery_address', '-')}")
                     st.markdown(f"**Zip Code:** {order.get('delivery_zip', '-')}")
                     st.markdown(f"**City:** {order.get('delivery_city', '-')}")
             
             with st.container(border=True):
-                st.markdown("#### 📞 Contact Information")
+                st.markdown("#### Contact Information")
                 c1, c2, c3 = st.columns(3)
                 with c1:
                     st.markdown("**Contact Person**")
@@ -210,7 +186,7 @@ with col_details:
                     st.write(order.get('email', '-'))
 
             with st.container(border=True):
-                st.markdown("#### 📝 Specifications & Internal Notes")
+                st.markdown("#### Specifications & Internal Notes")
                 st.markdown(f"**Requested Services:** {order.get('types', '-')}")
                 if order.get('info'):
                     st.info(order['info'])
@@ -233,20 +209,20 @@ with col_details:
             
             col_b1, col_b2 = st.columns(2)
             with col_b1:
-                if st.button("💾 Save Updates", type="primary", use_container_width=True):
+                if st.button("Save Updates", type="primary", use_container_width=True):
                     update_data = {
                         "status": new_status,
                         "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
                         "internal_notes": new_notes
                     }
                     supabase.table("orders").update(update_data).eq("id", order['id']).execute()
-                    st.success("✅ Updates saved successfully!")
+                    st.success("Updates saved successfully!")
                     time.sleep(1)
                     st.rerun()
             with col_b2:
-                if st.button("🗑️ Delete Order", use_container_width=True):
+                if st.button("Delete Order", use_container_width=True):
                     supabase.table("orders").delete().eq("id", order['id']).execute()
                     st.session_state.selected_order_id = None
                     st.rerun()
     else:
-        st.info("👈 Select an order from the Inbox to view details and update its status.")
+        st.info("Select an order from the Inbox to view details and update its status.")
