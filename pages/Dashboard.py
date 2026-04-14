@@ -18,8 +18,8 @@ st.set_page_config(
 def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
     headers = {
-        # LET OP: Plak hieronder weer jouw eigen API key!
-        'authorization': "apikey VUL_HIER_JE_API_KEY_IN",
+        # LET OP: Plak hieronder jouw API key van CollectAPI!
+        'authorization': "apikey 45CDpqYa0mK5v7B0vLExG7:6RHFfYXba02CtLDkUH2GTI",
         'content-type': "application/json"
     }
     
@@ -29,18 +29,17 @@ def get_live_fuel_prices():
         
         for country in data.get('result', []):
             if country['country'].lower() == 'norway':
-                # Beide prijzen ophalen en omrekenen naar NOK
+                # Beide prijzen ophalen en omrekenen naar NOK (koers 11.5)
                 diesel_nok = round(float(country['diesel']) * 11.5, 2) 
                 gas_nok = round(float(country['gasoline']) * 11.5, 2) 
                 
-                # We sturen ze nu als een 'dictionary' (een setje) terug
                 return {"diesel": diesel_nok, "gas": gas_nok}
                 
     except Exception as e:
         print(f"API Error: {e}")
         
     # Fallback prijzen als de API tijdelijk faalt
-    return {"diesel": 20.50, "gas": 21.50}
+    return {"diesel": 20.50, "gas": 21.50} 
 
 # --- SUPABASE CONNECTIE ---
 @st.cache_resource
@@ -139,29 +138,12 @@ st.markdown("""
         padding: 15px;
     }
 
-    /* --- CUSTOMER CARDS --- */
-    .customer-card {
-        background-color: #212529;
-        border: 1px solid #333333;
-        border-radius: 10px;
-        padding: 20px;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    .customer-name {
-        font-size: 18px;
-        font-weight: 700;
-        color: #ffffff;
-        margin-bottom: 15px;
-        border-bottom: 2px solid #333333;
-        padding-bottom: 8px;
-    }
-    .metric-row { display: flex; justify-content: space-between; gap: 10px; }
-    .metric-box { flex: 1; display: flex; flex-direction: column; text-align: center; }
-    .metric-label { font-size: 12px; color: #b0b0b0; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
-    .metric-value { font-size: 16px; font-weight: 700; color: #ffffff; }
-
     div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c355c !important; border-color: #0c355c !important;}
+    
+    /* Expander styling */
+    div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
+    div[data-testid="stExpander"] p { color: #ffffff !important; }
+    div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
     </style>
     
 <div class="navbar">
@@ -208,7 +190,6 @@ with c_input:
     # We bewaren de dieselprijs apart voor de winst-berekeningen verderop in je code
     fuel_price = live_prices["diesel"]
     
-    # Maak twee kolommen ín deze sectie voor de twee blokjes
     f1, f2 = st.columns(2)
     
     with f1:
@@ -226,6 +207,7 @@ with c_input:
                 value=f"{live_prices['gas']:.2f}",
                 delta="Actueel via API"
             )
+
 st.write("---")
 
 # --- DATA VERWERKING ---
@@ -249,10 +231,7 @@ if 'co2_emission_kg' not in df.columns:
 # Berekeningen op de volledige dataset
 CO2_PER_LITER = 2.68
 df['liters'] = df['co2_emission_kg'] / CO2_PER_LITER
-
-# Gebruikt nu automatisch de live 'fuel_price' van de API!
 df['fuel_cost'] = df['liters'] * fuel_price
-
 df['revenue'] = 1500 + (df['co2_emission_kg'] * 15) 
 df['profit'] = df['revenue'] - df['fuel_cost']
 df['margin_pct'] = (df['profit'] / df['revenue']) * 100
@@ -316,7 +295,6 @@ with col_right:
     
     if 'parsed_date' in filtered_df.columns:
         df_trend = filtered_df.groupby('parsed_date')['profit'].sum().reset_index()
-        # Hernoem voor de as
         df_trend = df_trend.rename(columns={'parsed_date': 'date'})
         
         fig_line = px.line(df_trend, x='date', y='profit', markers=True, 
@@ -332,30 +310,28 @@ st.write("---")
 st.write("### Detailed Cost & Margin Breakdown")
 st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
-# 1. We breiden de aggregatie uit zodat hij ook de datum van de laatste order meepakt
+# Aggregatie mét de laatste datum erbij, en gesorteerd op last_date!
 customer_group = filtered_df.groupby('company').agg(
     total_orders=('id', 'count'),
     total_fuel=('fuel_cost', 'sum'),
     total_profit=('profit', 'sum'),
     avg_margin=('margin_pct', 'mean'),
-    last_date=('parsed_date', 'max') # Haalt de nieuwste datum op
-).reset_index().sort_values('total_profit', ascending=False)
+    last_date=('parsed_date', 'max')
+).reset_index().sort_values('last_date', ascending=False)
 
-# 2. Teken de 2 kolommen
 card_col1, card_col2 = st.columns(2)
 
 for i, row in customer_group.iterrows():
     target_col = card_col1 if i % 2 == 0 else card_col2
     
     with target_col:
-        # Met st.container maken we een mooi klikbaar kader om het geheel
         with st.container(border=True):
             margin_color = "#27ae60" if row['avg_margin'] > 85 else "#e67e22"
             
-            # Format de datum netjes (of zet een streepje als er geen datum is)
+            # Format de datum netjes
             last_date_str = row['last_date'].strftime('%Y-%m-%d') if pd.notnull(row['last_date']) else "Onbekend"
             
-            # Het overzichts-gedeelte (vergelijkbaar met je oude kaart, maar strakker)
+            # Klant overzicht (HTML)
             st.markdown(f"""
             <div style="padding-bottom: 10px;">
                 <div style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 5px; border-bottom: 2px solid #333; padding-bottom: 8px;">
@@ -371,17 +347,15 @@ for i, row in customer_group.iterrows():
             </div>
             """, unsafe_allow_html=True)
             
-            # Het NIEUWE klikbare uitklapmenu voor meer order details!
+            # Uitklapmenu met order details
             with st.expander("🔍 View Order History & Details"):
-                # Haal alle individuele orders van deze specifieke klant op
                 cust_orders = filtered_df[filtered_df['company'] == row['company']].sort_values('parsed_date', ascending=False)
                 
                 for _, order in cust_orders.iterrows():
                     o_date = order['parsed_date'].strftime('%Y-%m-%d') if pd.notnull(order['parsed_date']) else "N/A"
                     status = order.get('status', 'Unknown')
                     
-                    # Toon de individuele order data
                     st.markdown(f"**Order #{order['id']}** — {o_date} `({status})`")
                     st.write(f"🛣️ **Route:** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')}")
                     st.write(f"💰 **Profit:** {order['profit']:,.0f} NOK | **Margin:** {order['margin_pct']:.1f}%")
-                    st.write("---") # Scheidingslijntje tussen orders
+                    st.write("---")
