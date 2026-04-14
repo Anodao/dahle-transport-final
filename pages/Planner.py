@@ -38,7 +38,7 @@ if 'user' not in st.session_state:
 if 'selected_order_id' not in st.session_state:
     st.session_state.selected_order_id = None
 
-# --- CSS STYLING & NAVBAR (CRISP LIGHT MODE) ---
+# --- CSS STYLING (HUDFTERPROOF LIGHT MODE) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -46,10 +46,9 @@ st.markdown("""
     
     [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
     
-    /* --- LIGHT THEME ACHTERGROND --- */
     .stApp { background-color: #f4f6f8 !important; }
     
-    /* Forceer alle algemene tekst naar donkergrijs/zwart */
+    /* Forceer algemene tekst naar donkergrijs/zwart */
     .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li, .stMarkdown span { color: #111111 !important; }
     div[data-testid="caption"] { color: #666666 !important; }
 
@@ -63,57 +62,59 @@ st.markdown("""
     }
     .nav-logo img { height: 48px; width: auto; }
     .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
-    .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
-    .nav-links span:hover { color: #894b9d !important; }
+    .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; }
     .nav-cta { display: flex; justify-content: flex-end; }
-    .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
+    .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
 
-    /* CONTAINERS (Witte kaarten met lichte schaduw) */
+    /* CONTAINERS */
     div[data-testid="stVerticalBlockBorderWrapper"] { 
         background-color: #ffffff !important; 
         border: 1px solid #d1d5db !important; 
         border-radius: 8px !important; 
-        box-shadow: 0 4px 6px rgba(0,0,0,0.03) !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.02) !important;
     }
     
-    /* FIX VOOR KPI METRICS TEKST (Geforceerd Zwart) */
-    div[data-testid="stMetricValue"] > div { color: #894b9d !important; font-weight: 700 !important; font-size: 32px !important;}
-    div[data-testid="stMetricLabel"] * { color: #111111 !important; font-weight: 600 !important; font-size: 14px !important; visibility: visible !important;}
+    /* FIX VOOR KPI METRICS */
+    div[data-testid="stMetricValue"] > div { color: #894b9d !important; font-weight: 700 !important; }
+    div[data-testid="stMetricLabel"] { visibility: visible !important; }
+    div[data-testid="stMetricLabel"] > div > p { color: #333333 !important; font-weight: 600 !important; font-size: 15px !important; }
     
-    /* FIX VOOR DROPDOWNS EN INPUTS (Geforceerd Zwart) */
-    div[data-baseweb="select"] { background-color: #ffffff !important; }
-    div[data-baseweb="select"] * { color: #111111 !important; }
+    /* FIX VOOR DROPDOWNS & POPOVERS (Het zwarte menu probleem) */
+    div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
+    div[data-baseweb="select"] span { color: #111111 !important; }
+    div[data-baseweb="popover"] { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
+    ul[role="listbox"] { background-color: #ffffff !important; }
+    ul[role="listbox"] li { color: #111111 !important; background-color: #ffffff !important; }
+    ul[role="listbox"] li:hover { background-color: #f4f6f8 !important; }
+
+    /* FIX VOOR TEXT AREA (Notities) */
+    div[data-baseweb="textarea"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
+    div[data-baseweb="textarea"] textarea { color: #111111 !important; }
     
     /* BUTTONS */
     div.stButton > button[kind="primary"] { 
-        background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; transition: all 0.3s ease !important;
+        background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important;
     }
-    div.stButton > button[kind="primary"] * { color: #ffffff !important; }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 16px rgba(137, 75, 157, 0.3) !important; }
+    div.stButton > button[kind="primary"] p { color: #ffffff !important; }
     
     div.stButton > button[kind="secondary"] { 
-        background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; transition: all 0.2s ease !important;
+        background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important;
     }
-    div.stButton > button[kind="secondary"] * { color: #333333 !important; }
-    div.stButton > button[kind="secondary"]:hover { border-color: #894b9d !important; color: #894b9d !important;}
+    div.stButton > button[kind="secondary"] p { color: #333333 !important; }
 
-    /* TABS FIX */
+    /* TABS */
     button[data-baseweb="tab"] p { color: #666666 !important; font-weight: 600; font-size: 15px;}
     button[data-baseweb="tab"][aria-selected="true"] p { color: #b070c6 !important; }
     button[data-baseweb="tab"] { background-color: transparent !important; }
     </style>
 
     <div class="navbar">
-        <div class="nav-logo">
-            <a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a>
-        </div>
+        <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
         <div class="nav-links">
             <a href="/"><span>Hjem</span></a>
             <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
         </div>
-        <div class="nav-cta">
-            <a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a>
-        </div>
+        <div class="nav-cta"><a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a></div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -156,11 +157,10 @@ st.write("---")
 col_list, col_details = st.columns([1, 2], gap="large")
 
 with col_list:
-    st.markdown("<h2 style='color: #b070c6;'>Inbox</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #b070c6; margin-bottom: 5px;'>Inbox</h2>", unsafe_allow_html=True)
     
     tab_new, tab_prog, tab_done = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done"])
     
-    # --- 1. PENDING (Status: New) ---
     with tab_new:
         pending = [o for o in all_orders if o['status'] == 'New']
         if not pending: st.info("No pending orders.")
@@ -172,7 +172,6 @@ with col_list:
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
 
-    # --- 2. IN PROGRESS (Status: In Progress) ---
     with tab_prog:
         inprogress = [o for o in all_orders if o['status'] == 'In Progress']
         if not inprogress: st.info("Nothing in progress.")
@@ -184,7 +183,6 @@ with col_list:
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
 
-    # --- 3. DONE (Status: Processed / Delivered) ---
     with tab_done:
         done = [o for o in all_orders if o['status'] in ['Processed', 'Delivered']]
         if not done: st.info("No completed orders.")
@@ -199,7 +197,7 @@ with col_list:
                     st.rerun()
 
 with col_details:
-    st.markdown("<h2>Order Details</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='color: #111111; margin-bottom: 5px;'>Order Details</h2>", unsafe_allow_html=True)
     st.write("---")
     
     if st.session_state.selected_order_id:
@@ -207,42 +205,70 @@ with col_details:
         if order:
             st.markdown(f"### Order #{order['id']} - {order['company']}")
             
+            # --- ROUTE INFO ---
             with st.container(border=True):
-                c1, c2 = st.columns(2)
-                with c1:
+                r1, r2 = st.columns(2)
+                with r1:
                     st.markdown("**📤 Pickup**")
                     st.write(f"{order['pickup_address']}\n{order['pickup_zip']} {order['pickup_city']}")
-                with c2:
+                with r2:
                     st.markdown("**📥 Delivery**")
                     st.write(f"{order['delivery_address']}\n{order['delivery_zip']} {order['delivery_city']}")
             
+            # --- CONTACT INFO ---
+            with st.container(border=True):
+                st.markdown("#### 📞 Contact Information")
+                c1, c2, c3 = st.columns(3)
+                with c1:
+                    st.markdown("**Contact Person**")
+                    st.write(order.get('contact_name', '-'))
+                with c2:
+                    st.markdown("**Phone**")
+                    st.write(order.get('phone', '-'))
+                with c3:
+                    st.markdown("**Email**")
+                    st.write(order.get('email', '-'))
+
+            # --- NOTES & SPECS ---
+            with st.container(border=True):
+                st.markdown("#### 📝 Specifications & Internal Notes")
+                st.markdown(f"**Requested Services:** {order.get('types', '-')}")
+                if order.get('info'):
+                    st.info(order['info'])
+                
+                st.write("---")
+                st.markdown("**Internal Dispatch Notes (Hidden from customer):**")
+                current_notes = order.get('internal_notes', '')
+                new_notes = st.text_area("Typ hier je eigen notities...", value=current_notes if current_notes else "", height=100, label_visibility="collapsed")
+            
             st.write("")
             
-            # --- STATUS UPDATE ---
-            st.markdown("#### Update Status")
+            # --- STATUS UPDATE CONTROLS ---
+            st.markdown("#### Control Panel")
             status_list = ["New", "In Progress", "Processed", "Delivered"]
             try:
                 current_idx = status_list.index(order['status'])
             except:
                 current_idx = 0
                 
-            new_status = st.selectbox("Status", options=status_list, index=current_idx)
+            new_status = st.selectbox("Update Order Status", options=status_list, index=current_idx)
             
             col_b1, col_b2 = st.columns(2)
             with col_b1:
-                if st.button("💾 Save Status", type="primary", use_container_width=True):
+                if st.button("💾 Save Updates", type="primary", use_container_width=True):
                     update_data = {
                         "status": new_status,
-                        "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M")
+                        "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                        "internal_notes": new_notes
                     }
                     supabase.table("orders").update(update_data).eq("id", order['id']).execute()
-                    st.success(f"Status updated to {new_status}")
+                    st.success("✅ Updates saved successfully!")
                     time.sleep(1)
                     st.rerun()
             with col_b2:
-                if st.button("🗑️ Delete", use_container_width=True):
+                if st.button("🗑️ Delete Order", use_container_width=True):
                     supabase.table("orders").delete().eq("id", order['id']).execute()
                     st.session_state.selected_order_id = None
                     st.rerun()
     else:
-        st.info("Select an order to view details.")
+        st.info("👈 Select an order from the Inbox to view details and update its status.")
