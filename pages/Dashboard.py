@@ -332,38 +332,60 @@ st.write("---")
 st.write("### Detailed Cost & Margin Breakdown")
 st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
-customer_group = filtered_df.groupby('company').agg({
-    'id': 'count',
-    'fuel_cost': 'sum',
-    'profit': 'sum',
-    'margin_pct': 'mean'
-}).reset_index().sort_values('profit', ascending=False)
+# --- CUSTOMER CARDS (ONDERAAN) ---
+st.write("### Detailed Cost & Margin Breakdown")
+st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
+# 1. We breiden de aggregatie uit zodat hij ook de datum van de laatste order meepakt
+customer_group = filtered_df.groupby('company').agg(
+    total_orders=('id', 'count'),
+    total_fuel=('fuel_cost', 'sum'),
+    total_profit=('profit', 'sum'),
+    avg_margin=('margin_pct', 'mean'),
+    last_date=('parsed_date', 'max') # Haalt de nieuwste datum op
+).reset_index().sort_values('total_profit', ascending=False)
+
+# 2. Teken de 2 kolommen
 card_col1, card_col2 = st.columns(2)
-for i, (index, row) in enumerate(customer_group.iterrows()):
+
+for i, row in customer_group.iterrows():
     target_col = card_col1 if i % 2 == 0 else card_col2
+    
     with target_col:
-        margin_color = "#27ae60" if row['margin_pct'] > 85 else "#e67e22"
-        st.markdown(f"""
-        <div class="customer-card">
-            <div class="customer-name">{row['company']}</div>
-            <div class="metric-row">
-                <div class="metric-box">
-                    <div class="metric-label">Shipments</div>
-                    <div class="metric-value">{row['id']}</div>
+        # Met st.container maken we een mooi klikbaar kader om het geheel
+        with st.container(border=True):
+            margin_color = "#27ae60" if row['avg_margin'] > 85 else "#e67e22"
+            
+            # Format de datum netjes (of zet een streepje als er geen datum is)
+            last_date_str = row['last_date'].strftime('%Y-%m-%d') if pd.notnull(row['last_date']) else "Onbekend"
+            
+            # Het overzichts-gedeelte (vergelijkbaar met je oude kaart, maar strakker)
+            st.markdown(f"""
+            <div style="padding-bottom: 10px;">
+                <div style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 5px; border-bottom: 2px solid #333; padding-bottom: 8px;">
+                    {row['company']} 
+                    <span style="font-size: 13px; color: #888; font-weight: 400; float: right; margin-top: 4px;">Last order: {last_date_str}</span>
                 </div>
-                <div class="metric-box">
-                    <div class="metric-label">Fuel Cost</div>
-                    <div class="metric-value">{row['fuel_cost']:,.0f} NOK</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">Net Profit</div>
-                    <div class="metric-value" style="color: #27ae60;">{row['profit']:,.0f} NOK</div>
-                </div>
-                <div class="metric-box">
-                    <div class="metric-label">Margin %</div>
-                    <div class="metric-value" style="color: {margin_color};">{row['margin_pct']:.1f}%</div>
+                <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 15px;">
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">SHIPMENTS</div><div style="font-size: 16px; font-weight: 700; color: #fff;">{row['total_orders']}</div></div>
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">FUEL COST</div><div style="font-size: 16px; font-weight: 700; color: #fff;">{row['total_fuel']:,.0f} NOK</div></div>
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">NET PROFIT</div><div style="font-size: 16px; font-weight: 700; color: #27ae60;">{row['total_profit']:,.0f} NOK</div></div>
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">MARGIN %</div><div style="font-size: 16px; font-weight: 700; color: {margin_color};">{row['avg_margin']:.1f}%</div></div>
                 </div>
             </div>
-        </div>
-        """, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
+            
+            # Het NIEUWE klikbare uitklapmenu voor meer order details!
+            with st.expander("🔍 View Order History & Details"):
+                # Haal alle individuele orders van deze specifieke klant op
+                cust_orders = filtered_df[filtered_df['company'] == row['company']].sort_values('parsed_date', ascending=False)
+                
+                for _, order in cust_orders.iterrows():
+                    o_date = order['parsed_date'].strftime('%Y-%m-%d') if pd.notnull(order['parsed_date']) else "N/A"
+                    status = order.get('status', 'Unknown')
+                    
+                    # Toon de individuele order data
+                    st.markdown(f"**Order #{order['id']}** — {o_date} `({status})`")
+                    st.write(f"🛣️ **Route:** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')}")
+                    st.write(f"💰 **Profit:** {order['profit']:,.0f} NOK | **Margin:** {order['margin_pct']:.1f}%")
+                    st.write("---") # Scheidingslijntje tussen orders
