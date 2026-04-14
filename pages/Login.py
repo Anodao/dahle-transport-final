@@ -38,9 +38,10 @@ st.markdown("""
     /* --- DARK THEME ACHTERGROND --- */
     .stApp { background-color: #111111 !important; }
     .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3 { color: #ffffff !important; }
+    div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 
     /* --- NAVBAR (WIT MET ZWARTE TEKST) --- */
-    .block-container { padding-top: 130px !important; max-width: 800px; }
+    .block-container { padding-top: 130px !important; max-width: 900px; }
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
@@ -49,24 +50,14 @@ st.markdown("""
     }
     .nav-logo img { height: 48px; width: auto; transition: transform 0.2s; }
     .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
-    
-    /* Forceer zwarte tekst in de witte navigatiebalk */
     .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
     .nav-links span:hover { color: #894b9d !important; }
-    
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; }
     .cta-btn { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; white-space: nowrap;}
     .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
 
     /* --- FORM & CONTAINER STYLING VOOR DARK MODE --- */
-    div[data-testid="stVerticalBlockBorderWrapper"] {
-        background-color: #1e1e1e !important;
-        border: 1px solid #333333 !important;
-        border-radius: 12px !important;
-        padding: 20px !important;
-    }
-
-    /* Input velden */
+    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 12px !important; padding: 20px !important; }
     div[data-baseweb="input"] > div { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
     div[data-baseweb="input"] input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
     label[data-testid="stWidgetLabel"] p { color: #cccccc !important; font-weight: 600; font-size: 14px !important;}
@@ -89,9 +80,14 @@ st.markdown("""
     }
     div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}
 
-    /* Tabs styling (Aangepast voor dark mode) */
+    /* Tabs styling */
     button[data-baseweb="tab"] { background-color: transparent !important; color: #888888 !important; font-weight: 600; font-size: 16px;}
     button[data-baseweb="tab"][aria-selected="true"] { color: #b070c6 !important; border-bottom: 3px solid #b070c6 !important; }
+    
+    /* Expander styling */
+    div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
+    div[data-testid="stExpander"] p { color: #ffffff !important; }
+    div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
     </style>
 
     <div class="navbar">
@@ -198,14 +194,82 @@ else:
 
     company_name = profile.get("company_name", "Valued Customer")
     
-    st.markdown(f"<h2 style='color: #b070c6;'>Welcome back, {company_name}!</h2>", unsafe_allow_html=True)
-    st.write(f"Logged in as: {st.session_state.user.email}")
-    
+    # --- DASHBOARD HEADER ---
+    c_head1, c_head2 = st.columns([3, 1])
+    with c_head1:
+        st.markdown(f"<h2 style='color: #b070c6; margin-bottom: 0px;'>Welcome back, {company_name}!</h2>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #888; font-size: 14px;'>Logged in as: {st.session_state.user.email}</p>", unsafe_allow_html=True)
+    with c_head2:
+        st.write("")
+        if st.button("🚪 Log Out", type="secondary", use_container_width=True):
+            supabase.auth.sign_out()
+            st.session_state.user = None
+            st.rerun()
+            
     st.write("---")
-    st.info("🚧 Welcome to your dashboard! Here you will soon be able to see your active orders, past shipments, and update your company details.")
     
-    st.write("")
-    if st.button("🚪 Log Out", type="secondary"):
-        supabase.auth.sign_out()
-        st.session_state.user = None
-        st.rerun()
+    # --- DASHBOARD TABS ---
+    tab_history, tab_new_order, tab_profile = st.tabs(["📦 My Shipments", "➕ New Order", "⚙️ Profile Settings"])
+
+    # --- TAB 1: ORDER HISTORIE ---
+    with tab_history:
+        st.markdown("### Your Shipment History")
+        
+        # Haal ALLEEN de orders op van deze specifieke ingelogde gebruiker
+        try:
+            orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
+            user_orders = orders_res.data
+        except Exception as e:
+            st.error("Could not fetch orders at this time.")
+            user_orders = []
+
+        if not user_orders:
+            st.info("📊 You haven't placed any orders with this account yet. Go to 'New Order' to get started!")
+        else:
+            # Genereer de metrics
+            total_orders = len(user_orders)
+            pending_orders = sum(1 for o in user_orders if o['status'] == 'New')
+            processed_orders = sum(1 for o in user_orders if o['status'] == 'Processed')
+            
+            m1, m2, m3 = st.columns(3)
+            m1.metric("Total Shipments", total_orders)
+            m2.metric("Pending Approval", pending_orders)
+            m3.metric("Processed", processed_orders)
+            
+            st.write("---")
+            
+            # Laat de orders zien in inklapbare balken (Expanders)
+            for o in user_orders:
+                # Bepaal het icoon/kleur op basis van de status
+                status_icon = "🔴" if o['status'] == 'New' else "🟢"
+                
+                with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} (Status: {o['status']})"):
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    c_det1, c_det2 = st.columns(2)
+                    
+                    with c_det1:
+                        st.markdown("**📤 Pickup:**")
+                        st.write(f"{o.get('pickup_address', '')}, {o.get('pickup_city', '')}")
+                        st.write("")
+                        st.markdown("**📥 Delivery:**")
+                        st.write(f"{o.get('delivery_address', '')}, {o.get('delivery_city', '')}")
+                        
+                    with c_det2:
+                        st.markdown("**🚛 Services Requested:**")
+                        st.write(f"{o.get('types', '')}")
+                        st.write("")
+                        if o.get('info'):
+                            st.markdown("**📝 Additional Info:**")
+                            st.write(f"{o.get('info')}")
+                    
+                    st.markdown("<br>", unsafe_allow_html=True)
+
+    # --- TAB 2: NIEUWE ORDER (Placeholder) ---
+    with tab_new_order:
+        st.markdown("### Quick Order Form")
+        st.info("🚧 This feature is currently under construction. Soon you will be able to book shipments directly from here without filling in your company details again!")
+
+    # --- TAB 3: PROFIEL (Placeholder) ---
+    with tab_profile:
+        st.markdown("### Manage Your Profile")
+        st.info("🚧 Profile management will be available shortly.")
