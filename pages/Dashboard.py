@@ -13,12 +13,31 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- POP-UP FUNCTIE (Nieuw!) ---
+@st.dialog("🔍 Order History & Details")
+def show_order_history(company_name, df):
+    st.markdown(f"### {company_name}")
+    st.write("Hier is het overzicht van alle afgehandelde orders voor deze specifieke klant.")
+    st.write("---")
+    
+    cust_orders = df[df['company'] == company_name].sort_values('parsed_date', ascending=False)
+    
+    for _, order in cust_orders.iterrows():
+        o_date = order['parsed_date'].strftime('%Y-%m-%d') if pd.notnull(order['parsed_date']) else "N/A"
+        status = order.get('status', 'Unknown')
+        
+        # We zetten elke order in een mooi afgekaderd blokje ín de pop-up
+        with st.container(border=True):
+            st.markdown(f"**Order #{order['id']}** — {o_date} `({status})`")
+            st.write(f"🛣️ **Route:** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')}")
+            st.write(f"💰 **Profit:** {order['profit']:,.0f} NOK | **Margin:** {order['margin_pct']:.1f}%")
+
 # --- LIVE API FUNCTIE VOOR DIESEL & GAS ---
 @st.cache_data(ttl=3600)
 def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
     headers = {
-        # JOUW PERSOONLIJKE API KEY (Vastgezet)
+        # Jouw vaste API key
         'authorization': "apikey 45CDpqYa0mK5v7B0vLExG7:6RHFfYXba02CtLDkUH2GTI",
         'content-type': "application/json"
     }
@@ -139,11 +158,6 @@ st.markdown("""
     }
 
     div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c355c !important; border-color: #0c355c !important;}
-    
-    /* Expander styling */
-    div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
-    div[data-testid="stExpander"] p { color: #ffffff !important; }
-    div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
     </style>
     
 <div class="navbar">
@@ -184,10 +198,8 @@ with c_filter:
         custom_dates = st.date_input("Select a date range:", value=today)
 
 with c_input:
-    # Haal beide prijzen op via de nieuwe functie
+    # Haal beide prijzen op via de API
     live_prices = get_live_fuel_prices()
-    
-    # We bewaren de dieselprijs apart voor de winst-berekeningen verderop in je code
     fuel_price = live_prices["diesel"]
     
     f1, f2 = st.columns(2)
@@ -319,21 +331,17 @@ customer_group = filtered_df.groupby('company').agg(
     last_date=('parsed_date', 'max')
 ).reset_index()
 
-# 2. HIER IS DE FIX: Sorteer op datum en HERSTEL de index! 
-# Dit voorkomt dat Streamlit de kaarten alsnog alfabetisch indeelt in de kolommen.
+# 2. Sorteer op datum en HERSTEL de index
 customer_group = customer_group.sort_values(by='last_date', ascending=False).reset_index(drop=True)
 
 card_col1, card_col2 = st.columns(2)
 
 for i, row in customer_group.iterrows():
-    # Nu is 'i' netjes verbonden aan de chronologische volgorde (0, 1, 2) in plaats van het alfabet
     target_col = card_col1 if i % 2 == 0 else card_col2
     
     with target_col:
         with st.container(border=True):
             margin_color = "#27ae60" if row['avg_margin'] > 85 else "#e67e22"
-            
-            # Format de datum netjes
             last_date_str = row['last_date'].strftime('%Y-%m-%d') if pd.notnull(row['last_date']) else "Onbekend"
             
             # Klant overzicht (HTML)
@@ -352,15 +360,6 @@ for i, row in customer_group.iterrows():
             </div>
             """, unsafe_allow_html=True)
             
-            # Uitklapmenu met order details
-            with st.expander("🔍 View Order History & Details"):
-                cust_orders = filtered_df[filtered_df['company'] == row['company']].sort_values('parsed_date', ascending=False)
-                
-                for _, order in cust_orders.iterrows():
-                    o_date = order['parsed_date'].strftime('%Y-%m-%d') if pd.notnull(order['parsed_date']) else "N/A"
-                    status = order.get('status', 'Unknown')
-                    
-                    st.markdown(f"**Order #{order['id']}** — {o_date} `({status})`")
-                    st.write(f"🛣️ **Route:** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')}")
-                    st.write(f"💰 **Profit:** {order['profit']:,.0f} NOK | **Margin:** {order['margin_pct']:.1f}%")
-                    st.write("---")
+            # POP-UP KNOP (In plaats van expander)
+            if st.button(f"🔍 View Orders", key=f"popup_{row['company']}", use_container_width=True):
+                show_order_history(row['company'], filtered_df)
