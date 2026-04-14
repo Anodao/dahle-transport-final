@@ -18,7 +18,7 @@ st.set_page_config(
 def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
     headers = {
-        # LET OP: Plak hieronder jouw API key van CollectAPI!
+        # JOUW PERSOONLIJKE API KEY (Vastgezet)
         'authorization': "apikey 45CDpqYa0mK5v7B0vLExG7:6RHFfYXba02CtLDkUH2GTI",
         'content-type': "application/json"
     }
@@ -310,18 +310,23 @@ st.write("---")
 st.write("### Detailed Cost & Margin Breakdown")
 st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
 
-# Aggregatie mét de laatste datum erbij, en gesorteerd op last_date!
+# 1. Groepeer op data en haal max datum op
 customer_group = filtered_df.groupby('company').agg(
     total_orders=('id', 'count'),
     total_fuel=('fuel_cost', 'sum'),
     total_profit=('profit', 'sum'),
     avg_margin=('margin_pct', 'mean'),
     last_date=('parsed_date', 'max')
-).reset_index().sort_values('last_date', ascending=False)
+).reset_index()
+
+# 2. HIER IS DE FIX: Sorteer op datum en HERSTEL de index! 
+# Dit voorkomt dat Streamlit de kaarten alsnog alfabetisch indeelt in de kolommen.
+customer_group = customer_group.sort_values(by='last_date', ascending=False).reset_index(drop=True)
 
 card_col1, card_col2 = st.columns(2)
 
 for i, row in customer_group.iterrows():
+    # Nu is 'i' netjes verbonden aan de chronologische volgorde (0, 1, 2) in plaats van het alfabet
     target_col = card_col1 if i % 2 == 0 else card_col2
     
     with target_col:
