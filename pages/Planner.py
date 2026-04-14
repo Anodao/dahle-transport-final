@@ -24,7 +24,6 @@ except Exception as e:
     st.stop()
 
 # --- PERSISTENT SESSION CHECK ---
-# Zorgt dat je als planner ook langer ingelogd blijft als je auth gebruikt
 if 'user' not in st.session_state:
     try:
         session = supabase.auth.get_session()
@@ -38,7 +37,7 @@ if 'user' not in st.session_state:
 if 'selected_order_id' not in st.session_state:
     st.session_state.selected_order_id = None
 
-# --- CSS STYLING & NAVBAR ---
+# --- CSS STYLING & NAVBAR (LIGHT MODE) ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -46,8 +45,9 @@ st.markdown("""
     
     [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
     
-    .stApp { background-color: #111111 !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #ffffff !important; }
+    /* --- LIGHT THEME ACHTERGROND --- */
+    .stApp { background-color: #f4f6f8 !important; }
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #111111 !important; }
 
     /* NAVBAR */
     .block-container { padding-top: 130px !important; }
@@ -58,15 +58,30 @@ st.markdown("""
         padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
     }
     .nav-logo img { height: 48px; width: auto; }
-    .nav-links a { text-decoration: none; color: #111111 !important; font-weight: 500; }
+    .nav-links a { text-decoration: none; color: #111111 !important; font-weight: 500; transition: color 0.2s;}
+    .nav-links a:hover { color: #894b9d !important; }
     .nav-cta { display: flex; justify-content: flex-end; }
     .cta-btn-outline { color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: 600; border: 2px solid #894b9d; }
 
-    /* CONTAINERS */
-    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 8px !important; }
+    /* CONTAINERS (Witte kaarten in light mode) */
+    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; border-radius: 8px !important; box-shadow: 0 2px 8px rgba(0,0,0,0.02) !important;}
     
+    /* INPUT VELDEN (Dropdowns e.d.) */
+    div[data-baseweb="select"] > div { background-color: #ffffff !important; border: 1px solid #d1d5db !important; }
+    
+    /* BUTTONS */
+    div.stButton > button[kind="primary"] { 
+        background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; transition: all 0.3s ease !important;
+    }
+    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 6px 16px rgba(137, 75, 157, 0.3) !important; }
+    
+    div.stButton > button[kind="secondary"] { 
+        background: #ffffff !important; color: #333333 !important; border: 1px solid #d1d5db !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; width: 100% !important; transition: all 0.2s ease !important;
+    }
+    div.stButton > button[kind="secondary"]:hover { border-color: #894b9d !important; color: #894b9d !important;}
+
     /* TABS */
-    button[data-baseweb="tab"] { color: #888 !important; }
+    button[data-baseweb="tab"] { color: #666666 !important; font-weight: 600;}
     button[aria-selected="true"] { color: #b070c6 !important; border-bottom-color: #b070c6 !important; }
     </style>
 
@@ -104,7 +119,7 @@ with col_list:
         for o in pending:
             with st.container(border=True):
                 st.markdown(f"**{o['company']}**")
-                st.caption(f"Order #{o['id']} | {o['received_date']}")
+                st.caption(f"Order #{o['id']} | Datum: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"p_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
@@ -116,7 +131,7 @@ with col_list:
         for o in inprogress:
             with st.container(border=True):
                 st.markdown(f"**🟡 {o['company']}**")
-                st.caption(f"Order #{o['id']} | Bezig...")
+                st.caption(f"Order #{o['id']} | Datum: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"prog_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
@@ -128,13 +143,14 @@ with col_list:
         for o in done:
             with st.container(border=True):
                 st.markdown(f"**🟢 {o['company']}**")
-                st.caption(f"Order #{o['id']} | Afgerond")
+                # DATUM TOEGEVOEGD AAN PROCESSED TAB
+                st.caption(f"Order #{o['id']} | Afgerond | Datum: {o.get('received_date', '')[:10]}")
                 if st.button(f"View #{o['id']}", key=f"d_{o['id']}", use_container_width=True):
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
 
 with col_details:
-    st.markdown("## Order Details")
+    st.markdown("<h2 style='color: #111111;'>Order Details</h2>", unsafe_allow_html=True)
     st.write("---")
     
     if st.session_state.selected_order_id:
