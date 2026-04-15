@@ -36,7 +36,7 @@ def show_order_history(company_name, df):
 def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
     headers = {
-        'authorization': "apikey 45CDpqYa0mK5v7B0vLExG7:6RHFfYXba02CtLDkUH2GTI",
+        'authorization': "apikey 40xj3EeeCTOZVeAjO2pEmj:7sLuMmcz7WUnrEdHaGiXyR",
         'content-type': "application/json"
     }
     
