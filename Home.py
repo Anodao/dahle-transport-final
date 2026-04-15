@@ -53,8 +53,8 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 </div>
 
 <div style="display: flex; gap: 15px;">
-<a href="/Order" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">BESTILL</a>
-<a href="#" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">TA KONTAKT</a>
+<a href="/Order" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">BESTILL</a>
+<a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">TA KONTAKT</a>
 </div>
 
 <a href="#more" class="circle-btn">
