@@ -152,7 +152,20 @@ with c_filter:
     if filter_optie == "Custom date...":
         custom_dates = st.date_input("Select a date range:", value=today)
 
-# Hulpfunctie om een strakke kleine grafiek (sparkline) te maken
+with c_input:
+    # --- DATA SIMULATIE VOOR DE GRAFIEKJES ---
+    dates = pd.date_range(end=today, periods=30)
+    np.random.seed(int(today.strftime('%Y%m%d'))) 
+    
+    d_fluct = np.random.uniform(-0.3, 0.3, 30).cumsum()
+    d_history = live_prices['diesel'] + d_fluct - d_fluct[-1]
+    df_d = pd.DataFrame({'Date': dates, 'Price': d_history})
+    
+    g_fluct = np.random.uniform(-0.4, 0.4, 30).cumsum()
+    g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
+    df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
+
+    # Hulpfunctie om een strakke kleine grafiek (sparkline) te maken
     def make_sparkline(df, color):
         fig = px.line(df, x='Date', y='Price', template="plotly_dark")
         fig.update_layout(
