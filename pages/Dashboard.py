@@ -5,7 +5,6 @@ import plotly.express as px
 from datetime import datetime, timedelta
 from supabase import create_client
 import numpy as np
-import time
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -15,7 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- 1. POP-UP FUNCTIE ---
+# --- POP-UP FUNCTIE ---
 @st.dialog("🔍 Order History & Details")
 def show_order_history(company_name, df):
     st.markdown(f"### {company_name}")
@@ -33,7 +32,7 @@ def show_order_history(company_name, df):
             st.write(f"🛣️ **Route:** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')}")
             st.write(f"💰 **Profit:** {order['profit']:,.0f} NOK | **Margin:** {order['margin_pct']:.1f}%")
 
-# --- 2. LIVE API FUNCTIE VOOR DIESEL & GAS ---
+# --- LIVE API FUNCTIE VOOR DIESEL & GAS ---
 @st.cache_data(ttl=3600)
 def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
@@ -41,47 +40,25 @@ def get_live_fuel_prices():
         'authorization': "apikey 40xj3EeeCTOZVeAjO2pEmj:7sLuMmcz7WUnrEdHaGiXyR",
         'content-type': "application/json"
     }
+    
     try:
         response = requests.get(url, headers=headers)
         data = response.json()
+        
         for country in data.get('result', []):
             if country['country'].lower() == 'norway':
                 ruwe_diesel = country['diesel'].replace(',', '.')
                 ruwe_gas = country['gasoline'].replace(',', '.')
+                
                 diesel_nok = round(float(ruwe_diesel) * 11.5, 2) 
                 gas_nok = round(float(ruwe_gas) * 11.5, 2) 
+                
                 return {"diesel": diesel_nok, "gas": gas_nok}
+                
     except Exception as e:
         print(f"API Error: {e}")
+        
     return {"diesel": 20.50, "gas": 21.50} 
-
-# --- 3. NIEUW: OPENSTREETMAP API VOOR AFSTANDEN ---
-@st.cache_data(ttl=86400) # Onthoudt routes voor een dag zodat het sneller laadt
-def get_route_distance(city1, city2):
-    headers = {'User-Agent': 'DahleTransportApp/1.0'}
-    try:
-        # Stap 1: Zoek coördinaten stad 1 (Geforceerd in Noorwegen voor betere resultaten)
-        res1 = requests.get(f"https://nominatim.openstreetmap.org/search?q={city1},Norway&format=json&limit=1", headers=headers).json()
-        if not res1: return None
-        lat1, lon1 = res1[0]['lat'], res1[0]['lon']
-        
-        time.sleep(0.5) # Kleine pauze om de gratis API niet te overbelasten
-        
-        # Stap 2: Zoek coördinaten stad 2
-        res2 = requests.get(f"https://nominatim.openstreetmap.org/search?q={city2},Norway&format=json&limit=1", headers=headers).json()
-        if not res2: return None
-        lat2, lon2 = res2[0]['lat'], res2[0]['lon']
-        
-        # Stap 3: Bereken rij-afstand via wegen (OSRM API)
-        route_url = f"http://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=false"
-        route_res = requests.get(route_url).json()
-        
-        if route_res.get('code') == 'Ok':
-            distance_meters = route_res['routes'][0]['distance']
-            return distance_meters / 1000.0 # Zet meters om in kilometers
-    except Exception as e:
-        print(f"Routing Error: {e}")
-    return None
 
 # --- SUPABASE CONNECTIE ---
 @st.cache_resource
@@ -97,13 +74,20 @@ st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
+
     .stApp { background-color: #111111 !important; }
     .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown li { color: #ffffff !important; }
     div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
+
     [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
     
     .block-container { padding-top: 110px; }
-    .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .navbar {
+        position: fixed; top: 0; left: 0; width: 100%; height: 90px;
+        background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
+        display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+        padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
     .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
     .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
     .nav-logo a:hover img { transform: scale(1.05); } 
@@ -111,251 +95,238 @@ st.markdown("""
     .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
     .nav-links span:hover { color: #894b9d !important; }
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
+    
     .cta-btn { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap;}
     .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
+    
     div[data-baseweb="select"] > div, div[data-baseweb="base-input"] { background-color: #212529 !important; border: 1px solid #333333 !important; border-radius: 6px !important; }
     .stSelectbox div[data-baseweb="select"] span, .stSelectbox div[data-baseweb="select"] div, .stDateInput input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
     label[data-testid="stWidgetLabel"] { color: #ffffff !important; font-weight: 600; font-size: 14px; }
+    
     div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a; border: 1px solid #333333; border-radius: 10px; padding: 15px; }
     div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c355c !important; border-color: #0c355c !important;}
-    
-    /* Styling voor de Tabs */
-    button[data-baseweb="tab"] { background-color: transparent !important; color: #888 !important; font-size: 18px !important; font-weight: 600 !important; }
-    button[aria-selected="true"] { color: #c48bd6 !important; border-bottom-color: #c48bd6 !important; }
     </style>
     
     <div class="navbar">
         <div class="nav-logo">
             <a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a>
         </div>
-        <div class="nav-links"><a href="/"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
-        <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/" target="_self" class="cta-btn">TA KONTAKT</a></div>
+        <div class="nav-links">
+            <a href="/"><span>Hjem</span></a>
+            <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
+        </div>
+        <div class="nav-cta">
+            <a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a>
+            <a href="/" target="_self" class="cta-btn">TA KONTAKT</a>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
-# --- TABBLADEN AANMAKEN ---
-tab_dashboard, tab_calculator = st.tabs(["📊 Performance Dashboard", "🧮 Prijs & Route Calculator"])
+# --- DATUM LOGICA ---
+today = datetime.now().date()
+start_of_week = today - timedelta(days=today.weekday())
+start_of_last_week = start_of_week - timedelta(days=7)
+start_of_month = today.replace(day=1)
 
-# ==========================================
-# TAB 1: HET ORIGINELE DASHBOARD
-# ==========================================
-with tab_dashboard:
-    today = datetime.now().date()
-    start_of_week = today - timedelta(days=today.weekday())
-    start_of_last_week = start_of_week - timedelta(days=7)
-    start_of_month = today.replace(day=1)
+# --- GLOBAL PRIJZEN OPHALEN ---
+live_prices = get_live_fuel_prices()
+fuel_price = live_prices["diesel"]
 
-    live_prices = get_live_fuel_prices()
-    fuel_price = live_prices["diesel"]
+# --- BRANDSTOF PRIJZEN UI (Nu mooi over de hele breedte) ---
+dates = pd.date_range(end=today, periods=30)
+np.random.seed(int(today.strftime('%Y%m%d'))) 
 
-    dates = pd.date_range(end=today, periods=30)
-    np.random.seed(int(today.strftime('%Y%m%d'))) 
+d_fluct = np.random.uniform(-0.3, 0.3, 30).cumsum()
+d_history = live_prices['diesel'] + d_fluct - d_fluct[-1]
+df_d = pd.DataFrame({'Date': dates, 'Price': d_history})
 
-    d_fluct = np.random.uniform(-0.3, 0.3, 30).cumsum()
-    d_history = live_prices['diesel'] + d_fluct - d_fluct[-1]
-    df_d = pd.DataFrame({'Date': dates, 'Price': d_history})
+g_fluct = np.random.uniform(-0.4, 0.4, 30).cumsum()
+g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
+df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
 
-    g_fluct = np.random.uniform(-0.4, 0.4, 30).cumsum()
-    g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
-    df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
+def make_compact_detailed_chart(df, color):
+    fig = px.line(df, x='Date', y='Price', template="plotly_dark")
+    fig.update_layout(
+        margin=dict(l=35, r=10, t=10, b=30), 
+        height=130, 
+        xaxis=dict(
+            visible=True, 
+            title=None, 
+            tickformat="%d %b", 
+            showgrid=False,
+            tickfont=dict(size=10) 
+        ), 
+        yaxis=dict(
+            visible=True, 
+            title=None, 
+            tickformat=".1f", 
+            showgrid=True,
+            gridcolor="#333",
+            tickfont=dict(size=10)
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        hoverlabel=dict(font_size=13, font_family="Montserrat") 
+    )
+    fig.update_traces(
+        line_color=color, 
+        line_width=3,
+        hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:.2f} NOK<extra></extra>"
+    )
+    return fig
 
-    def make_compact_detailed_chart(df, color):
-        fig = px.line(df, x='Date', y='Price', template="plotly_dark")
-        fig.update_layout(
-            margin=dict(l=35, r=10, t=10, b=30), height=130, 
-            xaxis=dict(visible=True, title=None, tickformat="%d %b", showgrid=False, tickfont=dict(size=10)), 
-            yaxis=dict(visible=True, title=None, tickformat=".1f", showgrid=True, gridcolor="#333", tickfont=dict(size=10)),
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", showlegend=False, hoverlabel=dict(font_size=13, font_family="Montserrat") 
-        )
-        fig.update_traces(line_color=color, line_width=3, hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:.2f} NOK<extra></extra>")
-        return fig
+f1, f2 = st.columns(2, gap="large")
+with f1:
+    with st.container(border=True):
+        c_text, c_chart = st.columns([1, 1.5]) 
+        with c_text:
+            st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
+        with c_chart:
+            st.plotly_chart(make_compact_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
+            
+with f2:
+    with st.container(border=True):
+        c_text, c_chart = st.columns([1, 1.5])
+        with c_text:
+            st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
+        with c_chart:
+            st.plotly_chart(make_compact_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
 
-    f1, f2 = st.columns(2, gap="large")
-    with f1:
-        with st.container(border=True):
-            c_text, c_chart = st.columns([1, 1.5]) 
-            with c_text: st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
-            with c_chart: st.plotly_chart(make_compact_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
-    with f2:
-        with st.container(border=True):
-            c_text, c_chart = st.columns([1, 1.5])
-            with c_text: st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
-            with c_chart: st.plotly_chart(make_compact_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
+st.write("---")
 
-    st.write("---")
+# --- DATA VERWERKING ---
+try:
+    response = supabase.table("orders").select("*").execute()
+    df = pd.DataFrame(response.data)
+except Exception as e:
+    st.error("Error loading data from database.")
+    st.stop()
 
-    try:
-        response = supabase.table("orders").select("*").execute()
-        df = pd.DataFrame(response.data)
-    except Exception as e:
-        st.error("Error loading data from database.")
-        st.stop()
+if df.empty:
+    st.info("No order data available to generate the dashboard.")
+    st.stop()
 
-    if df.empty:
-        st.info("No order data available to generate the dashboard.")
-        st.stop()
+if 'co2_emission_kg' not in df.columns:
+    np.random.seed(42)
+    df['co2_emission_kg'] = np.random.uniform(40, 150, size=len(df))
 
-    if 'co2_emission_kg' not in df.columns:
-        np.random.seed(42)
-        df['co2_emission_kg'] = np.random.uniform(40, 150, size=len(df))
+CO2_PER_LITER = 2.68
+df['liters'] = df['co2_emission_kg'] / CO2_PER_LITER
+df['fuel_cost'] = df['liters'] * fuel_price
+df['revenue'] = 1500 + (df['co2_emission_kg'] * 15) 
+df['profit'] = df['revenue'] - df['fuel_cost']
+df['margin_pct'] = (df['profit'] / df['revenue']) * 100
 
-    CO2_PER_LITER = 2.68
-    df['liters'] = df['co2_emission_kg'] / CO2_PER_LITER
-    df['fuel_cost'] = df['liters'] * fuel_price
-    df['revenue'] = 1500 + (df['co2_emission_kg'] * 15) 
-    df['profit'] = df['revenue'] - df['fuel_cost']
-    df['margin_pct'] = (df['profit'] / df['revenue']) * 100
+if 'received_date' in df.columns:
+    df['parsed_date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
 
-    if 'received_date' in df.columns:
-        df['parsed_date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
+# --- FILTER UI NAAST DE TITEL ---
+c_title, c_filter = st.columns([2.5, 1])
+with c_title:
+    st.write("### Performance Summary")
+with c_filter:
+    filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "This month", "Custom date..."])
+    custom_dates = []
+    if filter_optie == "Custom date...":
+        custom_dates = st.date_input("Select a date range:", value=today)
 
-    c_title, c_filter = st.columns([2.5, 1])
-    with c_title: st.write("### Performance Summary")
-    with c_filter:
-        filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "This month", "Custom date..."])
-        custom_dates = []
-        if filter_optie == "Custom date...":
-            custom_dates = st.date_input("Select a date range:", value=today)
+# --- FILTER TOEPASSEN ---
+filtered_df = df.copy()
 
-    filtered_df = df.copy()
-
-    if 'parsed_date' in df.columns:
-        if filter_optie == "Today": filtered_df = df[df['parsed_date'] == today]
-        elif filter_optie == "This week": filtered_df = df[df['parsed_date'] >= start_of_week]
-        elif filter_optie == "Last week": filtered_df = df[(df['parsed_date'] >= start_of_last_week) & (df['parsed_date'] < start_of_week)]
-        elif filter_optie == "This month": filtered_df = df[df['parsed_date'] >= start_of_month]
-        elif filter_optie == "Custom date...":
-            if isinstance(custom_dates, tuple) and len(custom_dates) == 2: filtered_df = df[(df['parsed_date'] >= custom_dates[0]) & (df['parsed_date'] <= custom_dates[1])]
-            elif isinstance(custom_dates, tuple) and len(custom_dates) == 1: filtered_df = df[df['parsed_date'] == custom_dates[0]]
-            else: filtered_df = df[df['parsed_date'] == custom_dates]
-
-    if filtered_df.empty:
-        st.warning("📊 No orders found for this specific date range. Please adjust your filter.")
-        st.stop()
-
-    k1, k2, k3, k4 = st.columns(4)
-    total_profit = filtered_df['profit'].sum()
-    avg_margin = filtered_df['margin_pct'].mean()
-
-    k1.metric("Total Fuel Cost", f"{filtered_df['fuel_cost'].sum():,.0f} NOK")
-    k2.metric("Total Profit", f"{total_profit:,.0f} NOK", delta=f"{avg_margin:.1f}% Avg. Margin")
-    k3.metric("CO₂ Footprint", f"{filtered_df['co2_emission_kg'].sum():,.0f} kg")
-    k4.metric("Active Shipments", len(filtered_df))
-
-    st.write("---")
-    st.write("") 
-    col_left, col_right = st.columns(2, gap="large")
-
-    with col_left:
-        st.write("### Profitability per Customer")
-        df_chart = filtered_df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
-        fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#c48bd6'], template="plotly_dark")
-        fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Customer", yaxis_title="Net Profit (NOK)")
-        st.plotly_chart(fig_profit, use_container_width=True)
-
-    with col_right:
-        st.write("### Profit Trend Over Time")
-        if 'parsed_date' in filtered_df.columns:
-            df_trend = filtered_df.groupby('parsed_date')['profit'].sum().reset_index()
-            df_trend = df_trend.rename(columns={'parsed_date': 'date'})
-            fig_line = px.line(df_trend, x='date', y='profit', markers=True, color_discrete_sequence=['#27ae60'], template="plotly_dark")
-            fig_line.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Date", yaxis_title="Daily Profit (NOK)")
-            st.plotly_chart(fig_line, use_container_width=True)
+if 'parsed_date' in df.columns:
+    if filter_optie == "Today":
+        filtered_df = df[df['parsed_date'] == today]
+    elif filter_optie == "This week":
+        filtered_df = df[df['parsed_date'] >= start_of_week]
+    elif filter_optie == "Last week":
+        filtered_df = df[(df['parsed_date'] >= start_of_last_week) & (df['parsed_date'] < start_of_week)]
+    elif filter_optie == "This month": 
+        filtered_df = df[df['parsed_date'] >= start_of_month]
+    elif filter_optie == "Custom date...":
+        if isinstance(custom_dates, tuple) and len(custom_dates) == 2:
+            filtered_df = df[(df['parsed_date'] >= custom_dates[0]) & (df['parsed_date'] <= custom_dates[1])]
+        elif isinstance(custom_dates, tuple) and len(custom_dates) == 1:
+            filtered_df = df[df['parsed_date'] == custom_dates[0]]
         else:
-            st.info("No date data available to generate a trendline.")
+            filtered_df = df[df['parsed_date'] == custom_dates]
 
-    st.write("---")
-    st.write("### Detailed Cost & Margin Breakdown")
-    st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
+if filtered_df.empty:
+    st.warning("📊 No orders found for this specific date range. Please adjust your filter.")
+    st.stop()
 
-    customer_group = filtered_df.groupby('company').agg(
-        total_orders=('id', 'count'), total_fuel=('fuel_cost', 'sum'), total_profit=('profit', 'sum'),
-        avg_margin=('margin_pct', 'mean'), last_date=('parsed_date', 'max')
-    ).reset_index().sort_values(by='last_date', ascending=False).reset_index(drop=True)
+# --- KPI SECTIE ---
+k1, k2, k3, k4 = st.columns(4)
+total_profit = filtered_df['profit'].sum()
+avg_margin = filtered_df['margin_pct'].mean()
 
-    card_col1, card_col2 = st.columns(2)
+k1.metric("Total Fuel Cost", f"{filtered_df['fuel_cost'].sum():,.0f} NOK")
+k2.metric("Total Profit", f"{total_profit:,.0f} NOK", delta=f"{avg_margin:.1f}% Avg. Margin")
+k3.metric("CO₂ Footprint", f"{filtered_df['co2_emission_kg'].sum():,.0f} kg")
+k4.metric("Active Shipments", len(filtered_df))
 
-    for i, row in customer_group.iterrows():
-        target_col = card_col1 if i % 2 == 0 else card_col2
-        with target_col:
-            with st.container(border=True):
-                margin_color = "#27ae60" if row['avg_margin'] > 85 else "#e67e22"
-                last_date_str = row['last_date'].strftime('%Y-%m-%d') if pd.notnull(row['last_date']) else "Onbekend"
-                
-                st.markdown(f"""
-                <div style="padding-bottom: 10px;">
-                    <div style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 5px; border-bottom: 2px solid #333; padding-bottom: 8px;">
-                        {row['company']} <span style="font-size: 13px; color: #888; font-weight: 400; float: right; margin-top: 4px;">Last order: {last_date_str}</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 15px;">
-                        <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">SHIPMENTS</div><div style="font-size: 16px; font-weight: 700; color: #fff;">{row['total_orders']}</div></div>
-                        <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">FUEL COST</div><div style="font-size: 16px; font-weight: 700; color: #fff;">{row['total_fuel']:,.0f} NOK</div></div>
-                        <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">NET PROFIT</div><div style="font-size: 16px; font-weight: 700; color: #27ae60;">{row['total_profit']:,.0f} NOK</div></div>
-                        <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">MARGIN %</div><div style="font-size: 16px; font-weight: 700; color: {margin_color};">{row['avg_margin']:.1f}%</div></div>
-                    </div>
+st.write("---")
+
+# --- GRAFIEKEN ---
+st.write("") 
+col_left, col_right = st.columns(2, gap="large")
+
+with col_left:
+    st.write("### Profitability per Customer")
+    df_chart = filtered_df.groupby('company')['profit'].sum().reset_index().sort_values('profit', ascending=False)
+    fig_profit = px.bar(df_chart, x='company', y='profit', color_discrete_sequence=['#c48bd6'], template="plotly_dark")
+    fig_profit.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Customer", yaxis_title="Net Profit (NOK)")
+    st.plotly_chart(fig_profit, use_container_width=True)
+
+with col_right:
+    st.write("### Profit Trend Over Time")
+    if 'parsed_date' in filtered_df.columns:
+        df_trend = filtered_df.groupby('parsed_date')['profit'].sum().reset_index()
+        df_trend = df_trend.rename(columns={'parsed_date': 'date'})
+        fig_line = px.line(df_trend, x='date', y='profit', markers=True, color_discrete_sequence=['#27ae60'], template="plotly_dark")
+        fig_line.update_layout(paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)", xaxis_title="Date", yaxis_title="Daily Profit (NOK)")
+        st.plotly_chart(fig_line, use_container_width=True)
+    else:
+        st.info("No date data available to generate a trendline.")
+
+st.write("---")
+
+# --- CUSTOMER CARDS ---
+st.write("### Detailed Cost & Margin Breakdown")
+st.info("ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.")
+
+customer_group = filtered_df.groupby('company').agg(
+    total_orders=('id', 'count'),
+    total_fuel=('fuel_cost', 'sum'),
+    total_profit=('profit', 'sum'),
+    avg_margin=('margin_pct', 'mean'),
+    last_date=('parsed_date', 'max')
+).reset_index().sort_values(by='last_date', ascending=False).reset_index(drop=True)
+
+card_col1, card_col2 = st.columns(2)
+
+for i, row in customer_group.iterrows():
+    target_col = card_col1 if i % 2 == 0 else card_col2
+    
+    with target_col:
+        with st.container(border=True):
+            margin_color = "#27ae60" if row['avg_margin'] > 85 else "#e67e22"
+            last_date_str = row['last_date'].strftime('%Y-%m-%d') if pd.notnull(row['last_date']) else "Onbekend"
+            
+            st.markdown(f"""
+            <div style="padding-bottom: 10px;">
+                <div style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 5px; border-bottom: 2px solid #333; padding-bottom: 8px;">
+                    {row['company']} 
+                    <span style="font-size: 13px; color: #888; font-weight: 400; float: right; margin-top: 4px;">Last order: {last_date_str}</span>
                 </div>
-                """, unsafe_allow_html=True)
-                
-                if st.button(f"🔍 View Orders", key=f"popup_{row['company']}", use_container_width=True):
-                    show_order_history(row['company'], filtered_df)
-
-
-# ==========================================
-# TAB 2: DE NIEUWE API CALCULATOR
-# ==========================================
-with tab_calculator:
-    st.write("### 🧮 Slimme Prijs & Route Calculator")
-    st.info("Vul de afhaal- en afleverlocatie (in Noorwegen) in. Het systeem berekent via satelliet de exacte rij-afstand en de totale transportkosten.")
-
-    with st.form("price_calculator"):
-        # Rij 1: Adressen
-        st.write("#### 1. Route Informatie")
-        col1, col2 = st.columns(2)
-        with col1: pickup = st.text_input("📍 Afhaaladres (Stad of Postcode, bijv: Oslo)")
-        with col2: delivery = st.text_input("🏁 Verzendadres (Stad of Postcode, bijv: Bergen)")
+                <div style="display: flex; justify-content: space-between; text-align: center; margin-top: 15px;">
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">SHIPMENTS</div><div style="font-size: 16px; font-weight: 700; color: #fff;">{row['total_orders']}</div></div>
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">FUEL COST</div><div style="font-size: 16px; font-weight: 700; color: #fff;">{row['total_fuel']:,.0f} NOK</div></div>
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">NET PROFIT</div><div style="font-size: 16px; font-weight: 700; color: #27ae60;">{row['total_profit']:,.0f} NOK</div></div>
+                    <div style="flex: 1;"><div style="font-size: 12px; color: #b0b0b0; font-weight: 600;">MARGIN %</div><div style="font-size: 16px; font-weight: 700; color: {margin_color};">{row['avg_margin']:.1f}%</div></div>
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
             
-        st.write("---")
-        
-        # Rij 2: Pakket details
-        st.write("#### 2. Pakket Informatie")
-        col4, col5, col6 = st.columns(3)
-        with col4: weight_kg = st.number_input("⚖️ Gewicht per stuk (kg)", min_value=0.5, value=10.0, step=0.5)
-        with col5: quantity = st.number_input("📦 Aantal items", min_value=1, value=1, step=1)
-        with col6: shape = st.selectbox("📐 Vorm & Type", ["Standaard Doos", "Europallet", "Afwijkend/Groot", "Breekbaar/Speciaal"])
-            
-        st.write("")
-        submitted = st.form_submit_button("🛰️ Bereken Afstand & Transportprijs", use_container_width=True)
-        
-        if submitted:
-            if not pickup or not delivery:
-                st.warning("⚠️ Vul a.u.b. zowel een afhaal- als verzendadres in.")
-            else:
-                with st.spinner("Satellietverbinding maken en route berekenen..."):
-                    # API AANROEP!
-                    afstand_km = get_route_distance(pickup, delivery)
-                    
-                    if afstand_km is None:
-                        st.error(f"❌ Route niet gevonden. Controleer of '{pickup}' en '{delivery}' correct gespelde plaatsen in Noorwegen zijn.")
-                    else:
-                        # --- DE REKENMODULE ---
-                        base_fee = 350.0 
-                        km_cost = afstand_km * 12.5 # 12.5 NOK per gereden km
-                        
-                        total_weight = weight_kg * quantity
-                        weight_cost = total_weight * 5.0 # 5 NOK per kg
-                        
-                        shape_surcharge = 0.0
-                        if shape == "Europallet": shape_surcharge = 400.0 * quantity
-                        elif shape == "Afwijkend/Groot": shape_surcharge = 750.0 * quantity
-                        elif shape == "Breekbaar/Speciaal": shape_surcharge = 250.0 * quantity
-                            
-                        total_price = base_fee + km_cost + weight_cost + shape_surcharge
-                        
-                        st.success(f"✅ Route succesvol berekend! Exacte rij-afstand via wegen: **{afstand_km:.1f} km**")
-                        
-                        # Resultaten
-                        r1, r2, r3, r4 = st.columns(4)
-                        r1.metric("Afstand Kosten", f"{km_cost:,.0f} NOK", f"{afstand_km:.1f} km")
-                        r2.metric("Gewicht Kosten", f"{weight_cost:,.0f} NOK", f"{total_weight} kg")
-                        r3.metric("Type Toeslag", f"{shape_surcharge:,.0f} NOK", shape)
-                        r4.metric("TOTAAL PRIJS", f"{total_price:,.0f} NOK")
+            if st.button(f"🔍 View Orders", key=f"popup_{row['company']}", use_container_width=True):
+                show_order_history(row['company'], filtered_df)
