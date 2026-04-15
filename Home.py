@@ -4,7 +4,6 @@ import streamlit as st
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # --- CSS STYLING & HTML ---
-# Let op: Deze code is expres zonder inspringen of lege regels geschreven om Streamlit Markdown crashes te voorkomen!
 html_code = """<style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
@@ -40,7 +39,7 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 <div class="navbar">
 <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
 <div class="nav-links"><a href="/"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
-<div class="nav-cta"><a href="/Order" target="_self" class="cta-btn-outline">BESTILL</a><a href="/" target="_self" class="cta-btn-purple">TA KONTAKT</a></div>
+<div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/" target="_self" class="cta-btn-purple">TA KONTAKT</a></div>
 </div>
 
 <div class="hero-container">
@@ -52,7 +51,12 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 <p>Mandag-fredag: 07:00-16:00</p>
 <p><i>Åpningstidene kan avvike ved spesielle høytider.</i></p>
 </div>
+
+<div style="display: flex; gap: 15px;">
+<a href="/Order" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">BESTILL</a>
 <a href="#" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">TA KONTAKT</a>
+</div>
+
 <a href="#more" class="circle-btn">
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
 </a>
@@ -60,5 +64,4 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 <div class="hero-right"></div>
 </div>"""
 
-# Render de HTML veilig zonder inspringen
 st.markdown(html_code, unsafe_allow_html=True)
