@@ -192,6 +192,10 @@ start_of_last_week = start_of_week - timedelta(days=7)
 start_of_month = today.replace(day=1)
 
 # --- FILTER & API PRIJS ---
+# We halen de prijzen nu helemáál bovenaan op, zodat de rest van de code ze nooit vergeet!
+live_prices = get_live_fuel_prices()
+fuel_price = live_prices["diesel"]
+
 c_filter, c_input = st.columns([1, 2], gap="large")
 
 with c_filter:
@@ -199,20 +203,61 @@ with c_filter:
     custom_dates = []
     if filter_optie == "Custom date...":
         custom_dates = st.date_input("Select a date range:", value=today)
-            
+
+with c_input:
+    # --- DATA SIMULATIE VOOR DE GRAFIEKJES ---
+    import numpy as np
+    dates = pd.date_range(end=today, periods=30)
+    np.random.seed(int(today.strftime('%Y%m%d'))) 
+    
+    # Diesel data simulatie
+    d_fluct = np.random.uniform(-0.3, 0.3, 30).cumsum()
+    d_history = live_prices['diesel'] + d_fluct - d_fluct[-1]
+    df_d = pd.DataFrame({'Date': dates, 'Price': d_history})
+    
+    # Gas data simulatie
+    g_fluct = np.random.uniform(-0.4, 0.4, 30).cumsum()
+    g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
+    df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
+
+    # Hulpfunctie om een strakke kleine grafiek (sparkline) te maken
+    def make_sparkline(df, color):
+        fig = px.line(df, x='Date', y='Price', template="plotly_dark")
+        fig.update_layout(
+            margin=dict(l=0, r=0, t=25, b=0), 
+            height=80, 
+            xaxis=dict(visible=False), 
+            yaxis=dict(visible=False),
+            paper_bgcolor="rgba(0,0,0,0)",
+            plot_bgcolor="rgba(0,0,0,0)",
+            showlegend=False,
+            hovermode="x unified"
+        )
+        fig.update_traces(line_color=color, line_width=3)
+        return fig
+    
+    # --- DE 2 KADERS OP HET SCHERM ---
+    f1, f2 = st.columns(2)
+    
+    with f1:
+        with st.container(border=True):
+            # Binnenin het kader maken we 2 kolommen: [ Prijs | Grafiek ]
+            c_text, c_chart = st.columns([1.2, 1])
+            with c_text:
+                st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
+            with c_chart:
+                st.plotly_chart(make_sparkline(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
+                
+    with f2:
+        with st.container(border=True):
+            # Binnenin het kader maken we 2 kolommen: [ Prijs | Grafiek ]
+            c_text, c_chart = st.columns([1.2, 1])
+            with c_text:
+                st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
+            with c_chart:
+                st.plotly_chart(make_sparkline(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
+
 st.write("---")
-
-# --- DATA VERWERKING ---
-try:
-    response = supabase.table("orders").select("*").execute()
-    df = pd.DataFrame(response.data)
-except Exception as e:
-    st.error("Error loading data from database.")
-    st.stop()
-
-if df.empty:
-    st.info("No order data available to generate the dashboard.")
-    st.stop()
 
 # Genereer random CO2 (als het er niet in zit) op de VOLLEDIGE dataset voor consistentie
 if 'co2_emission_kg' not in df.columns:
