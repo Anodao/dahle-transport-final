@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- POP-UP FUNCTIE (Nieuw!) ---
+# --- POP-UP FUNCTIE ---
 @st.dialog("🔍 Order History & Details")
 def show_order_history(company_name, df):
     st.markdown(f"### {company_name}")
@@ -32,33 +32,46 @@ def show_order_history(company_name, df):
             st.write(f"🛣️ **Route:** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')}")
             st.write(f"💰 **Profit:** {order['profit']:,.0f} NOK | **Margin:** {order['margin_pct']:.1f}%")
 
-# --- LIVE API FUNCTIE VOOR DIESEL & GAS ---
-@st.cache_data(ttl=3600)
+# --- LIVE API FUNCTIE VOOR DIESEL & GAS (DEBUG VERSIE) ---
 def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
     headers = {
-        # Jouw vaste API key
         'authorization': "apikey 45CDpqYa0mK5v7B0vLExG7:6RHFfYXba02CtLDkUH2GTI",
         'content-type': "application/json"
     }
     
     try:
         response = requests.get(url, headers=headers)
+        
+        # 1. Controleer of de server boos is (bijv. 401 Geen Toegang)
+        if response.status_code != 200:
+            st.error(f"🔴 API Toegangs-Fout: Code {response.status_code}. Heb je de Free API geabonneerd op CollectAPI?")
+            return {"diesel": 20.50, "gas": 21.50}
+            
         data = response.json()
         
+        # 2. Controleer of CollectAPI intern een foutmelding geeft
+        if not data.get('success'):
+            st.error(f"🔴 CollectAPI Foutmelding: {data.get('message', 'Onbekende fout')}")
+            return {"diesel": 20.50, "gas": 21.50}
+        
+        # 3. Zoek Noorwegen
         for country in data.get('result', []):
             if country['country'].lower() == 'norway':
-                # Beide prijzen ophalen en omrekenen naar NOK (koers 11.5)
                 diesel_nok = round(float(country['diesel']) * 11.5, 2) 
                 gas_nok = round(float(country['gasoline']) * 11.5, 2) 
                 
+                # Succes! Toon een groen vinkje als bewijs dat de API het doet
+                st.toast("✅ Live API verbinding succesvol!") 
                 return {"diesel": diesel_nok, "gas": gas_nok}
                 
+        # Als we hier komen, stond Noorwegen niet in de lijst
+        st.warning("⚠️ Let op: Noorwegen is niet gevonden in de API data.")
+                
     except Exception as e:
-        print(f"API Error: {e}")
+        st.error(f"🔴 Systeem Crash: {e}")
         
-    # Fallback prijzen als de API tijdelijk faalt
-    return {"diesel": 0, "gas": 0} 
+    return {"diesel": 20.50, "gas": 21.50}
 
 # --- SUPABASE CONNECTIE ---
 @st.cache_resource
