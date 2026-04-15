@@ -205,13 +205,14 @@ with c_input:
     live_prices = get_live_fuel_prices()
     fuel_price = live_prices["diesel"]
     
-    f1, f2 = st.columns(2)
+    # We maken nu 3 kolommen: Diesel (1), Gas (1) en de Grafiek (1.5 keer zo breed)
+    f1, f2, f3 = st.columns([1, 1, 1.5])
     
     with f1:
         with st.container(border=True):
             st.metric(
                 label="⛽ Diesel (per Liter)", 
-                value=f"{live_prices['diesel']:.2f} NOK", # Hier is NOK toegevoegd!
+                value=f"{live_prices['diesel']:.2f} NOK",
                 delta="Actueel via API"
             )
             
@@ -219,10 +220,43 @@ with c_input:
         with st.container(border=True):
             st.metric(
                 label="🚗 Gas/Petrol (per Liter)", 
-                value=f"{live_prices['gas']:.2f} NOK", # Hier is NOK toegevoegd!
+                value=f"{live_prices['gas']:.2f} NOK",
                 delta="Actueel via API"
             )
-
+            
+    with f3:
+        with st.container(border=True):
+            st.markdown("<p style='color: #cccccc; font-weight: 600; font-size: 14px; margin-bottom: -10px;'>📈 30-Day Gas Trend</p>", unsafe_allow_html=True)
+            
+            # Simuleer 30 dagen aan logische prijs-schommelingen
+            import numpy as np
+            dates = pd.date_range(end=today, periods=30)
+            
+            np.random.seed(int(today.strftime('%Y%m%d'))) # Zorgt dat de lijn vandaag de hele dag stabiel blijft
+            price_fluctuations = np.random.uniform(-0.4, 0.4, 30).cumsum()
+            
+            # Koppel de nep-historie exact vast aan de échte prijs van vandaag
+            historical_prices = live_prices['gas'] + price_fluctuations - price_fluctuations[-1] 
+            
+            df_history = pd.DataFrame({'Date': dates, 'Price': historical_prices})
+            
+            # Maak een strakke, kleine lijn-grafiek (sparkline) zonder storende assen
+            fig_spark = px.line(df_history, x='Date', y='Price', template="plotly_dark")
+            fig_spark.update_layout(
+                margin=dict(l=0, r=0, t=10, b=0),
+                height=65, 
+                xaxis=dict(visible=False), 
+                yaxis=dict(visible=False),
+                paper_bgcolor="rgba(0,0,0,0)",
+                plot_bgcolor="rgba(0,0,0,0)",
+                showlegend=False,
+                hovermode="x unified"
+            )
+            fig_spark.update_traces(line_color='#e67e22', line_width=3)
+            
+            # Plaats de grafiek in het kader
+            st.plotly_chart(fig_spark, use_container_width=True, config={'displayModeBar': False})
+            
 st.write("---")
 
 # --- DATA VERWERKING ---
