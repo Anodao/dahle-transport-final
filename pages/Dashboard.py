@@ -98,11 +98,6 @@ st.markdown("""
     
     .cta-btn { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); white-space: nowrap;}
     .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
-
-    .header-banner { background-color: #723e83 !important; padding: 30px 40px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); }
-    .header-banner h1, .header-banner p { color: #ffffff !important; }
-    .header-banner h1 { margin: 0; font-weight: 700; }
-    .header-banner p { margin: 5px 0 0 0; font-size: 14px;}
     
     div[data-baseweb="select"] > div, div[data-baseweb="base-input"] { background-color: #212529 !important; border: 1px solid #333333 !important; border-radius: 6px !important; }
     .stSelectbox div[data-baseweb="select"] span, .stSelectbox div[data-baseweb="select"] div, .stDateInput input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
@@ -127,9 +122,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-# --- HEADER BANNER ---
-st.markdown('<div class="header-banner"><h1>Performance & Margin Analysis</h1><p>Financial impact and sustainability tracking</p></div>', unsafe_allow_html=True)
-
 # --- DATUM LOGICA ---
 today = datetime.now().date()
 start_of_week = today - timedelta(days=today.weekday())
@@ -140,78 +132,66 @@ start_of_month = today.replace(day=1)
 live_prices = get_live_fuel_prices()
 fuel_price = live_prices["diesel"]
 
-# --- FILTER & API PRIJS UI ---
-c_filter, c_input = st.columns([1, 2], gap="large")
+# --- BRANDSTOF PRIJZEN UI (Nu mooi over de hele breedte) ---
+dates = pd.date_range(end=today, periods=30)
+np.random.seed(int(today.strftime('%Y%m%d'))) 
 
-with c_filter:
-    filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "This month", "Custom date..."])
-    custom_dates = []
-    if filter_optie == "Custom date...":
-        custom_dates = st.date_input("Select a date range:", value=today)
+d_fluct = np.random.uniform(-0.3, 0.3, 30).cumsum()
+d_history = live_prices['diesel'] + d_fluct - d_fluct[-1]
+df_d = pd.DataFrame({'Date': dates, 'Price': d_history})
 
-with c_input:
-    # --- DATA SIMULATIE VOOR DE GRAFIEKJES ---
-    dates = pd.date_range(end=today, periods=30)
-    np.random.seed(int(today.strftime('%Y%m%d'))) 
-    
-    d_fluct = np.random.uniform(-0.3, 0.3, 30).cumsum()
-    d_history = live_prices['diesel'] + d_fluct - d_fluct[-1]
-    df_d = pd.DataFrame({'Date': dates, 'Price': d_history})
-    
-    g_fluct = np.random.uniform(-0.4, 0.4, 30).cumsum()
-    g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
-    df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
+g_fluct = np.random.uniform(-0.4, 0.4, 30).cumsum()
+g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
+df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
 
-    # --- COMPACTE GRAFIEK MET ASSEN ---
-    def make_compact_detailed_chart(df, color):
-        fig = px.line(df, x='Date', y='Price', template="plotly_dark")
-        fig.update_layout(
-            margin=dict(l=35, r=10, t=10, b=30), # Compacte marges
-            height=130, # Korte hoogte zodat het naast de tekst past
-            xaxis=dict(
-                visible=True, 
-                title=None, # Verbergt het woord "Datum"
-                tickformat="%d %b", 
-                showgrid=False,
-                tickfont=dict(size=10) # Kleinere letters
-            ), 
-            yaxis=dict(
-                visible=True, 
-                title=None, # Verbergt het woord "Prijs"
-                tickformat=".1f", # Maximaal 1 decimaal op de as voor ruimte
-                showgrid=True,
-                gridcolor="#333",
-                tickfont=dict(size=10)
-            ),
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            showlegend=False,
-            hoverlabel=dict(font_size=13, font_family="Montserrat") 
-        )
-        fig.update_traces(
-            line_color=color, 
-            line_width=3,
-            hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:.2f} NOK<extra></extra>"
-        )
-        return fig
-    
-    f1, f2 = st.columns(2)
-    with f1:
-        with st.container(border=True):
-            # We zetten ze weer naast elkaar! De grafiek krijgt iets meer ruimte (1.5) ivm de assen
-            c_text, c_chart = st.columns([1, 1.5]) 
-            with c_text:
-                st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
-            with c_chart:
-                st.plotly_chart(make_compact_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
-                
-    with f2:
-        with st.container(border=True):
-            c_text, c_chart = st.columns([1, 1.5])
-            with c_text:
-                st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
-            with c_chart:
-                st.plotly_chart(make_compact_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
+def make_compact_detailed_chart(df, color):
+    fig = px.line(df, x='Date', y='Price', template="plotly_dark")
+    fig.update_layout(
+        margin=dict(l=35, r=10, t=10, b=30), 
+        height=130, 
+        xaxis=dict(
+            visible=True, 
+            title=None, 
+            tickformat="%d %b", 
+            showgrid=False,
+            tickfont=dict(size=10) 
+        ), 
+        yaxis=dict(
+            visible=True, 
+            title=None, 
+            tickformat=".1f", 
+            showgrid=True,
+            gridcolor="#333",
+            tickfont=dict(size=10)
+        ),
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        showlegend=False,
+        hoverlabel=dict(font_size=13, font_family="Montserrat") 
+    )
+    fig.update_traces(
+        line_color=color, 
+        line_width=3,
+        hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:.2f} NOK<extra></extra>"
+    )
+    return fig
+
+f1, f2 = st.columns(2, gap="large")
+with f1:
+    with st.container(border=True):
+        c_text, c_chart = st.columns([1, 1.5]) 
+        with c_text:
+            st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
+        with c_chart:
+            st.plotly_chart(make_compact_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
+            
+with f2:
+    with st.container(border=True):
+        c_text, c_chart = st.columns([1, 1.5])
+        with c_text:
+            st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
+        with c_chart:
+            st.plotly_chart(make_compact_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
 
 st.write("---")
 
@@ -241,6 +221,17 @@ df['margin_pct'] = (df['profit'] / df['revenue']) * 100
 if 'received_date' in df.columns:
     df['parsed_date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
 
+# --- FILTER UI NAAST DE TITEL ---
+c_title, c_filter = st.columns([2.5, 1])
+with c_title:
+    st.write("### Performance Summary")
+with c_filter:
+    filter_optie = st.selectbox("📅 Filter by date:", ["All orders", "Today", "This week", "Last week", "This month", "Custom date..."])
+    custom_dates = []
+    if filter_optie == "Custom date...":
+        custom_dates = st.date_input("Select a date range:", value=today)
+
+# --- FILTER TOEPASSEN ---
 filtered_df = df.copy()
 
 if 'parsed_date' in df.columns:
@@ -265,7 +256,6 @@ if filtered_df.empty:
     st.stop()
 
 # --- KPI SECTIE ---
-st.write("### Performance Summary")
 k1, k2, k3, k4 = st.columns(4)
 total_profit = filtered_df['profit'].sum()
 avg_margin = filtered_df['margin_pct'].mean()
