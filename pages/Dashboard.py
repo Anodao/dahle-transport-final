@@ -107,7 +107,7 @@ st.markdown("""
     div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c355c !important; border-color: #0c355c !important;}
     </style>
     
-    <div class="navbar">
+<div class="navbar">
         <div class="nav-logo">
             <a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a>
         </div>
@@ -117,7 +117,7 @@ st.markdown("""
         </div>
         <div class="nav-cta">
             <a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a>
-            <a href="/" target="_self" class="cta-btn">TA KONTAKT</a>
+            <a href="/Order" target="_self" class="cta-btn">BESTILL TRANSPORT</a>
         </div>
     </div>
 """, unsafe_allow_html=True)
