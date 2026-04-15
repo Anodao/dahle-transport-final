@@ -58,7 +58,7 @@ def get_live_fuel_prices():
         print(f"API Error: {e}")
         
     # Fallback prijzen als de API tijdelijk faalt
-    return {"diesel": 20.50, "gas": 21.50} 
+    return {"diesel": error, "gas": error} 
 
 # --- SUPABASE CONNECTIE ---
 @st.cache_resource
