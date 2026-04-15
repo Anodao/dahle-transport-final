@@ -152,19 +152,7 @@ with c_filter:
     if filter_optie == "Custom date...":
         custom_dates = st.date_input("Select a date range:", value=today)
 
-with c_input:
-    # --- DATA SIMULATIE VOOR DE GRAFIEKJES ---
-    dates = pd.date_range(end=today, periods=30)
-    np.random.seed(int(today.strftime('%Y%m%d'))) 
-    
-    d_fluct = np.random.uniform(-0.3, 0.3, 30).cumsum()
-    d_history = live_prices['diesel'] + d_fluct - d_fluct[-1]
-    df_d = pd.DataFrame({'Date': dates, 'Price': d_history})
-    
-    g_fluct = np.random.uniform(-0.4, 0.4, 30).cumsum()
-    g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
-    df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
-
+# Hulpfunctie om een strakke kleine grafiek (sparkline) te maken
     def make_sparkline(df, color):
         fig = px.line(df, x='Date', y='Price', template="plotly_dark")
         fig.update_layout(
@@ -175,9 +163,16 @@ with c_input:
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             showlegend=False,
-            hovermode="x unified"
+            # We maken het lettertype van de pop-up iets groter en passend bij je dashboard
+            hoverlabel=dict(font_size=13, font_family="Montserrat") 
         )
-        fig.update_traces(line_color=color, line_width=3)
+        
+        # HIER IS DE FIX: We bepalen exact de tekst en ronden af op 2 decimalen (.2f)
+        fig.update_traces(
+            line_color=color, 
+            line_width=3,
+            hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:.2f} NOK<extra></extra>"
+        )
         return fig
     
     f1, f2 = st.columns(2)
