@@ -139,7 +139,7 @@ start_of_week = today - timedelta(days=today.weekday())
 start_of_last_week = start_of_week - timedelta(days=7)
 start_of_month = today.replace(day=1)
 
-# --- GLOBAL PRIJZEN OPHALEN (Voorkomt NameError) ---
+# --- GLOBAL PRIJZEN OPHALEN ---
 live_prices = get_live_fuel_prices()
 fuel_price = live_prices["diesel"]
 
@@ -165,49 +165,67 @@ with c_input:
     g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
     df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
 
-    # Hulpfunctie om een strakke kleine grafiek (sparkline) te maken
-    def make_sparkline(df, color):
+    # --- HULPFUNCTIE VOOR GEDETAILLEERDE GRAFIEK (Aangepast!) ---
+    def make_detailed_chart(df, color):
         fig = px.line(df, x='Date', y='Price', template="plotly_dark")
         fig.update_layout(
-            margin=dict(l=0, r=0, t=25, b=0), 
-            height=80, 
-            xaxis=dict(visible=False), 
-            yaxis=dict(visible=False),
+            # Iets meer marge boven en rechts voor labels
+            margin=dict(l=50, r=20, t=30, b=50), 
+            height=200, # Veel hoger om assen kwijt te kunnen
+            
+            # --- ASSEN AAN ZETTEN EN FORMATTEREN ---
+            xaxis=dict(
+                visible=True, 
+                title="Datum", 
+                tickformat="%d %b", # Dag en Maand (bijv. 14 apr)
+                showgrid=True,
+                gridcolor="#333"
+            ), 
+            yaxis=dict(
+                visible=True, 
+                title="Prijs (NOK)", 
+                tickformat=".2f NOK", # Afronden op 2 decimalen met NOK erachter
+                showgrid=True,
+                gridcolor="#333"
+            ),
+            
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             showlegend=False,
-            # We maken het lettertype van de pop-up iets groter en passend bij je dashboard
+            # Strakke pop-up (tooltip) behouden
             hoverlabel=dict(font_size=13, font_family="Montserrat") 
         )
-        
-        # HIER IS DE FIX: We bepalen exact de tekst en ronden af op 2 decimalen (.2f)
         fig.update_traces(
             line_color=color, 
             line_width=3,
+            # minimalistische tooltip
             hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:.2f} NOK<extra></extra>"
         )
         return fig
     
     f1, f2 = st.columns(2)
     with f1:
+        # Stap 1: Kader maken
         with st.container(border=True):
-            c_text, c_chart = st.columns([1.2, 1])
-            with c_text:
-                st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
-            with c_chart:
-                st.plotly_chart(make_sparkline(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
+            # Stap 2: Metric bovenin (geen kolommen meer nodig!)
+            st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
+            
+            # Stap 3: Gedetailleerde grafiek eronder over de volle breedte
+            st.plotly_chart(make_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
                 
     with f2:
+        # Stap 1: Kader maken
         with st.container(border=True):
-            c_text, c_chart = st.columns([1.2, 1])
-            with c_text:
-                st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
-            with c_chart:
-                st.plotly_chart(make_sparkline(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
+            # Stap 2: Metric bovenin
+            st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
+            
+            # Stap 3: Gedetailleerde grafiek eronder
+            st.plotly_chart(make_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
 
 st.write("---")
 
 # --- DATA VERWERKING ---
+# [De rest van de code blijft ongewijzigd...]
 try:
     response = supabase.table("orders").select("*").execute()
     df = pd.DataFrame(response.data)
