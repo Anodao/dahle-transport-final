@@ -37,7 +37,6 @@ def show_order_history(company_name, df):
 def get_live_fuel_prices():
     url = "https://api.collectapi.com/gasPrice/europeanCountries"
     headers = {
-        # JOUW NIEUWE API KEY IS HIER INGEVULD:
         'authorization': "apikey 40xj3EeeCTOZVeAjO2pEmj:7sLuMmcz7WUnrEdHaGiXyR",
         'content-type': "application/json"
     }
@@ -48,11 +47,9 @@ def get_live_fuel_prices():
         
         for country in data.get('result', []):
             if country['country'].lower() == 'norway':
-                # FIX: vervang de komma door een punt zodat Python kan rekenen
                 ruwe_diesel = country['diesel'].replace(',', '.')
                 ruwe_gas = country['gasoline'].replace(',', '.')
                 
-                # Omrekenen van EUR naar NOK (koers 11.5)
                 diesel_nok = round(float(ruwe_diesel) * 11.5, 2) 
                 gas_nok = round(float(ruwe_gas) * 11.5, 2) 
                 
@@ -165,67 +162,60 @@ with c_input:
     g_history = live_prices['gas'] + g_fluct - g_fluct[-1]
     df_g = pd.DataFrame({'Date': dates, 'Price': g_history})
 
-    # --- HULPFUNCTIE VOOR GEDETAILLEERDE GRAFIEK (Aangepast!) ---
-    def make_detailed_chart(df, color):
+    # --- COMPACTE GRAFIEK MET ASSEN ---
+    def make_compact_detailed_chart(df, color):
         fig = px.line(df, x='Date', y='Price', template="plotly_dark")
         fig.update_layout(
-            # Iets meer marge boven en rechts voor labels
-            margin=dict(l=50, r=20, t=30, b=50), 
-            height=200, # Veel hoger om assen kwijt te kunnen
-            
-            # --- ASSEN AAN ZETTEN EN FORMATTEREN ---
+            margin=dict(l=35, r=10, t=10, b=30), # Compacte marges
+            height=130, # Korte hoogte zodat het naast de tekst past
             xaxis=dict(
                 visible=True, 
-                title="Datum", 
-                tickformat="%d %b", # Dag en Maand (bijv. 14 apr)
-                showgrid=True,
-                gridcolor="#333"
+                title=None, # Verbergt het woord "Datum"
+                tickformat="%d %b", 
+                showgrid=False,
+                tickfont=dict(size=10) # Kleinere letters
             ), 
             yaxis=dict(
                 visible=True, 
-                title="Prijs (NOK)", 
-                tickformat=".2f NOK", # Afronden op 2 decimalen met NOK erachter
+                title=None, # Verbergt het woord "Prijs"
+                tickformat=".1f", # Maximaal 1 decimaal op de as voor ruimte
                 showgrid=True,
-                gridcolor="#333"
+                gridcolor="#333",
+                tickfont=dict(size=10)
             ),
-            
             paper_bgcolor="rgba(0,0,0,0)",
             plot_bgcolor="rgba(0,0,0,0)",
             showlegend=False,
-            # Strakke pop-up (tooltip) behouden
             hoverlabel=dict(font_size=13, font_family="Montserrat") 
         )
         fig.update_traces(
             line_color=color, 
             line_width=3,
-            # minimalistische tooltip
             hovertemplate="<b>%{x|%d %b %Y}</b><br>%{y:.2f} NOK<extra></extra>"
         )
         return fig
     
     f1, f2 = st.columns(2)
     with f1:
-        # Stap 1: Kader maken
         with st.container(border=True):
-            # Stap 2: Metric bovenin (geen kolommen meer nodig!)
-            st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
-            
-            # Stap 3: Gedetailleerde grafiek eronder over de volle breedte
-            st.plotly_chart(make_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
+            # We zetten ze weer naast elkaar! De grafiek krijgt iets meer ruimte (1.5) ivm de assen
+            c_text, c_chart = st.columns([1, 1.5]) 
+            with c_text:
+                st.metric("⛽ Diesel (per Liter)", f"{live_prices['diesel']:.2f} NOK", "Actueel via API")
+            with c_chart:
+                st.plotly_chart(make_compact_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
                 
     with f2:
-        # Stap 1: Kader maken
         with st.container(border=True):
-            # Stap 2: Metric bovenin
-            st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
-            
-            # Stap 3: Gedetailleerde grafiek eronder
-            st.plotly_chart(make_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
+            c_text, c_chart = st.columns([1, 1.5])
+            with c_text:
+                st.metric("🚗 Gas/Petrol (per Liter)", f"{live_prices['gas']:.2f} NOK", "Actueel via API")
+            with c_chart:
+                st.plotly_chart(make_compact_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
 
 st.write("---")
 
 # --- DATA VERWERKING ---
-# [De rest van de code blijft ongewijzigd...]
 try:
     response = supabase.table("orders").select("*").execute()
     df = pd.DataFrame(response.data)
