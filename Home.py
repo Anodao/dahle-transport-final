@@ -38,7 +38,7 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 
 <div class="navbar">
 <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
-<div class="nav-links"><a href="/"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
+<div class="nav-links"><a href="/" target="_self"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
 <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/" target="_self" class="cta-btn-purple">TA KONTAKT</a></div>
 </div>
 
