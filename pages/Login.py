@@ -142,15 +142,17 @@ if st.session_state.user is None:
             st.write("")
             if st.button("Log In", type="primary", use_container_width=True):
                 if login_email and login_pass:
-                    try:
-                        auth_response = supabase.auth.sign_in_with_password({
-                            "email": login_email,
-                            "password": login_pass
-                        })
-                        st.session_state.user = auth_response.user
-                        st.rerun()
-                    except Exception as e:
-                        st.error("❌ Incorrect email or password. Please try again.")
+                    # --- HIER IS DE LAAD ANIMATIE TOEGEVOEGD ---
+                    with st.spinner("Bezig met inloggen... Een moment geduld a.u.b. ⏳"):
+                        try:
+                            auth_response = supabase.auth.sign_in_with_password({
+                                "email": login_email,
+                                "password": login_pass
+                            })
+                            st.session_state.user = auth_response.user
+                            st.rerun()
+                        except Exception as e:
+                            st.error("❌ Incorrect email or password. Please try again.")
                 else:
                     st.warning("⚠️ Please fill in both fields.")
 
@@ -170,29 +172,31 @@ if st.session_state.user is None:
             st.write("")
             if st.button("Create Account", type="primary", use_container_width=True):
                 if reg_email and reg_pass and reg_company and reg_fname and reg_lname:
-                    try:
-                        auth_res = supabase.auth.sign_up({
-                            "email": reg_email,
-                            "password": reg_pass
-                        })
-                        
-                        new_user_id = auth_res.user.id
-                        full_name = f"{reg_fname} {reg_lname}"
-                        
-                        profile_data = {
-                            "id": new_user_id,
-                            "company_name": reg_company,
-                            "contact_name": full_name,
-                            "phone": reg_phone
-                        }
-                        supabase.table("profiles").insert(profile_data).execute()
-                        
-                        st.success("✅ Account created successfully! You can now log in via the 'Log In' tab.")
-                    except Exception as e:
-                        if "already registered" in str(e).lower():
-                            st.error("⚠️ This email address is already registered.")
-                        else:
-                            st.error(f"❌ An error occurred: {e}")
+                    # --- HIER OOK EEN LAAD ANIMATIE VOOR REGISTRATIE ---
+                    with st.spinner("Account wordt aangemaakt... ⏳"):
+                        try:
+                            auth_res = supabase.auth.sign_up({
+                                "email": reg_email,
+                                "password": reg_pass
+                            })
+                            
+                            new_user_id = auth_res.user.id
+                            full_name = f"{reg_fname} {reg_lname}"
+                            
+                            profile_data = {
+                                "id": new_user_id,
+                                "company_name": reg_company,
+                                "contact_name": full_name,
+                                "phone": reg_phone
+                            }
+                            supabase.table("profiles").insert(profile_data).execute()
+                            
+                            st.success("✅ Account created successfully! You can now log in via the 'Log In' tab.")
+                        except Exception as e:
+                            if "already registered" in str(e).lower():
+                                st.error("⚠️ This email address is already registered.")
+                            else:
+                                st.error(f"❌ An error occurred: {e}")
                 else:
                     st.warning("⚠️ Please fill in all mandatory fields (*).")
 
@@ -428,12 +432,14 @@ else:
                             "user_id": user_id 
                         }
                         
-                        try:
-                            supabase.table("orders").insert(db_order).execute()
-                            st.session_state.last_order_signature = current_signature
-                            st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
-                        except Exception as e:
-                            st.error(f"⚠️ Failed to send order. Error: {e}")
+                        # --- LAAD ANIMATIE VOOR HET PLAATSEN VAN EEN ORDER ---
+                        with st.spinner("Je order wordt veilig verstuurd... ⏳"):
+                            try:
+                                supabase.table("orders").insert(db_order).execute()
+                                st.session_state.last_order_signature = current_signature
+                                st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
+                            except Exception as e:
+                                st.error(f"⚠️ Failed to send order. Error: {e}")
 
     # =========================================================
     # CONTENT 3: PROFIEL BEHEREN
@@ -480,10 +486,12 @@ else:
                     "del_city": upd_del_city
                 }
                 
-                try:
-                    supabase.table("profiles").update(update_data).eq("id", user_id).execute()
-                    st.success("✅ Profile updated successfully! Je standaard adressen worden nu automatisch ingevuld bij een nieuwe bestelling.")
-                    time.sleep(2.5)
-                    st.rerun() 
-                except Exception as e:
-                    st.error(f"⚠️ Could not update profile: {e}")
+                # --- LAAD ANIMATIE VOOR OPSLAAN VAN PROFIEL ---
+                with st.spinner("Profiel wordt bijgewerkt... ⏳"):
+                    try:
+                        supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+                        st.success("✅ Profile updated successfully! Je standaard adressen worden nu automatisch ingevuld bij een nieuwe bestelling.")
+                        time.sleep(2.5)
+                        st.rerun() 
+                    except Exception as e:
+                        st.error(f"⚠️ Could not update profile: {e}")
