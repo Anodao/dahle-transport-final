@@ -210,16 +210,16 @@ with c_input:
     with f1:
         with st.container(border=True):
             st.metric(
-                label="⛽ Diesel (NOK/L)", 
-                value=f"{live_prices['diesel']:.2f}",
+                label="⛽ Diesel (per Liter)", 
+                value=f"{live_prices['diesel']:.2f} NOK", # Hier is NOK toegevoegd!
                 delta="Actueel via API"
             )
             
     with f2:
         with st.container(border=True):
             st.metric(
-                label="🚗 Gas/Petrol (NOK/L)", 
-                value=f"{live_prices['gas']:.2f}",
+                label="🚗 Gas/Petrol (per Liter)", 
+                value=f"{live_prices['gas']:.2f} NOK", # Hier is NOK toegevoegd!
                 delta="Actueel via API"
             )
 
