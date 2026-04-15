@@ -103,8 +103,7 @@ st.markdown("""
     /* --- RECHTERKANT (Foto met ronde vorm) --- */
     .hero-right {
         flex: 1.2;
-        /* HIER KUN JE LATER DE LINK VAN JE ECHTE VRACHTWAGEN FOTO INPLAKKEN */
-        background-image: url('https://images.unsplash.com/photo-1601584115197-04ecc0da31d7?q=80&w=2070&auto=format&fit=crop');
+        background-image: url('https://cloud-1de12d.becdn.net/media/iW=1200&iH=630/c9ca77aaff92037d097c5d1558e89fa1.jpg');
         background-size: cover;
         background-position: center left;
         /* Dit creëert de grote bolle ronding naar links */
