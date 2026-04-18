@@ -15,7 +15,6 @@ st.set_page_config(
 )
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
-# CSS is aangepast om de lay-out bugs (zoals de verticale knoppen) te verhelpen!
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -79,7 +78,6 @@ except Exception as e:
 
 
 # --- ONVERWOESTBAAR GEHEUGEN (SHADOW STATE) ---
-# Dit fixt de bug waardoor velden leeg raakten na inloggen!
 prof = st.session_state.get('user_profile', {})
 f_name, l_name = '', ''
 if prof:
@@ -87,11 +85,12 @@ if prof:
     f_name = name_parts[0] if name_parts else ''
     l_name = name_parts[1] if len(name_parts) > 1 else ''
 
+# LET OP: we hebben de 'Where do you ship' variabelen (zoals pd_ship_where) hier verwijderd
 default_values = {
     'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-    'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
-    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
-    'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
+    'pd_weight': 1.0, 'pd_oversized': False, 
+    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 
+    'mdm_weight': 0.5, 
     'comp_name': prof.get('comp_name', ''), 
     'comp_reg': '', 
     'comp_addr': prof.get('address', ''), 
@@ -115,17 +114,14 @@ default_values = {
 if 'shadow_state' not in st.session_state:
     st.session_state.shadow_state = {}
 
-# Sla huidige velden direct veilig op
 for k in default_values.keys():
     if k in st.session_state:
         st.session_state.shadow_state[k] = st.session_state[k]
 
-# Als het geheugen nog helemaal leeg is, vul het dan met de profiel defaults
 if not st.session_state.shadow_state:
     for k, v in default_values.items():
         st.session_state.shadow_state[k] = v
 
-# Zet het geheugen terug in de actieve velden
 for k, v in st.session_state.shadow_state.items():
     if k not in st.session_state:
         st.session_state[k] = v
@@ -149,14 +145,14 @@ if "reset" in st.query_params:
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
-    st.session_state.shadow_state = {} # Wis het geheugen
+    st.session_state.shadow_state = {} 
     for k, v in default_values.items():
         st.session_state[k] = v
     st.query_params.clear()
     st.rerun()
 
 # --- ROUTING API FUNCTIES ---
-HQ_COORDS = (63.4305, 10.3951) # Trondheim hoofdkwartier.
+HQ_COORDS = (63.4305, 10.3951) 
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -183,7 +179,7 @@ def get_route_data(coord1, coord2):
     return None, None
 
 # =========================================================
-# PRIJS CALCULATIE LOGICA
+# PRIJS CALCULATIE LOGICA (AANGEPAST VOOR AUTOMATISCHE WORLDWIDE DETECTIE)
 # =========================================================
 def get_live_price():
     total_price = 0
@@ -235,13 +231,23 @@ def get_live_price():
             dist_hq_pick, _ = get_route_data(HQ_COORDS, pick_coords)
             dist_pick_del, _ = get_route_data(pick_coords, del_coords)
             
+            # Als OSRM een route over land kan vinden (Binnen Europa)
             if dist_hq_pick is not None and dist_pick_del is not None:
                 total_km = dist_hq_pick + dist_pick_del
                 price_per_km = 12 
                 transport_cost = total_km * price_per_km
                 total_price += transport_cost
                 breakdown.append((f"Transport ({total_km:.0f} km)", transport_cost))
-            else: breakdown.append(("Calculating route...", 0))
+                st.session_state.is_worldwide = False
+            
+            # Als OSRM géén route kan vinden, maar wel GPS coords heeft -> Het is waarschijnlijk Luchtvracht/Worldwide!
+            else:
+                ww_base = 2500 # Starttarief Luchtvracht
+                ww_per_kg = 55 # Toeslag per kilo luchtvracht
+                ww_cost = ww_base + (total_weight * ww_per_kg)
+                total_price += ww_cost
+                breakdown.append((f"Worldwide Air Freight ({total_weight}kg)", ww_cost))
+                st.session_state.is_worldwide = True
         else: breakdown.append(("Searching address...", 0))
     elif st.session_state.step > 1:
         breakdown.append(("Awaiting route details...", 0))
@@ -376,7 +382,7 @@ else:
                         if sel == "Parcels & Documents":
                             st.number_input("Total Weight (kg)", min_value=0.5, step=0.5, key="pd_weight")
                             st.checkbox("Oversized / Irregular Shape", key="pd_oversized")
-                            st.radio("**Where do you ship? ***", options=["Domestic", "Pan-European", "Worldwide"], captions=["within the country", "within the continent", "beyond the continent"], key="pd_ship_where")
+                            # RADIO BUTTONS REMOVED!
                             
                         elif sel == "Cargo & Freight":
                             cf_lbl = "**Load Type ***"
@@ -387,11 +393,11 @@ else:
                             st.checkbox("Full Container/Truck Load", key="cf_full")
                             st.checkbox("Loose Cargo", key="cf_lc")
                             st.number_input("Total Est. Weight (kg)", min_value=50, step=50, key="cf_weight")
-                            st.radio("**Where do you ship? ***", options=["Domestic", "Pan-European", "Worldwide"], captions=["within the country", "within the continent", "beyond the continent"], key="cf_ship_where")
+                            # RADIO BUTTONS REMOVED!
                             
                         elif sel == "Mail & Direct Marketing":
                             st.number_input("Total Weight (kg)", min_value=0.1, step=0.1, key="mdm_weight")
-                            st.radio("**Where do you ship? ***", options=["Pan-European", "Worldwide"], captions=["within the continent", "beyond the continent"], key="mdm_ship_where")
+                            # RADIO BUTTONS REMOVED!
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
@@ -486,11 +492,28 @@ else:
                                     get_width=5
                                 )
                             )
-                        
+                            # Weer platte kaart als er een route is
+                            pitch = 20
+                        else:
+                            # ALS ER GEEN ROUTE IS (WORLDWIDE), MAAK EEN VLIEGENDE BOOG (ARC)
+                            layers.append(
+                                pdk.Layer(
+                                    "ArcLayer",
+                                    data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}],
+                                    get_source_position="source",
+                                    get_target_position="target",
+                                    get_source_color=[137, 75, 157, 200],
+                                    get_target_color=[137, 75, 157, 200],
+                                    get_width=3,
+                                    get_tilt=15
+                                )
+                            )
+                            # Schuinere kaart voor het 3D vlieg-effect!
+                            pitch = 45
+                            
                         center_lat = (p_coords[0] + d_coords[0]) / 2
                         center_lon = (p_coords[1] + d_coords[1]) / 2
-                        zoom = 4.5
-                        pitch = 20 
+                        zoom = 3.5 
                     else:
                         center_lat = p_coords[0] if p_coords else d_coords[0]
                         center_lon = p_coords[1] if p_coords else d_coords[1]
@@ -525,12 +548,12 @@ else:
                 elif invalid_email: error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
             c_back, c_next = st.columns([1, 4])
-            if c_back.button("← Go Back", type="secondary", use_container_width=True):
+            if c_back.button("← Go Back", type="secondary"):
                 st.session_state.step = 1
                 st.session_state.validate_step2 = False 
                 st.rerun()
                 
-            if c_next.button("Continue to Review →", type="primary", use_container_width=True):
+            if c_next.button("Continue to Review →", type="primary"):
                 st.session_state.validate_step2 = True 
                 if missing_fields or invalid_email:
                     st.session_state.scroll_up = True
@@ -540,10 +563,14 @@ else:
                     st.session_state.scroll_up = False
                     
                     specs_list = []
+                    
+                    is_ww = st.session_state.get('is_worldwide', False)
+                    region_txt = "Worldwide" if is_ww else "Domestic/European"
+                    
                     if "Parcels & Documents" in st.session_state.selected_types:
                         w = st.session_state.pd_weight
                         sz = "Oversized" if st.session_state.pd_oversized else "Standard"
-                        specs_list.append(f"📦 **Parcels:** {w}kg ({sz}) ➔ {st.session_state.pd_ship_where}")
+                        specs_list.append(f"📦 **Parcels:** {w}kg ({sz}) ➔ {region_txt}")
                     
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
@@ -551,11 +578,11 @@ else:
                         if st.session_state.cf_full: loads.append("Full Container")
                         if st.session_state.cf_lc: loads.append("Loose Cargo")
                         w = st.session_state.cf_weight
-                        specs_list.append(f"🚛 **Freight:** {', '.join(loads)} | {w}kg ➔ {st.session_state.cf_ship_where}")
+                        specs_list.append(f"🚛 **Freight:** {', '.join(loads)} | {w}kg ➔ {region_txt}")
                     
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
                         w = st.session_state.mdm_weight
-                        specs_list.append(f"📭 **Mail:** {w}kg ➔ {st.session_state.mdm_ship_where}")
+                        specs_list.append(f"📭 **Mail:** {w}kg ➔ {region_txt}")
                     
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
                     if st.session_state.cont_info.strip(): 
@@ -636,11 +663,11 @@ else:
             if not st.session_state.is_submitted:
                 c_b1, c_b2 = st.columns([1, 4])
                 with c_b1:
-                    if st.button("← Edit Details", type="secondary", use_container_width=True):
+                    if st.button("← Edit Details", type="secondary"):
                         st.session_state.step = 2
                         st.rerun()
                 with c_b2:
-                    if st.button("✅ CONFIRM & SEND REQUEST", type="primary", use_container_width=True):
+                    if st.button("✅ CONFIRM & SEND REQUEST", type="primary"):
                         db_order = {
                             "company": o['company'], "reg_no": o['reg_no'], "address": o['address'],
                             "contact_name": o['contact_name'], "email": o['email'], "phone": o['phone'],
