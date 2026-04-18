@@ -76,67 +76,60 @@ try:
 except Exception as e:
     st.error("⚠️ Database connection failed.")
 
-# --- 1. WIE IS ER INGELOGD? ---
-current_user = None
-if 'user' not in st.session_state:
-    session = supabase.auth.get_session()
-    if session:
-        st.session_state.user = session.user
-        current_user = session.user
+# --- CHECK LIVE LOGIN STATUS ---
+current_session = supabase.auth.get_session()
+if current_session:
+    st.session_state.user = current_session.user
 else:
-    current_user = st.session_state.user
+    st.session_state.user = None
 
-current_user_id = current_user.id if current_user else "guest"
+current_user_id = st.session_state.user.id if st.session_state.user else "guest"
 
-# --- 2. DE "KLUIS" (CACHED PROFILE) MAKEN ---
-# We halen het profiel 1 keer op en zetten het in een kluis die de Garbage Collector niet kan wissen!
-if st.session_state.get('cached_user_id') != current_user_id:
+# =========================================================================
+# DE FIX: FORCEER OVERSCHRIJVING VAN HET GEHEUGEN ALS DE GEBRUIKER WISSELT
+# =========================================================================
+if st.session_state.get('last_seen_user_id') != current_user_id:
+    # 1. Haal de gegevens op uit de database
+    prof = {}
     if current_user_id != "guest":
         try:
             prof_res = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
-            st.session_state.cached_profile = prof_res.data[0] if prof_res.data else {}
+            if prof_res.data:
+                prof = prof_res.data[0]
         except:
-            st.session_state.cached_profile = {}
-    else:
-        st.session_state.cached_profile = {}
+            pass
+
+    name_parts = str(prof.get('contact_name', '')).split(' ', 1)
+    f_name = name_parts[0] if name_parts else ''
+    l_name = name_parts[1] if len(name_parts) > 1 else ''
+
+    # 2. Overschrijf de Streamlit Session State KEIHARD met deze data
+    st.session_state['comp_name'] = str(prof.get('company_name') or '')
+    st.session_state['comp_reg'] = ''
+    st.session_state['comp_addr'] = str(prof.get('address') or '')
+    st.session_state['comp_pc'] = str(prof.get('zip_code') or '')
+    st.session_state['comp_city'] = str(prof.get('city') or '')
+    st.session_state['comp_country'] = 'Norway'
     
-    st.session_state.cached_user_id = current_user_id
+    st.session_state['cont_fn'] = f_name
+    st.session_state['cont_ln'] = l_name
+    st.session_state['cont_email'] = st.session_state.user.email if current_user_id != "guest" else ''
+    st.session_state['cont_code'] = '+47'
+    st.session_state['cont_phone'] = str(prof.get('phone') or '')
+    st.session_state['cont_info'] = ''
+    
+    st.session_state['p_addr'] = str(prof.get('address') or '')
+    st.session_state['p_zip'] = str(prof.get('zip_code') or '')
+    st.session_state['p_city'] = str(prof.get('city') or '')
+    st.session_state['d_addr'] = str(prof.get('del_address') or '')
+    st.session_state['d_zip'] = str(prof.get('del_zip') or '')
+    st.session_state['d_city'] = str(prof.get('del_city') or '')
+    
+    # 3. Zorg dat we weten dat we deze stap gehad hebben
+    st.session_state['last_seen_user_id'] = current_user_id
 
-# --- 3. STANDAARDWAARDEN BEPALEN VANUIT DE KLUIS ---
-prof = st.session_state.get('cached_profile', {})
-name_parts = str(prof.get('contact_name') or '').split(' ', 1)
 
-default_keys = {
-    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-    'pd_weight': 1.0, 'pd_oversized': False,
-    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100,
-    'mdm_weight': 0.5,
-    'comp_name': str(prof.get('company_name') or ''),
-    'comp_reg': '',
-    'comp_addr': str(prof.get('address') or ''),
-    'comp_pc': str(prof.get('zip_code') or ''),
-    'comp_city': str(prof.get('city') or ''),
-    'comp_country': 'Norway',
-    'cont_fn': name_parts[0] if name_parts else '',
-    'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
-    'cont_email': current_user.email if current_user else '',
-    'cont_code': '+47',
-    'cont_phone': str(prof.get('phone') or ''),
-    'cont_info': '',
-    'p_addr': str(prof.get('address') or ''),
-    'p_zip': str(prof.get('zip_code') or ''),
-    'p_city': str(prof.get('city') or ''),
-    'd_addr': str(prof.get('del_address') or ''),
-    'd_zip': str(prof.get('del_zip') or ''),
-    'd_city': str(prof.get('del_city') or '')
-}
-
-# --- 4. VELDEN AANVULLEN ALS STREAMLIT ZE HEEFT GEWIST ---
-for k, v in default_keys.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-# --- OVERIGE SESSION STATES ---
+# --- OVERIGE SESSION STATES (Niet gerelateerd aan profiel) ---
 if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
@@ -145,6 +138,21 @@ if 'show_error' not in st.session_state: st.session_state.show_error = False
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
+
+# Basis states voor de checkboxes
+default_checks = ['chk_parcels', 'chk_freight', 'chk_mail', 'pd_oversized', 'cf_pal', 'cf_full', 'cf_lc']
+for k in default_checks:
+    if k not in st.session_state: st.session_state[k] = False
+
+if 'pd_weight' not in st.session_state: st.session_state['pd_weight'] = 1.0
+if 'cf_weight' not in st.session_state: st.session_state['cf_weight'] = 100
+if 'mdm_weight' not in st.session_state: st.session_state['mdm_weight'] = 0.5
+
+default_keys = {
+    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
+    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_phone': '', 'cont_code': '+47', 'cont_info': '',
+    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
+}
 
 # --- LOGO RESET TRUCJE ---
 def reset_form_state():
@@ -155,10 +163,9 @@ def reset_form_state():
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
-    # Door de velden te verwijderen, dwingen we ze hierboven opnieuw in te laden vanuit de kluis!
-    for k in default_keys.keys():
-        if k in st.session_state:
-            del st.session_state[k]
+    for k, v in default_keys.items():
+        st.session_state[k] = v
+    st.session_state['last_seen_user_id'] = None 
 
 if "reset" in st.query_params:
     reset_form_state()
@@ -235,8 +242,8 @@ def get_live_price():
     d_city = str(st.session_state.get('d_city') or '').strip()
 
     if len(p_addr) > 3 and len(p_city) > 2 and len(d_addr) > 3 and len(d_city) > 2:
-        pickup_string = f"{p_addr}, {st.session_state.get('p_zip', '')} {p_city}"
-        delivery_string = f"{d_addr}, {st.session_state.get('d_zip', '')} {d_city}"
+        pickup_string = f"{p_addr}, {str(st.session_state.get('p_zip') or '')} {p_city}"
+        delivery_string = f"{d_addr}, {str(st.session_state.get('d_zip') or '')} {d_city}"
         
         pick_coords = get_coordinates(pickup_string)
         del_coords = get_coordinates(delivery_string)
