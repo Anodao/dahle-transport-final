@@ -503,7 +503,7 @@ else:
                 st.session_state.validate_step2 = False 
                 st.rerun()
                 
-            if c_next.button("Continue to Review →", type="primary", use_container_width=True):
+if c_next.button("Continue to Review →", type="primary", use_container_width=True):
                 st.session_state.validate_step2 = True 
                 
                 if missing_fields or invalid_email:
@@ -513,12 +513,13 @@ else:
                     st.session_state.validate_step2 = False 
                     st.session_state.scroll_up = False
                     
-                    compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
+                    # --- SCHONE OPMAAK VOOR SPECIFICATIES ---
+                    specs_list = []
                     
                     if "Parcels & Documents" in st.session_state.selected_types:
                         w = st.session_state.get('pd_weight', 1.0)
                         sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
-                        compiled_info += f"📦 Parcels: {w}kg ({sz}), to {st.session_state.pd_ship_where}.\n"
+                        specs_list.append(f"📦 **Parcels:** {w}kg ({sz}) ➔ {st.session_state.pd_ship_where}")
                     
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
@@ -526,11 +527,16 @@ else:
                         if cf_full_val: loads.append("Full Container")
                         if cf_lc_val: loads.append("Loose Cargo")
                         w = st.session_state.get('cf_weight', 100)
-                        compiled_info += f"🚛 Freight: Load: {', '.join(loads)}, {w}kg to {st.session_state.cf_ship_where}.\n"
+                        specs_list.append(f"🚛 **Freight:** {', '.join(loads)} | {w}kg ➔ {st.session_state.cf_ship_where}")
                     
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
                         w = st.session_state.get('mdm_weight', 0.5)
-                        compiled_info += f"📭 Mail: {w}kg to {st.session_state.mdm_ship_where}.\n"
+                        specs_list.append(f"📭 **Mail:** {w}kg ➔ {st.session_state.mdm_ship_where}")
+                    
+                    # Voor de database maken we één gecombineerde tekst aan zonder Markdown-sterretjes
+                    db_info = "\n".join([s.replace("**", "") for s in specs_list])
+                    if additional_info.strip():
+                        db_info += f"\n\nNotes: {additional_info.strip()}"
                     
                     calc_price, _ = get_live_price()
                     
@@ -541,7 +547,9 @@ else:
                         "contact_name": f"{first_name} {last_name}",
                         "email": work_email,
                         "phone": f"{phone_code} {phone}",
-                        "info": compiled_info,
+                        "info_notes": additional_info.strip(), # Alleen de notes voor de UI
+                        "specs_list": specs_list,              # Mooie lijst voor de UI
+                        "db_info": db_info,                    # Gecombineerde tekst voor de Database!
                         "types": st.session_state.selected_types,
                         "pickup_address": p_address,
                         "pickup_zip": p_zip,
@@ -555,39 +563,58 @@ else:
                     st.rerun()
 
         # =========================================================
-        # STAP 3: REVIEW 
+        # STAP 3: REVIEW (Nieuwe, superstrakke opmaak!)
         # =========================================================
         elif st.session_state.step == 3:
             o = st.session_state.temp_order
+            
+            st.markdown("<h3 style='margin-top: 0px;'>📝 Review your request</h3>", unsafe_allow_html=True)
+            st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 20px;'>Please verify your details below before confirming.</p>", unsafe_allow_html=True)
+            
+            # KADER 1: COMPANY & CONTACT
             with st.container(border=True):
-                st.markdown("#### Review your request")
-                st.markdown("---")
-                
+                st.markdown("#### 🏢 Company & Contact")
+                st.write("---")
                 col_s1, col_s2 = st.columns(2)
                 with col_s1:
-                    st.write(f"**Company Name:** {o['company']}")
-                    if o['reg_no']: st.write(f"**Registration No:** {o['reg_no']}")
-                    st.write(f"**Address:** {o['address']}")
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>COMPANY NAME</span><br><b>{o['company']}</b>", unsafe_allow_html=True)
                     st.write("")
-                    st.write(f"**Selected Services:**")
-                    for s_type in o['types']:
-                        st.write(f"- {s_type}")
-                        
-                with col_s2:
-                    st.write(f"**Contact Person:** {o['contact_name']}")
-                    st.write(f"**Email:** {o['email']}")
-                    st.write(f"**Phone:** {o['phone']}")
-                    if o['info'] and o['info'] != "--- Order Specifications ---\n":
+                    if o['reg_no']: 
+                        st.markdown(f"<span style='color:#888; font-size:12px;'>REGISTRATION NO</span><br><b>{o['reg_no']}</b>", unsafe_allow_html=True)
                         st.write("")
-                        st.write(f"**Additional Information & Specifications:**")
-                        st.write(f"_{o['info']}_")
-                        
-                st.markdown("---")
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>ADDRESS</span><br><b>{o['address']}</b>", unsafe_allow_html=True)
+                    
+                with col_s2:
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>CONTACT PERSON</span><br><b>{o['contact_name']}</b>", unsafe_allow_html=True)
+                    st.write("")
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>EMAIL</span><br><b>{o['email']}</b>", unsafe_allow_html=True)
+                    st.write("")
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>PHONE</span><br><b>{o['phone']}</b>", unsafe_allow_html=True)
+            
+            # KADER 2: ROUTE
+            with st.container(border=True):
+                st.markdown("#### 📍 Route Information")
+                st.write("---")
                 col_s3, col_s4 = st.columns(2)
                 with col_s3:
-                    st.write(f"**📤 Pickup Location:** {o.get('pickup_address', '')}, {o.get('pickup_zip', '')} {o.get('pickup_city', '')}")
+                    st.markdown("<span style='color:#888; font-size:12px;'>📤 PICKUP LOCATION</span>", unsafe_allow_html=True)
+                    st.markdown(f"<b>{o.get('pickup_address', '')}</b><br>{o.get('pickup_zip', '')} {o.get('pickup_city', '')}", unsafe_allow_html=True)
                 with col_s4:
-                    st.write(f"**📥 Delivery Destination:** {o.get('delivery_address', '')}, {o.get('delivery_zip', '')} {o.get('delivery_city', '')}")
+                    st.markdown("<span style='color:#888; font-size:12px;'>📥 DELIVERY DESTINATION</span>", unsafe_allow_html=True)
+                    st.markdown(f"<b>{o.get('delivery_address', '')}</b><br>{o.get('delivery_zip', '')} {o.get('delivery_city', '')}", unsafe_allow_html=True)
+            
+            # KADER 3: SHIPMENT DETAILS
+            with st.container(border=True):
+                st.markdown("#### 📦 Shipment Details")
+                st.write("---")
+                for spec in o['specs_list']:
+                    st.markdown(spec)
+                
+                # Als er extra notities zijn, toon die dan netjes in een apart infoblok
+                if o['info_notes']:
+                    st.write("")
+                    st.markdown("<span style='color:#888; font-size:12px;'>ADDITIONAL NOTES</span>", unsafe_allow_html=True)
+                    st.info(o['info_notes'])
             
             st.write("")
             
@@ -607,7 +634,7 @@ else:
                             "contact_name": o['contact_name'],
                             "email": o['email'],
                             "phone": o['phone'],
-                            "info": o['info'],
+                            "info": o['db_info'], # <--- Hier sturen we de schone tekst naar de database
                             "types": ", ".join(o['types']),
                             "status": "New",
                             "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
