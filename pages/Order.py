@@ -14,6 +14,99 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- SUPABASE CONNECTIE ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+try:
+    supabase = init_connection()
+except Exception as e:
+    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
+
+# --- CHECK LOGIN STATUS (Belangrijk voor refresh!) ---
+if 'user' not in st.session_state:
+    session = supabase.auth.get_session()
+    if session:
+        st.session_state.user = session.user
+    else:
+        st.session_state.user = None
+
+# --- AUTO-FILL LOGICA VIA DATABASE ---
+# We doen dit eenmalig zodra de pagina (of een nieuwe order) laadt
+if 'autofill_done' not in st.session_state:
+    st.session_state.autofill_done = False
+
+if not st.session_state.autofill_done:
+    if st.session_state.user:
+        try:
+            # Haal profiel live uit de database!
+            prof_res = supabase.table("profiles").select("*").eq("id", st.session_state.user.id).execute()
+            prof = prof_res.data[0] if prof_res.data else {}
+            
+            name_parts = prof.get('contact_name', '').split(' ', 1)
+            
+            # Koppel de database waarden direct aan de keys van je invulvelden
+            st.session_state['comp_name'] = prof.get('company_name', '')
+            st.session_state['comp_addr'] = prof.get('address', '')
+            st.session_state['comp_pc'] = prof.get('zip_code', '')
+            st.session_state['comp_city'] = prof.get('city', '')
+            st.session_state['comp_country'] = 'Norway'
+            
+            st.session_state['cont_fn'] = name_parts[0] if name_parts else ''
+            st.session_state['cont_ln'] = name_parts[1] if len(name_parts) > 1 else ''
+            st.session_state['cont_email'] = st.session_state.user.email
+            st.session_state['cont_phone'] = prof.get('phone', '')
+            st.session_state['cont_code'] = '+47'
+            
+            st.session_state['p_addr'] = prof.get('address', '')
+            st.session_state['p_zip'] = prof.get('zip_code', '')
+            st.session_state['p_city'] = prof.get('city', '')
+            
+            st.session_state['d_addr'] = prof.get('del_address', '')
+            st.session_state['d_zip'] = prof.get('del_zip', '')
+            st.session_state['d_city'] = prof.get('del_city', '')
+            
+        except Exception as e:
+            pass # Als het mislukt, laten we het formulier gewoon leeg
+            
+    st.session_state.autofill_done = True
+
+# --- OVERIGE SESSION STATES ---
+if 'orders' not in st.session_state: st.session_state.orders = []
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'selected_types' not in st.session_state: st.session_state.selected_types = []
+if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
+if 'show_error' not in st.session_state: st.session_state.show_error = False
+if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
+if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
+if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
+
+# --- LOGO RESET TRUCJE ---
+def reset_form_state():
+    st.session_state.step = 1
+    st.session_state.selected_types = [] 
+    st.session_state.temp_order = {}
+    st.session_state.show_error = False
+    st.session_state.is_submitted = False
+    st.session_state.validate_step2 = False
+    st.session_state.scroll_up = False
+    
+    # Verwijder de oude velden zodat Auto-Fill ze straks opnieuw kan inladen
+    keys_to_clear = ['comp_name', 'comp_reg', 'comp_addr', 'comp_pc', 'comp_city', 'comp_country', 
+                     'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'cont_code', 'cont_info',
+                     'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city', 'autofill_done']
+    for k in keys_to_clear:
+        if k in st.session_state:
+            del st.session_state[k]
+
+if "reset" in st.query_params:
+    reset_form_state()
+    st.query_params.clear()
+    st.rerun()
+
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
 <style>
@@ -64,95 +157,8 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </div>
 """, unsafe_allow_html=True)
 
-# --- SUPABASE CONNECTIE ---
-@st.cache_resource
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
-
-try:
-    supabase = init_connection()
-except Exception as e:
-    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
-
-
-# --- ONVERWOESTBAAR GEHEUGEN (SHADOW STATE) ---
-prof = st.session_state.get('user_profile', {})
-f_name, l_name = '', ''
-if prof:
-    name_parts = prof.get('cont_name', '').split(' ', 1)
-    f_name = name_parts[0] if name_parts else ''
-    l_name = name_parts[1] if len(name_parts) > 1 else ''
-
-# LET OP: we hebben de 'Where do you ship' variabelen (zoals pd_ship_where) hier verwijderd
-default_values = {
-    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-    'pd_weight': 1.0, 'pd_oversized': False, 
-    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 
-    'mdm_weight': 0.5, 
-    'comp_name': prof.get('comp_name', ''), 
-    'comp_reg': '', 
-    'comp_addr': prof.get('address', ''), 
-    'comp_pc': prof.get('zip_code', ''), 
-    'comp_city': prof.get('city', ''), 
-    'comp_country': 'Norway',
-    'cont_fn': f_name, 
-    'cont_ln': l_name, 
-    'cont_email': prof.get('email', ''), 
-    'cont_code': '+47', 
-    'cont_phone': prof.get('phone', ''), 
-    'cont_info': '',
-    'p_addr': prof.get('address', ''), 
-    'p_zip': prof.get('zip_code', ''), 
-    'p_city': prof.get('city', ''), 
-    'd_addr': prof.get('del_address', ''), 
-    'd_zip': prof.get('del_zip', ''), 
-    'd_city': prof.get('del_city', '')
-}
-
-if 'shadow_state' not in st.session_state:
-    st.session_state.shadow_state = {}
-
-for k in default_values.keys():
-    if k in st.session_state:
-        st.session_state.shadow_state[k] = st.session_state[k]
-
-if not st.session_state.shadow_state:
-    for k, v in default_values.items():
-        st.session_state.shadow_state[k] = v
-
-for k, v in st.session_state.shadow_state.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-# --- OVERIGE SESSION STATES ---
-if 'orders' not in st.session_state: st.session_state.orders = []
-if 'step' not in st.session_state: st.session_state.step = 1
-if 'selected_types' not in st.session_state: st.session_state.selected_types = []
-if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
-if 'show_error' not in st.session_state: st.session_state.show_error = False
-if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
-if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
-if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
-
-# --- LOGO RESET TRUCJE ---
-if "reset" in st.query_params:
-    st.session_state.step = 1
-    st.session_state.selected_types = [] 
-    st.session_state.temp_order = {}
-    st.session_state.show_error = False
-    st.session_state.is_submitted = False
-    st.session_state.validate_step2 = False
-    st.session_state.scroll_up = False
-    st.session_state.shadow_state = {} 
-    for k, v in default_values.items():
-        st.session_state[k] = v
-    st.query_params.clear()
-    st.rerun()
-
 # --- ROUTING API FUNCTIES ---
-HQ_COORDS = (63.4305, 10.3951) 
+HQ_COORDS = (63.4305, 10.3951) # Trondheim hoofdkwartier.
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -179,7 +185,7 @@ def get_route_data(coord1, coord2):
     return None, None
 
 # =========================================================
-# PRIJS CALCULATIE LOGICA (AANGEPAST VOOR AUTOMATISCHE WORLDWIDE DETECTIE)
+# PRIJS CALCULATIE LOGICA
 # =========================================================
 def get_live_price():
     total_price = 0
@@ -193,21 +199,21 @@ def get_live_price():
     total_weight = 0
     
     if "Parcels & Documents" in st.session_state.selected_types:
-        w_p = st.session_state.pd_weight
+        w_p = st.session_state.get('pd_weight', 1.0)
         total_weight += w_p
         weight_cost += (w_p * 8)
-        if st.session_state.pd_oversized: weight_cost += 150 
+        if st.session_state.get('pd_oversized', False): weight_cost += 150 
             
     if "Cargo & Freight" in st.session_state.selected_types:
-        w_f = st.session_state.cf_weight
+        w_f = st.session_state.get('cf_weight', 100)
         total_weight += w_f
         weight_cost += (w_f * 3) 
-        if st.session_state.cf_pal: weight_cost += 250
-        if st.session_state.cf_full: weight_cost += 2500
-        if st.session_state.cf_lc: weight_cost += 100
+        if st.session_state.get('cf_pal', False): weight_cost += 250
+        if st.session_state.get('cf_full', False): weight_cost += 2500
+        if st.session_state.get('cf_lc', False): weight_cost += 100
 
     if "Mail & Direct Marketing" in st.session_state.selected_types:
-        w_m = st.session_state.mdm_weight
+        w_m = st.session_state.get('mdm_weight', 0.5)
         total_weight += w_m
         weight_cost += (w_m * 15)
 
@@ -215,14 +221,14 @@ def get_live_price():
         total_price += weight_cost
         breakdown.append((f"Handling & Weight ({total_weight}kg)", weight_cost))
 
-    p_addr = st.session_state.p_addr.strip()
-    p_city = st.session_state.p_city.strip()
-    d_addr = st.session_state.d_addr.strip()
-    d_city = st.session_state.d_city.strip()
+    p_addr = st.session_state.get('p_addr', '').strip()
+    p_city = st.session_state.get('p_city', '').strip()
+    d_addr = st.session_state.get('d_addr', '').strip()
+    d_city = st.session_state.get('d_city', '').strip()
 
     if len(p_addr) > 3 and len(p_city) > 2 and len(d_addr) > 3 and len(d_city) > 2:
-        pickup_string = f"{p_addr}, {st.session_state.p_zip} {p_city}"
-        delivery_string = f"{d_addr}, {st.session_state.d_zip} {d_city}"
+        pickup_string = f"{p_addr}, {st.session_state.get('p_zip', '')} {p_city}"
+        delivery_string = f"{d_addr}, {st.session_state.get('d_zip', '')} {d_city}"
         
         pick_coords = get_coordinates(pickup_string)
         del_coords = get_coordinates(delivery_string)
@@ -231,7 +237,6 @@ def get_live_price():
             dist_hq_pick, _ = get_route_data(HQ_COORDS, pick_coords)
             dist_pick_del, _ = get_route_data(pick_coords, del_coords)
             
-            # Als OSRM een route over land kan vinden (Binnen Europa)
             if dist_hq_pick is not None and dist_pick_del is not None:
                 total_km = dist_hq_pick + dist_pick_del
                 price_per_km = 12 
@@ -239,11 +244,9 @@ def get_live_price():
                 total_price += transport_cost
                 breakdown.append((f"Transport ({total_km:.0f} km)", transport_cost))
                 st.session_state.is_worldwide = False
-            
-            # Als OSRM géén route kan vinden, maar wel GPS coords heeft -> Het is waarschijnlijk Luchtvracht/Worldwide!
             else:
-                ww_base = 2500 # Starttarief Luchtvracht
-                ww_per_kg = 55 # Toeslag per kilo luchtvracht
+                ww_base = 2500 
+                ww_per_kg = 55 
                 ww_cost = ww_base + (total_weight * ww_per_kg)
                 total_price += ww_cost
                 breakdown.append((f"Worldwide Air Freight ({total_weight}kg)", ww_cost))
@@ -348,7 +351,7 @@ else:
     def email_lbl():
         base = "Work Email *"
         if st.session_state.validate_step2:
-            val = st.session_state.cont_email
+            val = st.session_state.get('cont_email', "")
             if not val or not str(val).strip(): return f"{base} 🚨 :red[(Required)]"
             elif "@" not in str(val): return f"{base} 🚨 :red[(Missing '@')]"
         return base
@@ -382,22 +385,19 @@ else:
                         if sel == "Parcels & Documents":
                             st.number_input("Total Weight (kg)", min_value=0.5, step=0.5, key="pd_weight")
                             st.checkbox("Oversized / Irregular Shape", key="pd_oversized")
-                            # RADIO BUTTONS REMOVED!
                             
                         elif sel == "Cargo & Freight":
                             cf_lbl = "**Load Type ***"
-                            if st.session_state.validate_step2 and not (st.session_state.cf_pal or st.session_state.cf_full or st.session_state.cf_lc):
+                            if st.session_state.validate_step2 and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
                                 cf_lbl += " 🚨 :red[(Select at least one)]"
                             st.markdown(cf_lbl)
                             st.checkbox("Pallet", key="cf_pal")
                             st.checkbox("Full Container/Truck Load", key="cf_full")
                             st.checkbox("Loose Cargo", key="cf_lc")
                             st.number_input("Total Est. Weight (kg)", min_value=50, step=50, key="cf_weight")
-                            # RADIO BUTTONS REMOVED!
                             
                         elif sel == "Mail & Direct Marketing":
                             st.number_input("Total Weight (kg)", min_value=0.1, step=0.1, key="mdm_weight")
-                            # RADIO BUTTONS REMOVED!
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
@@ -421,7 +421,7 @@ else:
                     with c_ln: st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
                     st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
                     phone_lbl = "Phone *"
-                    if st.session_state.validate_step2 and not st.session_state.cont_phone.strip():
+                    if st.session_state.validate_step2 and not st.session_state.get('cont_phone', '').strip():
                         phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
                     st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
                     c_code, c_phone = st.columns([1, 3])
@@ -447,14 +447,14 @@ else:
                     
                 st.write("")
                 
-                # --- LIVE MAP GENERATOR MET ECHTE ROUTE (PYDECK) ---
+                # --- LIVE MAP GENERATOR ---
                 p_coords = None
                 d_coords = None
                 
-                if len(st.session_state.p_addr) > 3 and len(st.session_state.p_city) > 2:
+                if len(st.session_state.get('p_addr','')) > 3 and len(st.session_state.get('p_city','')) > 2:
                     p_coords = get_coordinates(f"{st.session_state.p_addr}, {st.session_state.p_zip} {st.session_state.p_city}")
                         
-                if len(st.session_state.d_addr) > 3 and len(st.session_state.d_city) > 2:
+                if len(st.session_state.get('d_addr','')) > 3 and len(st.session_state.get('d_city','')) > 2:
                     d_coords = get_coordinates(f"{st.session_state.d_addr}, {st.session_state.d_zip} {st.session_state.d_city}")
                 
                 if p_coords or d_coords:
@@ -492,10 +492,8 @@ else:
                                     get_width=5
                                 )
                             )
-                            # Weer platte kaart als er een route is
-                            pitch = 20
+                            pitch = 20 
                         else:
-                            # ALS ER GEEN ROUTE IS (WORLDWIDE), MAAK EEN VLIEGENDE BOOG (ARC)
                             layers.append(
                                 pdk.Layer(
                                     "ArcLayer",
@@ -508,7 +506,6 @@ else:
                                     get_tilt=15
                                 )
                             )
-                            # Schuinere kaart voor het 3D vlieg-effect!
                             pitch = 45
                             
                         center_lat = (p_coords[0] + d_coords[0]) / 2
@@ -534,14 +531,14 @@ else:
             error_container = st.empty()
             missing_fields = False
             
-            if not st.session_state.comp_name.strip() or not st.session_state.comp_addr.strip() or not st.session_state.comp_pc.strip() or not st.session_state.comp_city.strip() or not st.session_state.cont_fn.strip() or not st.session_state.cont_ln.strip() or not st.session_state.cont_email.strip() or not st.session_state.cont_phone.strip() or not st.session_state.comp_country.strip() or not st.session_state.p_addr.strip() or not st.session_state.p_zip.strip() or not st.session_state.p_city.strip() or not st.session_state.d_addr.strip() or not st.session_state.d_zip.strip() or not st.session_state.d_city.strip(): 
+            if not st.session_state.get('comp_name','').strip() or not st.session_state.get('comp_addr','').strip() or not st.session_state.get('comp_pc','').strip() or not st.session_state.get('comp_city','').strip() or not st.session_state.get('cont_fn','').strip() or not st.session_state.get('cont_ln','').strip() or not st.session_state.get('cont_email','').strip() or not st.session_state.get('cont_phone','').strip() or not st.session_state.get('comp_country','').strip() or not st.session_state.get('p_addr','').strip() or not st.session_state.get('p_zip','').strip() or not st.session_state.get('p_city','').strip() or not st.session_state.get('d_addr','').strip() or not st.session_state.get('d_zip','').strip() or not st.session_state.get('d_city','').strip(): 
                 missing_fields = True
             
             if "Cargo & Freight" in st.session_state.selected_types:
-                if not (st.session_state.cf_pal or st.session_state.cf_full or st.session_state.cf_lc): 
+                if not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')): 
                     missing_fields = True
             
-            invalid_email = bool(st.session_state.cont_email.strip() and "@" not in st.session_state.cont_email)
+            invalid_email = bool(st.session_state.get('cont_email','').strip() and "@" not in st.session_state.get('cont_email',''))
 
             if st.session_state.validate_step2:
                 if missing_fields: error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
@@ -563,29 +560,28 @@ else:
                     st.session_state.scroll_up = False
                     
                     specs_list = []
-                    
                     is_ww = st.session_state.get('is_worldwide', False)
                     region_txt = "Worldwide" if is_ww else "Domestic/European"
                     
                     if "Parcels & Documents" in st.session_state.selected_types:
-                        w = st.session_state.pd_weight
-                        sz = "Oversized" if st.session_state.pd_oversized else "Standard"
+                        w = st.session_state.get('pd_weight', 1)
+                        sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
                         specs_list.append(f"📦 **Parcels:** {w}kg ({sz}) ➔ {region_txt}")
                     
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
-                        if st.session_state.cf_pal: loads.append("Pallet")
-                        if st.session_state.cf_full: loads.append("Full Container")
-                        if st.session_state.cf_lc: loads.append("Loose Cargo")
-                        w = st.session_state.cf_weight
+                        if st.session_state.get('cf_pal'): loads.append("Pallet")
+                        if st.session_state.get('cf_full'): loads.append("Full Container")
+                        if st.session_state.get('cf_lc'): loads.append("Loose Cargo")
+                        w = st.session_state.get('cf_weight', 100)
                         specs_list.append(f"🚛 **Freight:** {', '.join(loads)} | {w}kg ➔ {region_txt}")
                     
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
-                        w = st.session_state.mdm_weight
+                        w = st.session_state.get('mdm_weight', 0.5)
                         specs_list.append(f"📭 **Mail:** {w}kg ➔ {region_txt}")
                     
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
-                    if st.session_state.cont_info.strip(): 
+                    if st.session_state.get('cont_info', '').strip(): 
                         db_info += f"\n\nNotes: {st.session_state.cont_info.strip()}"
                     
                     calc_price, calc_breakdown = get_live_price()
@@ -692,14 +688,7 @@ else:
                 st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
                 st.info("You can review your submitted details above.")
                 if st.button("← Start a New Request", type="primary"):
-                    st.session_state.step = 1
-                    st.session_state.is_submitted = False
-                    st.session_state.validate_step2 = False
-                    st.session_state.scroll_up = False
-                    st.session_state.selected_types = []
-                    st.session_state.shadow_state = {} 
-                    for k, v in default_values.items():
-                        st.session_state[k] = v
+                    reset_form_state()
                     st.rerun()
 
     with col_calc:
