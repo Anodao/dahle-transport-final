@@ -12,17 +12,19 @@ st.set_page_config(
 )
 
 # --- SUPABASE CONNECTIE ---
-@st.cache_resource
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
     return create_client(url, key)
 
-try:
-    supabase = init_connection()
-except Exception as e:
-    st.error("⚠️ Database connection failed.")
-    st.stop()
+if 'supabase_client' not in st.session_state:
+    try:
+        st.session_state.supabase_client = init_connection()
+    except Exception as e:
+        st.error("⚠️ Database connection failed.")
+        st.stop()
+
+supabase = st.session_state.supabase_client
 
 # --- INITIALIZE SESSION STATE ---
 if 'active_tab' not in st.session_state:
