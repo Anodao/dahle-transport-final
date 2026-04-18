@@ -86,50 +86,45 @@ else:
 current_user_id = st.session_state.user.id if st.session_state.user else "guest"
 
 # =========================================================================
-# DE FIX: FORCEER OVERSCHRIJVING VAN HET GEHEUGEN ALS DE GEBRUIKER WISSELT
+# DE GEHEIME KLUIS (Bypass Streamlit's Garbage Collector)
 # =========================================================================
 if st.session_state.get('last_seen_user_id') != current_user_id:
-    # 1. Haal de gegevens op uit de database
-    prof = {}
+    safe_profile = {}
     if current_user_id != "guest":
         try:
             prof_res = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
             if prof_res.data:
-                prof = prof_res.data[0]
+                raw_prof = prof_res.data[0]
+                name_parts = str(raw_prof.get('contact_name', '')).split(' ', 1)
+                
+                # We slaan het op in een gewone dictionary, los van de UI elementen!
+                safe_profile = {
+                    'comp_name': str(raw_prof.get('company_name') or ''),
+                    'cont_fn': name_parts[0] if name_parts else '',
+                    'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
+                    'cont_email': st.session_state.user.email,
+                    'cont_phone': str(raw_prof.get('phone') or ''),
+                    'comp_addr': str(raw_prof.get('address') or ''),
+                    'comp_pc': str(raw_prof.get('zip_code') or ''),
+                    'comp_city': str(raw_prof.get('city') or ''),
+                    'p_addr': str(raw_prof.get('address') or ''),
+                    'p_zip': str(raw_prof.get('zip_code') or ''),
+                    'p_city': str(raw_prof.get('city') or ''),
+                    'd_addr': str(raw_prof.get('del_address') or ''),
+                    'd_zip': str(raw_prof.get('del_zip') or ''),
+                    'd_city': str(raw_prof.get('del_city') or '')
+                }
         except:
             pass
-
-    name_parts = str(prof.get('contact_name', '')).split(' ', 1)
-    f_name = name_parts[0] if name_parts else ''
-    l_name = name_parts[1] if len(name_parts) > 1 else ''
-
-    # 2. Overschrijf de Streamlit Session State KEIHARD met deze data
-    st.session_state['comp_name'] = str(prof.get('company_name') or '')
-    st.session_state['comp_reg'] = ''
-    st.session_state['comp_addr'] = str(prof.get('address') or '')
-    st.session_state['comp_pc'] = str(prof.get('zip_code') or '')
-    st.session_state['comp_city'] = str(prof.get('city') or '')
-    st.session_state['comp_country'] = 'Norway'
-    
-    st.session_state['cont_fn'] = f_name
-    st.session_state['cont_ln'] = l_name
-    st.session_state['cont_email'] = st.session_state.user.email if current_user_id != "guest" else ''
-    st.session_state['cont_code'] = '+47'
-    st.session_state['cont_phone'] = str(prof.get('phone') or '')
-    st.session_state['cont_info'] = ''
-    
-    st.session_state['p_addr'] = str(prof.get('address') or '')
-    st.session_state['p_zip'] = str(prof.get('zip_code') or '')
-    st.session_state['p_city'] = str(prof.get('city') or '')
-    st.session_state['d_addr'] = str(prof.get('del_address') or '')
-    st.session_state['d_zip'] = str(prof.get('del_zip') or '')
-    st.session_state['d_city'] = str(prof.get('del_city') or '')
-    
-    # 3. Zorg dat we weten dat we deze stap gehad hebben
+            
+    # Zet de kluis in het geheugen
+    st.session_state['user_db_profile'] = safe_profile
     st.session_state['last_seen_user_id'] = current_user_id
 
+# Haal de kluis op (Leeg als gast, gevuld als ingelogd)
+prof = st.session_state.get('user_db_profile', {})
 
-# --- OVERIGE SESSION STATES (Niet gerelateerd aan profiel) ---
+# --- OVERIGE SESSION STATES ---
 if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
@@ -139,20 +134,10 @@ if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
 
-# Basis states voor de checkboxes
-default_checks = ['chk_parcels', 'chk_freight', 'chk_mail', 'pd_oversized', 'cf_pal', 'cf_full', 'cf_lc']
+# Basis states voor de checkboxes in Stap 1
+default_checks = ['chk_parcels', 'chk_freight', 'chk_mail']
 for k in default_checks:
     if k not in st.session_state: st.session_state[k] = False
-
-if 'pd_weight' not in st.session_state: st.session_state['pd_weight'] = 1.0
-if 'cf_weight' not in st.session_state: st.session_state['cf_weight'] = 100
-if 'mdm_weight' not in st.session_state: st.session_state['mdm_weight'] = 0.5
-
-default_keys = {
-    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
-    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_phone': '', 'cont_code': '+47', 'cont_info': '',
-    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
-}
 
 # --- LOGO RESET TRUCJE ---
 def reset_form_state():
@@ -163,9 +148,11 @@ def reset_form_state():
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
-    for k, v in default_keys.items():
-        st.session_state[k] = v
     st.session_state['last_seen_user_id'] = None 
+    # Wis alle ingevulde velden
+    keys_to_clear = ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']
+    for k in keys_to_clear:
+        if k in st.session_state: del st.session_state[k]
 
 if "reset" in st.query_params:
     reset_form_state()
@@ -242,8 +229,8 @@ def get_live_price():
     d_city = str(st.session_state.get('d_city') or '').strip()
 
     if len(p_addr) > 3 and len(p_city) > 2 and len(d_addr) > 3 and len(d_city) > 2:
-        pickup_string = f"{p_addr}, {str(st.session_state.get('p_zip') or '')} {p_city}"
-        delivery_string = f"{d_addr}, {str(st.session_state.get('d_zip') or '')} {d_city}"
+        pickup_string = f"{p_addr}, {st.session_state.get('p_zip', '')} {p_city}"
+        delivery_string = f"{d_addr}, {st.session_state.get('d_zip', '')} {d_city}"
         
         pick_coords = get_coordinates(pickup_string)
         del_coords = get_coordinates(delivery_string)
@@ -292,17 +279,6 @@ st.write("")
 if st.session_state.step == 1:
     col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
     with col_main:
-        st.markdown("""
-        <style>
-        div[data-testid="stVerticalBlockBorderWrapper"] { position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important; background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:hover { border-color: #666 !important; background-color: #262626 !important; transform: translateY(-3px); }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] { margin-bottom: 5px; padding-top: 0px; }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.6); margin-right: 15px; border-color: #888; }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label p { font-size: 20px !important; font-weight: 700 !important; color: white !important; }
-        </style>
-        """, unsafe_allow_html=True)
-        
         dynamic_css = ""
         if st.session_state.get('chk_parcels'): dynamic_css += '''div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
         if st.session_state.get('chk_freight'): dynamic_css += '''div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
@@ -397,22 +373,23 @@ else:
                                 st.session_state.validate_step2 = False
                                 st.rerun() 
 
+                        # BIJ DE INPUTS GEBRUIKEN WE NU DE 'value=' PARAMETER OM DE KLUIS UIT TE LEZEN!
                         if sel == "Parcels & Documents":
-                            st.number_input("Total Weight (kg)", min_value=0.5, step=0.5, key="pd_weight")
-                            st.checkbox("Oversized / Irregular Shape", key="pd_oversized")
+                            st.number_input("Total Weight (kg)", min_value=0.5, step=0.5, value=st.session_state.get('pd_weight', 1.0), key="pd_weight")
+                            st.checkbox("Oversized / Irregular Shape", value=st.session_state.get('pd_oversized', False), key="pd_oversized")
                             
                         elif sel == "Cargo & Freight":
                             cf_lbl = "**Load Type ***"
                             if st.session_state.validate_step2 and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
                                 cf_lbl += " 🚨 :red[(Select at least one)]"
                             st.markdown(cf_lbl)
-                            st.checkbox("Pallet", key="cf_pal")
-                            st.checkbox("Full Container/Truck Load", key="cf_full")
-                            st.checkbox("Loose Cargo", key="cf_lc")
-                            st.number_input("Total Est. Weight (kg)", min_value=50, step=50, key="cf_weight")
+                            st.checkbox("Pallet", value=st.session_state.get('cf_pal', False), key="cf_pal")
+                            st.checkbox("Full Container/Truck Load", value=st.session_state.get('cf_full', False), key="cf_full")
+                            st.checkbox("Loose Cargo", value=st.session_state.get('cf_lc', False), key="cf_lc")
+                            st.number_input("Total Est. Weight (kg)", min_value=50, step=50, value=st.session_state.get('cf_weight', 100), key="cf_weight")
                             
                         elif sel == "Mail & Direct Marketing":
-                            st.number_input("Total Weight (kg)", min_value=0.1, step=0.1, key="mdm_weight")
+                            st.number_input("Total Weight (kg)", min_value=0.1, step=0.1, value=st.session_state.get('mdm_weight', 0.5), key="mdm_weight")
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
@@ -421,20 +398,21 @@ else:
                 st.markdown("<h3 style='margin-top: 0px;'>🏢 Company & Contact Details</h3>", unsafe_allow_html=True)
                 st.write("---")
                 c_form_left, c_form_right = st.columns(2, gap="large")
+                
                 with c_form_left:
-                    st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
+                    st.text_input(req_lbl("comp_name", "Company Name *"), value=prof.get('comp_name', ''), key="comp_name", max_chars=100)
                     st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
-                    st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
+                    st.text_input(req_lbl("comp_addr", "Company Address *"), value=prof.get('comp_addr', ''), key="comp_addr", max_chars=150)
                     c_pc, c_city = st.columns(2)
-                    with c_pc: st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
-                    with c_city: st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
-                    st.text_input(req_lbl("comp_country", "Country *"), key="comp_country", max_chars=100)
+                    with c_pc: st.text_input(req_lbl("comp_pc", "Postal Code *"), value=prof.get('comp_pc', ''), key="comp_pc", max_chars=20)
+                    with c_city: st.text_input(req_lbl("comp_city", "City *"), value=prof.get('comp_city', ''), key="comp_city", max_chars=100)
+                    st.text_input(req_lbl("comp_country", "Country *"), value="Norway", key="comp_country", max_chars=100)
     
                 with c_form_right:
                     c_fn, c_ln = st.columns(2)
-                    with c_fn: st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
-                    with c_ln: st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
-                    st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
+                    with c_fn: st.text_input(req_lbl("cont_fn", "First Name *"), value=prof.get('cont_fn', ''), key="cont_fn", max_chars=50)
+                    with c_ln: st.text_input(req_lbl("cont_ln", "Last Name *"), value=prof.get('cont_ln', ''), key="cont_ln", max_chars=50)
+                    st.text_input(email_lbl(), placeholder="example@email.no", value=prof.get('cont_email', ''), key="cont_email", max_chars=150)
                     phone_lbl = "Phone *"
                     
                     phone_val = str(st.session_state.get('cont_phone') or '').strip()
@@ -443,7 +421,7 @@ else:
                     st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
                     c_code, c_phone = st.columns([1, 3])
                     with c_code: st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
-                    with c_phone: st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
+                    with c_phone: st.text_input("Phone", placeholder="e.g. 123 456 789", value=prof.get('cont_phone', ''), label_visibility="collapsed", key="cont_phone", max_chars=20)
     
                 st.write("")
                 st.markdown("<h3 style='margin-top: 20px;'>📍 Route Information</h3>", unsafe_allow_html=True)
@@ -451,16 +429,16 @@ else:
                 c_route_left, c_route_right = st.columns(2, gap="large")
                 with c_route_left:
                     st.markdown("**📤 Pickup Location**")
-                    st.text_input(req_lbl("p_addr", "Street Address *"), key="p_addr", max_chars=150)
+                    st.text_input(req_lbl("p_addr", "Street Address *"), value=prof.get('p_addr', ''), key="p_addr", max_chars=150)
                     c_p_zip, c_p_city = st.columns(2)
-                    with c_p_zip: st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
-                    with c_p_city: st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
+                    with c_p_zip: st.text_input(req_lbl("p_zip", "Zip Code *"), value=prof.get('p_zip', ''), key="p_zip", max_chars=20)
+                    with c_p_city: st.text_input(req_lbl("p_city", "City *"), value=prof.get('p_city', ''), key="p_city", max_chars=100)
                 with c_route_right:
                     st.markdown("**📥 Delivery Destination**")
-                    st.text_input(req_lbl("d_addr", "Street Address *"), key="d_addr", max_chars=150)
+                    st.text_input(req_lbl("d_addr", "Street Address *"), value=prof.get('d_addr', ''), key="d_addr", max_chars=150)
                     c_d_zip, c_d_city = st.columns(2)
-                    with c_d_zip: st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
-                    with c_d_city: st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
+                    with c_d_zip: st.text_input(req_lbl("d_zip", "Zip Code *"), value=prof.get('d_zip', ''), key="d_zip", max_chars=20)
+                    with c_d_city: st.text_input(req_lbl("d_city", "City *"), value=prof.get('d_city', ''), key="d_city", max_chars=100)
                     
                 st.write("")
                 
