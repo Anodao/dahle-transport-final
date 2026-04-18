@@ -152,16 +152,12 @@ st.markdown("""
 # =========================================================
 def get_live_price():
     total_price = 0
-    breakdown = []
-    
-    # Als we nog in stap 1 zijn zonder selectie
-    if not st.session_state.selected_types and st.session_state.step == 1:
-        return 0, ["Selecteer een dienst om de prijs te zien."]
+    breakdown = [] # We gebruiken nu tuples (Naam, Prijs) voor strakke HTML uitlijning
         
-    # Basistarief per order
-    base_fee = 150
+    # Verlaagd basistarief
+    base_fee = 49
     total_price += base_fee
-    breakdown.append(f"Base Fee: {base_fee} NOK")
+    breakdown.append(("Base Fee", base_fee))
 
     # PARCELS & DOCUMENTS
     if "Parcels & Documents" in st.session_state.selected_types:
@@ -169,88 +165,87 @@ def get_live_price():
         shape_oversized = st.session_state.get('pd_oversized', False)
         region = st.session_state.get('pd_ship_where', 'Domestic')
         
-        # Formule: 80 start + 15 per kg
-        p_price = 80 + (w_p * 15)
-        if shape_oversized: p_price += 250 # Oversized toeslag
+        # formule: 45 start + 8 per kg
+        p_price = 45 + (w_p * 8)
+        if shape_oversized: p_price += 150 # Lagere oversized toeslag
         
-        # Region multiplier
-        if region == "Pan-European": p_price *= 2.5
-        elif region == "Worldwide": p_price *= 5.0
+        # Region multiplier verlaagd
+        if region == "Pan-European": p_price *= 1.8
+        elif region == "Worldwide": p_price *= 3.5
         
         total_price += p_price
-        breakdown.append(f"Parcels ({w_p}kg, {region}): {p_price:,.0f} NOK")
+        breakdown.append((f"Parcels ({w_p}kg, {region})", p_price))
 
     # CARGO & FREIGHT
     if "Cargo & Freight" in st.session_state.selected_types:
         w_f = st.session_state.get('cf_weight', 100)
         region = st.session_state.get('cf_ship_where', 'Domestic')
         
-        f_price = 1000 + (w_f * 5) # 1000 start + 5 per kg
+        # Goedkopere formule: 450 start + 3 per kg
+        f_price = 450 + (w_f * 3) 
         
-        # Vorm/Load toeslagen
-        if st.session_state.get('cf_pal'): f_price += 400
-        if st.session_state.get('cf_full'): f_price += 5000
-        if st.session_state.get('cf_lc'): f_price += 200
+        # Vorm/Load toeslagen verlaagd
+        if st.session_state.get('cf_pal'): f_price += 250
+        if st.session_state.get('cf_full'): f_price += 2500
+        if st.session_state.get('cf_lc'): f_price += 100
         
-        if region == "Pan-European": f_price *= 2.0
-        elif region == "Worldwide": f_price *= 4.5
+        if region == "Pan-European": f_price *= 1.8
+        elif region == "Worldwide": f_price *= 3.5
         
         total_price += f_price
-        breakdown.append(f"Freight ({w_f}kg, {region}): {f_price:,.0f} NOK")
+        breakdown.append((f"Freight ({w_f}kg, {region})", f_price))
 
     # MAIL & MARKETING
     if "Mail & Direct Marketing" in st.session_state.selected_types:
         w_m = st.session_state.get('mdm_weight', 0.5)
         region = st.session_state.get('mdm_ship_where', 'Pan-European')
         
-        m_price = 45 + (w_m * 25)
-        if region == "Worldwide": m_price *= 3.0
+        m_price = 25 + (w_m * 15)
+        if region == "Worldwide": m_price *= 2.5
         
         total_price += m_price
-        breakdown.append(f"Mail ({w_m}kg, {region}): {m_price:,.0f} NOK")
+        breakdown.append((f"Mail ({w_m}kg, {region})", m_price))
 
     return total_price, breakdown
 
 
 # =========================================================
-# DE WEBSITE LOGICA (NU MET CALCULATOR KOLOM!)
+# DE WEBSITE LOGICA (DYNAMISCHE LAYOUT)
 # =========================================================
 
-# AANGEPAST: col_calc toegevoegd aan de rechterkant!
-col_spacer_L, col_main, col_calc = st.columns([0.5, 6, 2.5], gap="large")
-
-with col_main:
+# Helper voor de step tracker
+s = st.session_state.step
+def get_class(step_num):
+    if s > step_num: return "completed"
+    elif s == step_num: return "active"
+    return "inactive"
     
-    s = st.session_state.step
-    def get_class(step_num):
-        if s > step_num: return "completed"
-        elif s == step_num: return "active"
-        return "inactive"
-        
-    line_1 = "line-completed" if s > 1 else ""
-    line_2 = "line-completed" if s > 2 else ""
+line_1 = "line-completed" if s > 1 else ""
+line_2 = "line-completed" if s > 2 else ""
 
-    tracker_html = f"""
-    <div class="step-wrapper">
-        <div class="step-item {get_class(1)}">
-            <div class="step-circle">1</div><div class="step-label">Shipment</div>
-        </div>
-        <div class="step-line {line_1}"></div>
-        <div class="step-item {get_class(2)}">
-            <div class="step-circle">2</div><div class="step-label">Details</div>
-        </div>
-        <div class="step-line {line_2}"></div>
-        <div class="step-item {get_class(3)}">
-            <div class="step-circle">3</div><div class="step-label">Review</div>
-        </div>
+tracker_html = f"""
+<div class="step-wrapper">
+    <div class="step-item {get_class(1)}">
+        <div class="step-circle">1</div><div class="step-label">Shipment</div>
     </div>
-    """
-    st.markdown(tracker_html, unsafe_allow_html=True)
+    <div class="step-line {line_1}"></div>
+    <div class="step-item {get_class(2)}">
+        <div class="step-circle">2</div><div class="step-label">Details</div>
+    </div>
+    <div class="step-line {line_2}"></div>
+    <div class="step-item {get_class(3)}">
+        <div class="step-circle">3</div><div class="step-label">Review</div>
+    </div>
+</div>
+"""
 
-    # =========================================================
-    # STAP 1: KEUZE 
-    # =========================================================
-    if st.session_state.step == 1:
+# --- STAP 1: GEEN CALCULATOR (Gecentreerde Layout) ---
+if st.session_state.step == 1:
+    col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
+    
+    with col_main:
+        st.markdown(tracker_html, unsafe_allow_html=True)
+        
         st.markdown("""
         <style>
         div[data-testid="stVerticalBlockBorderWrapper"] { position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important; background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%; }
@@ -263,7 +258,6 @@ with col_main:
         """, unsafe_allow_html=True)
         
         dynamic_css = ""
-        
         if st.session_state.chk_parcels:
             dynamic_css += '''div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; }
             div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
@@ -324,356 +318,378 @@ with col_main:
                     st.session_state.step = 2
                     st.rerun()
 
-    # =========================================================
-    # STAP 2: DYNAMISCHE DETAILS + CONTACT FORMULIER
-    # =========================================================
-    elif st.session_state.step == 2:
-        
-        st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
-        
-        if st.session_state.get('scroll_up', False):
-            st.components.v1.html(
-                """<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
-            st.session_state.scroll_up = False 
-            
-        st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
-        
-        def req_lbl(key, base_text):
-            if st.session_state.get('validate_step2', False):
-                val = st.session_state.get(key, "")
-                if not val or not str(val).strip():
-                    return f"{base_text} 🚨 :red[(Required)]"
-            return base_text
-
-        def email_lbl():
-            base = "Work Email *"
-            if st.session_state.get('validate_step2', False):
-                val = st.session_state.get('cont_email', "")
-                if not val or not str(val).strip():
-                    return f"{base} 🚨 :red[(Required)]"
-                elif "@" not in str(val):
-                    return f"{base} 🚨 :red[(Missing '@')]"
-            return base
-
-        st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
-        
-        if not st.session_state.selected_types:
-             st.session_state.step = 1
-             st.rerun()
-
-        aantal_geselecteerd = len(st.session_state.selected_types)
-        cols = st.columns(aantal_geselecteerd)
-        
-        cf_pal_val = False
-        cf_full_val = False
-        cf_lc_val = False
-        
-        for i, sel in enumerate(st.session_state.selected_types[:]):
-            with cols[i]:
-                with st.container(border=True):
-                    c_title, c_close = st.columns([8, 1])
-                    with c_title: st.markdown(f"#### {sel}")
-                    with c_close:
-                        if st.button("✖", key=f"btn_close_{sel}", help=f"Remove {sel}", type="tertiary"):
-                            st.session_state.selected_types.remove(sel)
-                            if sel == "Parcels & Documents": st.session_state.chk_parcels = False
-                            if sel == "Cargo & Freight": st.session_state.chk_freight = False
-                            if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
-                            st.session_state.validate_step2 = False
-                            st.rerun() 
-
-                    if sel == "Parcels & Documents":
-                        # NIEUW: Gewicht & Vorm Input
-                        st.number_input("Total Weight (kg)", min_value=0.5, value=st.session_state.get('pd_weight', 1.0), step=0.5, key="pd_weight")
-                        st.checkbox("Oversized / Irregular Shape", value=st.session_state.get('pd_oversized', False), key="pd_oversized")
-                        
-                        st.radio("**Where do you ship? *** (Select one)", 
-                                 options=["Domestic", "Pan-European", "Worldwide"], 
-                                 captions=["within the country", "within the continent", "beyond the continent"],
-                                 key="pd_ship_where")
-                        
-                    elif sel == "Cargo & Freight":
-                        cf_lbl = "**Load Type ***"
-                        if st.session_state.get('validate_step2', False) and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
-                            cf_lbl += " 🚨 :red[(Select at least one)]"
-                        st.markdown(cf_lbl)
-                        
-                        cf_pal_val = st.checkbox("Pallet", value=st.session_state.get('cf_pal', False), key="cf_pal")
-                        cf_full_val = st.checkbox("Full Container/Truck Load", value=st.session_state.get('cf_full', False), key="cf_full")
-                        cf_lc_val = st.checkbox("Loose Cargo", value=st.session_state.get('cf_lc', False), key="cf_lc")
-                            
-                        # NIEUW: Gewicht Input
-                        st.number_input("Total Est. Weight (kg)", min_value=50, value=st.session_state.get('cf_weight', 100), step=50, key="cf_weight")
-                            
-                        st.radio("**Where do you ship? *** (Select one)", 
-                                 options=["Domestic", "Pan-European", "Worldwide"], 
-                                 captions=["within the country", "within the continent", "beyond the continent"],
-                                 key="cf_ship_where")
-                        
-                    elif sel == "Mail & Direct Marketing":
-                        # NIEUW: Gewicht Input
-                        st.number_input("Total Weight (kg)", min_value=0.1, value=st.session_state.get('mdm_weight', 0.5), step=0.1, key="mdm_weight")
-                        
-                        st.radio("**Where do you ship? *** (Select one)", 
-                                 options=["Pan-European", "Worldwide"], 
-                                 captions=["within the continent", "beyond the continent"],
-                                 key="mdm_ship_where")
-                        
-        st.markdown("</div>", unsafe_allow_html=True)
-        
-        st.markdown("<br><br>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
-        
-        c_form_left, c_form_right = st.columns(2, gap="large")
-        
-        with c_form_left:
-            st.markdown("#### Company Details")
-            company_name = st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
-            company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
-            company_address = st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
-            c_pc, c_city = st.columns(2)
-            with c_pc: postal_code = st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
-            with c_city: city = st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
-            country = st.text_input(req_lbl("comp_country", "Country *"), value="Norway", key="comp_country", max_chars=100)
-
-        with c_form_right:
-            st.markdown("#### Contact Person")
-            c_fn, c_ln = st.columns(2)
-            with c_fn: first_name = st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
-            with c_ln: last_name = st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
-            
-            work_email = st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
-            
-            phone_lbl = "Phone *"
-            if st.session_state.get('validate_step2', False) and not st.session_state.get('cont_phone', '').strip():
-                phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
-            st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
-            
-            c_code, c_phone = st.columns([1, 3])
-            with c_code: 
-                phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
-            with c_phone: 
-                phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
-
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        st.markdown("#### Route Information")
-        c_route_left, c_route_right = st.columns(2, gap="large")
-        
-        with c_route_left:
-            st.markdown("**📤 Pickup Location**")
-            p_address = st.text_input(req_lbl("p_addr", "Pickup Address *"), key="p_addr", max_chars=150)
-            c_p_zip, c_p_city = st.columns(2)
-            with c_p_zip: p_zip = st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
-            with c_p_city: p_city = st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
-            
-        with c_route_right:
-            st.markdown("**📥 Delivery Destination**")
-            d_address = st.text_input(req_lbl("d_addr", "Delivery Address *"), key="d_addr", max_chars=150)
-            c_d_zip, c_d_city = st.columns(2)
-            with c_d_zip: d_zip = st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
-            with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
-            
-        st.markdown("<br>", unsafe_allow_html=True)
-
-        additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
-
-        st.write("")
-        st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
-        
-        error_container = st.empty()
-        missing_fields = False
-        
-        if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip() or not p_address.strip() or not p_zip.strip() or not p_city.strip() or not d_address.strip() or not d_zip.strip() or not d_city.strip():
-            missing_fields = True
-        
-        if "Cargo & Freight" in st.session_state.selected_types:
-            if not (cf_pal_val or cf_full_val or cf_lc_val):
-                missing_fields = True
-
-        invalid_email = bool(work_email.strip() and "@" not in work_email)
-
-        if st.session_state.get('validate_step2', False):
-            if missing_fields:
-                error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
-            elif invalid_email:
-                error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
-
-        c_back, c_next = st.columns([1, 4])
-        if c_back.button("← Go Back", type="secondary", use_container_width=True):
-            st.session_state.step = 1
-            st.session_state.validate_step2 = False 
-            st.rerun()
-            
-        if c_next.button("Continue to Review →", type="primary", use_container_width=True):
-            st.session_state.validate_step2 = True 
-            
-            if missing_fields or invalid_email:
-                st.session_state.scroll_up = True
-                st.rerun()
-            else:
-                st.session_state.validate_step2 = False 
-                st.session_state.scroll_up = False
-                
-                compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
-                
-                if "Parcels & Documents" in st.session_state.selected_types:
-                    w = st.session_state.get('pd_weight', 1.0)
-                    sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
-                    compiled_info += f"📦 Parcels: {w}kg ({sz}), to {st.session_state.pd_ship_where}.\n"
-                
-                if "Cargo & Freight" in st.session_state.selected_types:
-                    loads = []
-                    if cf_pal_val: loads.append("Pallet")
-                    if cf_full_val: loads.append("Full Container")
-                    if cf_lc_val: loads.append("Loose Cargo")
-                    w = st.session_state.get('cf_weight', 100)
-                    compiled_info += f"🚛 Freight: Load: {', '.join(loads)}, {w}kg to {st.session_state.cf_ship_where}.\n"
-                
-                if "Mail & Direct Marketing" in st.session_state.selected_types:
-                    w = st.session_state.get('mdm_weight', 0.5)
-                    compiled_info += f"📭 Mail: {w}kg to {st.session_state.mdm_ship_where}.\n"
-                
-                # Sla ook de berekende prijs op!
-                calc_price, _ = get_live_price()
-                
-                st.session_state.temp_order = {
-                    "company": company_name, 
-                    "reg_no": company_reg,
-                    "address": f"{company_address}, {postal_code} {city}, {country}",
-                    "contact_name": f"{first_name} {last_name}",
-                    "email": work_email,
-                    "phone": f"{phone_code} {phone}",
-                    "info": compiled_info,
-                    "types": st.session_state.selected_types,
-                    "pickup_address": p_address,
-                    "pickup_zip": p_zip,
-                    "pickup_city": p_city,
-                    "delivery_address": d_address,
-                    "delivery_zip": d_zip,
-                    "delivery_city": d_city,
-                    "price": calc_price # <--- PRIJS AAN DATABASE TOEGEVOEGD
-                }
-                st.session_state.step = 3
-                st.rerun()
-
-    # =========================================================
-    # STAP 3: REVIEW 
-    # =========================================================
-    elif st.session_state.step == 3:
-        o = st.session_state.temp_order
-        with st.container(border=True):
-            st.markdown("#### Review your request")
-            st.markdown("---")
-            
-            col_s1, col_s2 = st.columns(2)
-            with col_s1:
-                st.write(f"**Company Name:** {o['company']}")
-                if o['reg_no']: st.write(f"**Registration No:** {o['reg_no']}")
-                st.write(f"**Address:** {o['address']}")
-                st.write("")
-                st.write(f"**Selected Services:**")
-                for s_type in o['types']:
-                    st.write(f"- {s_type}")
-                    
-            with col_s2:
-                st.write(f"**Contact Person:** {o['contact_name']}")
-                st.write(f"**Email:** {o['email']}")
-                st.write(f"**Phone:** {o['phone']}")
-                if o['info'] and o['info'] != "--- Order Specifications ---\n":
-                    st.write("")
-                    st.write(f"**Additional Information & Specifications:**")
-                    st.write(f"_{o['info']}_")
-                    
-            st.markdown("---")
-            col_s3, col_s4 = st.columns(2)
-            with col_s3:
-                st.write(f"**📤 Pickup Location:** {o.get('pickup_address', '')}, {o.get('pickup_zip', '')} {o.get('pickup_city', '')}")
-            with col_s4:
-                st.write(f"**📥 Delivery Destination:** {o.get('delivery_address', '')}, {o.get('delivery_zip', '')} {o.get('delivery_city', '')}")
-        
-        st.write("")
-        
-        if not st.session_state.is_submitted:
-            c_b1, c_b2 = st.columns([1, 4])
-            with c_b1:
-                if st.button("← Edit Details", type="secondary", use_container_width=True):
-                    st.session_state.step = 2
-                    st.rerun()
-            with c_b2:
-                if st.button("✅ CONFIRM & SEND REQUEST", type="primary", use_container_width=True):
-                    
-                    db_order = {
-                        "company": o['company'],
-                        "reg_no": o['reg_no'],
-                        "address": o['address'],
-                        "contact_name": o['contact_name'],
-                        "email": o['email'],
-                        "phone": o['phone'],
-                        "info": o['info'],
-                        "types": ", ".join(o['types']),
-                        "status": "New",
-                        "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                        "pickup_address": o.get('pickup_address', ''),
-                        "pickup_zip": o.get('pickup_zip', ''),
-                        "pickup_city": o.get('pickup_city', ''),
-                        "delivery_address": o.get('delivery_address', ''),
-                        "delivery_zip": o.get('delivery_zip', ''),
-                        "delivery_city": o.get('delivery_city', ''),
-                        "price": o.get('price', 0) # <--- Slaat de prijs op in de database!
-                    }
-                    
-                    try:
-                        supabase.table("orders").insert(db_order).execute()
-                        st.balloons()
-                        st.session_state.is_submitted = True
-                        st.rerun()
-                    except Exception as e:
-                        st.error("⚠️ Failed to send order to the database. Ensure the 'price' column exists in your Supabase 'orders' table!")
-                        
-        else:
-            st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
-            st.info("You can review your submitted details above.")
-            
-            if st.button("← Start a New Request", type="primary"):
-                st.session_state.step = 1
-                st.session_state.is_submitted = False
-                st.session_state.validate_step2 = False
-                st.session_state.scroll_up = False
-                st.session_state.selected_types = []
-                st.session_state.chk_parcels = False
-                st.session_state.chk_freight = False
-                st.session_state.chk_mail = False
-                for key in ['p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
-                    if key in st.session_state:
-                        del st.session_state[key]
-                st.rerun()
-
-
-# =========================================================
-# DE NIEUWE RECHTERKOLOM (LIVE CALCULATOR)
-# =========================================================
-with col_calc:
-    st.markdown("<div class='sticky-calculator'>", unsafe_allow_html=True)
+# --- STAP 2 & 3: MET CALCULATOR (Aangepaste Layout) ---
+else:
+    col_spacer_L, col_main, col_calc = st.columns([0.5, 6, 2.5], gap="large")
     
-    with st.container(border=True):
-        st.markdown("<h3 style='margin-top:0px; color:#894b9d;'>💰 Live Estimate</h3>", unsafe_allow_html=True)
-        st.write("Your price updates automatically as you adjust your transport details.")
-        
-        st.write("---")
-        
-        # Roep de logica aan die we bovenaan hebben gedefinieerd
+    with col_main:
+        st.markdown(tracker_html, unsafe_allow_html=True)
+
+        # =========================================================
+        # STAP 2: DYNAMISCHE DETAILS + CONTACT FORMULIER
+        # =========================================================
+        if st.session_state.step == 2:
+            st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
+            
+            if st.session_state.get('scroll_up', False):
+                st.components.v1.html(
+                    """<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
+                st.session_state.scroll_up = False 
+                
+            st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
+            
+            def req_lbl(key, base_text):
+                if st.session_state.get('validate_step2', False):
+                    val = st.session_state.get(key, "")
+                    if not val or not str(val).strip():
+                        return f"{base_text} 🚨 :red[(Required)]"
+                return base_text
+
+            def email_lbl():
+                base = "Work Email *"
+                if st.session_state.get('validate_step2', False):
+                    val = st.session_state.get('cont_email', "")
+                    if not val or not str(val).strip():
+                        return f"{base} 🚨 :red[(Required)]"
+                    elif "@" not in str(val):
+                        return f"{base} 🚨 :red[(Missing '@')]"
+                return base
+
+            st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
+            
+            if not st.session_state.selected_types:
+                 st.session_state.step = 1
+                 st.rerun()
+
+            aantal_geselecteerd = len(st.session_state.selected_types)
+            cols = st.columns(aantal_geselecteerd)
+            
+            cf_pal_val = False
+            cf_full_val = False
+            cf_lc_val = False
+            
+            for i, sel in enumerate(st.session_state.selected_types[:]):
+                with cols[i]:
+                    with st.container(border=True):
+                        c_title, c_close = st.columns([8, 1])
+                        with c_title: st.markdown(f"#### {sel}")
+                        with c_close:
+                            if st.button("✖", key=f"btn_close_{sel}", help=f"Remove {sel}", type="tertiary"):
+                                st.session_state.selected_types.remove(sel)
+                                if sel == "Parcels & Documents": st.session_state.chk_parcels = False
+                                if sel == "Cargo & Freight": st.session_state.chk_freight = False
+                                if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
+                                st.session_state.validate_step2 = False
+                                st.rerun() 
+
+                        if sel == "Parcels & Documents":
+                            st.number_input("Total Weight (kg)", min_value=0.5, value=st.session_state.get('pd_weight', 1.0), step=0.5, key="pd_weight")
+                            st.checkbox("Oversized / Irregular Shape", value=st.session_state.get('pd_oversized', False), key="pd_oversized")
+                            st.radio("**Where do you ship? *** (Select one)", 
+                                     options=["Domestic", "Pan-European", "Worldwide"], 
+                                     captions=["within the country", "within the continent", "beyond the continent"],
+                                     key="pd_ship_where")
+                            
+                        elif sel == "Cargo & Freight":
+                            cf_lbl = "**Load Type ***"
+                            if st.session_state.get('validate_step2', False) and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
+                                cf_lbl += " 🚨 :red[(Select at least one)]"
+                            st.markdown(cf_lbl)
+                            
+                            cf_pal_val = st.checkbox("Pallet", value=st.session_state.get('cf_pal', False), key="cf_pal")
+                            cf_full_val = st.checkbox("Full Container/Truck Load", value=st.session_state.get('cf_full', False), key="cf_full")
+                            cf_lc_val = st.checkbox("Loose Cargo", value=st.session_state.get('cf_lc', False), key="cf_lc")
+                                
+                            st.number_input("Total Est. Weight (kg)", min_value=50, value=st.session_state.get('cf_weight', 100), step=50, key="cf_weight")
+                            st.radio("**Where do you ship? *** (Select one)", 
+                                     options=["Domestic", "Pan-European", "Worldwide"], 
+                                     captions=["within the country", "within the continent", "beyond the continent"],
+                                     key="cf_ship_where")
+                            
+                        elif sel == "Mail & Direct Marketing":
+                            st.number_input("Total Weight (kg)", min_value=0.1, value=st.session_state.get('mdm_weight', 0.5), step=0.1, key="mdm_weight")
+                            st.radio("**Where do you ship? *** (Select one)", 
+                                     options=["Pan-European", "Worldwide"], 
+                                     captions=["within the continent", "beyond the continent"],
+                                     key="mdm_ship_where")
+                            
+            st.markdown("</div>", unsafe_allow_html=True)
+            
+            st.markdown("<br><br>", unsafe_allow_html=True)
+            st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
+            
+            c_form_left, c_form_right = st.columns(2, gap="large")
+            
+            with c_form_left:
+                st.markdown("#### Company Details")
+                company_name = st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
+                company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
+                company_address = st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
+                c_pc, c_city = st.columns(2)
+                with c_pc: postal_code = st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
+                with c_city: city = st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
+                country = st.text_input(req_lbl("comp_country", "Country *"), value="Norway", key="comp_country", max_chars=100)
+
+            with c_form_right:
+                st.markdown("#### Contact Person")
+                c_fn, c_ln = st.columns(2)
+                with c_fn: first_name = st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
+                with c_ln: last_name = st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
+                
+                work_email = st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
+                
+                phone_lbl = "Phone *"
+                if st.session_state.get('validate_step2', False) and not st.session_state.get('cont_phone', '').strip():
+                    phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
+                st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
+                
+                c_code, c_phone = st.columns([1, 3])
+                with c_code: 
+                    phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
+                with c_phone: 
+                    phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            st.markdown("#### Route Information")
+            c_route_left, c_route_right = st.columns(2, gap="large")
+            
+            with c_route_left:
+                st.markdown("**📤 Pickup Location**")
+                p_address = st.text_input(req_lbl("p_addr", "Pickup Address *"), key="p_addr", max_chars=150)
+                c_p_zip, c_p_city = st.columns(2)
+                with c_p_zip: p_zip = st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
+                with c_p_city: p_city = st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
+                
+            with c_route_right:
+                st.markdown("**📥 Delivery Destination**")
+                d_address = st.text_input(req_lbl("d_addr", "Delivery Address *"), key="d_addr", max_chars=150)
+                c_d_zip, c_d_city = st.columns(2)
+                with c_d_zip: d_zip = st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
+                with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
+                
+            st.markdown("<br>", unsafe_allow_html=True)
+
+            additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
+
+            st.write("")
+            st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
+            
+            error_container = st.empty()
+            missing_fields = False
+            
+            if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip() or not p_address.strip() or not p_zip.strip() or not p_city.strip() or not d_address.strip() or not d_zip.strip() or not d_city.strip():
+                missing_fields = True
+            
+            if "Cargo & Freight" in st.session_state.selected_types:
+                if not (cf_pal_val or cf_full_val or cf_lc_val):
+                    missing_fields = True
+
+            invalid_email = bool(work_email.strip() and "@" not in work_email)
+
+            if st.session_state.get('validate_step2', False):
+                if missing_fields:
+                    error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
+                elif invalid_email:
+                    error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
+
+            c_back, c_next = st.columns([1, 4])
+            if c_back.button("← Go Back", type="secondary", use_container_width=True):
+                st.session_state.step = 1
+                st.session_state.validate_step2 = False 
+                st.rerun()
+                
+            if c_next.button("Continue to Review →", type="primary", use_container_width=True):
+                st.session_state.validate_step2 = True 
+                
+                if missing_fields or invalid_email:
+                    st.session_state.scroll_up = True
+                    st.rerun()
+                else:
+                    st.session_state.validate_step2 = False 
+                    st.session_state.scroll_up = False
+                    
+                    compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
+                    
+                    if "Parcels & Documents" in st.session_state.selected_types:
+                        w = st.session_state.get('pd_weight', 1.0)
+                        sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
+                        compiled_info += f"📦 Parcels: {w}kg ({sz}), to {st.session_state.pd_ship_where}.\n"
+                    
+                    if "Cargo & Freight" in st.session_state.selected_types:
+                        loads = []
+                        if cf_pal_val: loads.append("Pallet")
+                        if cf_full_val: loads.append("Full Container")
+                        if cf_lc_val: loads.append("Loose Cargo")
+                        w = st.session_state.get('cf_weight', 100)
+                        compiled_info += f"🚛 Freight: Load: {', '.join(loads)}, {w}kg to {st.session_state.cf_ship_where}.\n"
+                    
+                    if "Mail & Direct Marketing" in st.session_state.selected_types:
+                        w = st.session_state.get('mdm_weight', 0.5)
+                        compiled_info += f"📭 Mail: {w}kg to {st.session_state.mdm_ship_where}.\n"
+                    
+                    calc_price, _ = get_live_price()
+                    
+                    st.session_state.temp_order = {
+                        "company": company_name, 
+                        "reg_no": company_reg,
+                        "address": f"{company_address}, {postal_code} {city}, {country}",
+                        "contact_name": f"{first_name} {last_name}",
+                        "email": work_email,
+                        "phone": f"{phone_code} {phone}",
+                        "info": compiled_info,
+                        "types": st.session_state.selected_types,
+                        "pickup_address": p_address,
+                        "pickup_zip": p_zip,
+                        "pickup_city": p_city,
+                        "delivery_address": d_address,
+                        "delivery_zip": d_zip,
+                        "delivery_city": d_city,
+                        "price": calc_price
+                    }
+                    st.session_state.step = 3
+                    st.rerun()
+
+        # =========================================================
+        # STAP 3: REVIEW 
+        # =========================================================
+        elif st.session_state.step == 3:
+            o = st.session_state.temp_order
+            with st.container(border=True):
+                st.markdown("#### Review your request")
+                st.markdown("---")
+                
+                col_s1, col_s2 = st.columns(2)
+                with col_s1:
+                    st.write(f"**Company Name:** {o['company']}")
+                    if o['reg_no']: st.write(f"**Registration No:** {o['reg_no']}")
+                    st.write(f"**Address:** {o['address']}")
+                    st.write("")
+                    st.write(f"**Selected Services:**")
+                    for s_type in o['types']:
+                        st.write(f"- {s_type}")
+                        
+                with col_s2:
+                    st.write(f"**Contact Person:** {o['contact_name']}")
+                    st.write(f"**Email:** {o['email']}")
+                    st.write(f"**Phone:** {o['phone']}")
+                    if o['info'] and o['info'] != "--- Order Specifications ---\n":
+                        st.write("")
+                        st.write(f"**Additional Information & Specifications:**")
+                        st.write(f"_{o['info']}_")
+                        
+                st.markdown("---")
+                col_s3, col_s4 = st.columns(2)
+                with col_s3:
+                    st.write(f"**📤 Pickup Location:** {o.get('pickup_address', '')}, {o.get('pickup_zip', '')} {o.get('pickup_city', '')}")
+                with col_s4:
+                    st.write(f"**📥 Delivery Destination:** {o.get('delivery_address', '')}, {o.get('delivery_zip', '')} {o.get('delivery_city', '')}")
+            
+            st.write("")
+            
+            if not st.session_state.is_submitted:
+                c_b1, c_b2 = st.columns([1, 4])
+                with c_b1:
+                    if st.button("← Edit Details", type="secondary", use_container_width=True):
+                        st.session_state.step = 2
+                        st.rerun()
+                with c_b2:
+                    if st.button("✅ CONFIRM & SEND REQUEST", type="primary", use_container_width=True):
+                        
+                        db_order = {
+                            "company": o['company'],
+                            "reg_no": o['reg_no'],
+                            "address": o['address'],
+                            "contact_name": o['contact_name'],
+                            "email": o['email'],
+                            "phone": o['phone'],
+                            "info": o['info'],
+                            "types": ", ".join(o['types']),
+                            "status": "New",
+                            "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "pickup_address": o.get('pickup_address', ''),
+                            "pickup_zip": o.get('pickup_zip', ''),
+                            "pickup_city": o.get('pickup_city', ''),
+                            "delivery_address": o.get('delivery_address', ''),
+                            "delivery_zip": o.get('delivery_zip', ''),
+                            "delivery_city": o.get('delivery_city', ''),
+                            "price": o.get('price', 0)
+                        }
+                        
+                        try:
+                            supabase.table("orders").insert(db_order).execute()
+                            st.balloons()
+                            st.session_state.is_submitted = True
+                            st.rerun()
+                        except Exception as e:
+                            st.error("⚠️ Failed to send order to the database. Ensure the 'price' column exists in your Supabase 'orders' table!")
+                            
+            else:
+                st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
+                st.info("You can review your submitted details above.")
+                
+                if st.button("← Start a New Request", type="primary"):
+                    st.session_state.step = 1
+                    st.session_state.is_submitted = False
+                    st.session_state.validate_step2 = False
+                    st.session_state.scroll_up = False
+                    st.session_state.selected_types = []
+                    st.session_state.chk_parcels = False
+                    st.session_state.chk_freight = False
+                    st.session_state.chk_mail = False
+                    for key in ['p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
+                        if key in st.session_state:
+                            del st.session_state[key]
+                    st.rerun()
+
+    # =========================================================
+    # RECHTERKOLOM (PROFESSIONELE KASSABON)
+    # =========================================================
+    with col_calc:
         current_price, breakdown_lines = get_live_price()
         
-        # Toon de specificatie regels (Base fee, gewicht, etc)
-        for line in breakdown_lines:
-            st.markdown(f"<p style='font-size: 14px; color: #bbb; margin:0;'>{line}</p>", unsafe_allow_html=True)
+        # HTML voor een strakke, professionele 'receipt' card
+        receipt_items_html = ""
+        for name, price in breakdown_lines:
+            receipt_items_html += f"""
+            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;">
+                <span>{name}</span>
+                <span>{price:,.0f}</span>
+            </div>
+            """
             
-        st.write("---")
-        st.markdown(f"<h2 style='text-align: right; margin:0;'>{current_price:,.0f} NOK</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: right; font-size: 12px; color: #888;'>Excl. MVA (VAT)</p>", unsafe_allow_html=True)
+        receipt_html = f"""
+        <style>
+        .receipt-card {{
+            background: linear-gradient(180deg, #1e1e20 0%, #171719 100%);
+            border: 1px solid #333; border-radius: 12px; padding: 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            position: sticky; top: 120px;
+        }}
+        </style>
         
-    st.markdown("</div>", unsafe_allow_html=True)
+        <div class="receipt-card">
+            <div style="color: #b070c6; font-size: 18px; font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
+                💰 Live Estimate
+            </div>
+            <div style="color: #888; font-size: 12px; margin-bottom: 25px;">
+                Your price updates automatically.
+            </div>
+            
+            {receipt_items_html}
+            
+            <div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 14px; font-weight: 600; color: #fff;">Total</span>
+                <span style="font-size: 26px; font-weight: 700; color: #fff;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span>
+            </div>
+            <div style="text-align: right; font-size: 11px; color: #666; margin-top: -3px;">
+                Excl. MVA (VAT)
+            </div>
+        </div>
+        """
+        st.markdown(receipt_html, unsafe_allow_html=True)
 
 
 # =========================================================
