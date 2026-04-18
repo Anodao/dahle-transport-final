@@ -14,11 +14,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- CSS STYLING GLOBAL & NAVBAR HTML (MOVED TO TOP TO PREVENT FLASHING!) ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML ---
+# CSS is aangepast om de lay-out bugs (zoals de verticale knoppen) te verhelpen!
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
+* { font-family: 'Montserrat', sans-serif; }
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
@@ -48,9 +49,9 @@ div[class^="viewerBadge"] { display: none !important; }
 .step-item.completed .step-circle { border-color: #894b9d; background-color: #894b9d; color: white; }
 .step-item.completed .step-label { color: #894b9d; }
 .line-completed { background-color: #894b9d; }
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; width: 100% !important; }
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; }
 div.stButton > button[kind="primary"]:hover { background: #ffffff !important; color: #894b9d !important; border: 2px solid #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
-div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; padding: 14px 24px !important; border-radius: 6px !important; font-weight: 600 !important; font-size: 14px !important; border: 2px solid #894b9d !important; transition: all 0.3s ease !important; width: 100% !important; }
+div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; padding: 14px 24px !important; border-radius: 6px !important; font-weight: 600 !important; font-size: 14px !important; border: 2px solid #894b9d !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="secondary"]:hover { background: #ffffff !important; border-color: #894b9d !important; color: #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important; }
 div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
@@ -76,13 +77,60 @@ try:
 except Exception as e:
     st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
 
-# --- SESSION & AUTO-FILL LOGICA ---
-# Reset de profile_applied flag als een gebruiker uitlogt
-if 'user' not in st.session_state or st.session_state.user is None:
-    st.session_state['profile_applied'] = False
-    st.session_state['user_profile'] = {}
 
-# Initialiseer basis session states
+# --- ONVERWOESTBAAR GEHEUGEN (SHADOW STATE) ---
+# Dit fixt de bug waardoor velden leeg raakten na inloggen!
+prof = st.session_state.get('user_profile', {})
+f_name, l_name = '', ''
+if prof:
+    name_parts = prof.get('cont_name', '').split(' ', 1)
+    f_name = name_parts[0] if name_parts else ''
+    l_name = name_parts[1] if len(name_parts) > 1 else ''
+
+default_values = {
+    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
+    'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
+    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
+    'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
+    'comp_name': prof.get('comp_name', ''), 
+    'comp_reg': '', 
+    'comp_addr': prof.get('address', ''), 
+    'comp_pc': prof.get('zip_code', ''), 
+    'comp_city': prof.get('city', ''), 
+    'comp_country': 'Norway',
+    'cont_fn': f_name, 
+    'cont_ln': l_name, 
+    'cont_email': prof.get('email', ''), 
+    'cont_code': '+47', 
+    'cont_phone': prof.get('phone', ''), 
+    'cont_info': '',
+    'p_addr': prof.get('address', ''), 
+    'p_zip': prof.get('zip_code', ''), 
+    'p_city': prof.get('city', ''), 
+    'd_addr': prof.get('del_address', ''), 
+    'd_zip': prof.get('del_zip', ''), 
+    'd_city': prof.get('del_city', '')
+}
+
+if 'shadow_state' not in st.session_state:
+    st.session_state.shadow_state = {}
+
+# Sla huidige velden direct veilig op
+for k in default_values.keys():
+    if k in st.session_state:
+        st.session_state.shadow_state[k] = st.session_state[k]
+
+# Als het geheugen nog helemaal leeg is, vul het dan met de profiel defaults
+if not st.session_state.shadow_state:
+    for k, v in default_values.items():
+        st.session_state.shadow_state[k] = v
+
+# Zet het geheugen terug in de actieve velden
+for k, v in st.session_state.shadow_state.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# --- OVERIGE SESSION STATES ---
 if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
@@ -91,48 +139,6 @@ if 'show_error' not in st.session_state: st.session_state.show_error = False
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
-
-# 1. Maak het formulier in het geheugen aan als 'leeg' (als ze er niet zijn)
-default_values = {
-    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-    'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
-    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
-    'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
-    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
-    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_code': '+47', 'cont_phone': '', 'cont_info': '',
-    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
-}
-for k, v in default_values.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-# 2. Overschrijf het lege geheugen met profiel-data (eenmalig per login)
-prof = st.session_state.get('user_profile', {})
-if prof and not st.session_state.get('profile_applied'):
-    full_name = prof.get('cont_name', '')
-    name_parts = full_name.split(' ', 1)
-    f_name = name_parts[0] if name_parts else ''
-    l_name = name_parts[1] if len(name_parts) > 1 else ''
-    
-    st.session_state['comp_name'] = prof.get('comp_name', '')
-    st.session_state['cont_fn'] = f_name
-    st.session_state['cont_ln'] = l_name
-    st.session_state['cont_email'] = prof.get('email', '')
-    st.session_state['cont_phone'] = prof.get('phone', '')
-    
-    st.session_state['comp_addr'] = prof.get('address', '')
-    st.session_state['comp_pc'] = prof.get('zip_code', '')
-    st.session_state['comp_city'] = prof.get('city', '')
-    
-    st.session_state['p_addr'] = prof.get('address', '')
-    st.session_state['p_zip'] = prof.get('zip_code', '')
-    st.session_state['p_city'] = prof.get('city', '')
-    
-    st.session_state['d_addr'] = prof.get('del_address', '')
-    st.session_state['d_zip'] = prof.get('del_zip', '')
-    st.session_state['d_city'] = prof.get('del_city', '')
-    
-    st.session_state['profile_applied'] = True
 
 # --- LOGO RESET TRUCJE ---
 if "reset" in st.query_params:
@@ -143,7 +149,7 @@ if "reset" in st.query_params:
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
-    st.session_state.profile_applied = False # Laat hem opnieuw invullen bij reset
+    st.session_state.shadow_state = {} # Wis het geheugen
     for k, v in default_values.items():
         st.session_state[k] = v
     st.query_params.clear()
@@ -159,8 +165,7 @@ def get_coordinates(address_string):
     headers = {'User-Agent': 'DahleTransportApp/1.0'}
     try:
         resp = requests.get(url, headers=headers).json()
-        if resp:
-            return float(resp[0]['lat']), float(resp[0]['lon'])
+        if resp: return float(resp[0]['lat']), float(resp[0]['lon'])
     except: pass
     return None
 
@@ -242,7 +247,6 @@ def get_live_price():
         breakdown.append(("Awaiting route details...", 0))
 
     return total_price, breakdown
-
 
 # =========================================================
 # DE WEBSITE LOGICA (DYNAMISCHE LAYOUT)
@@ -647,7 +651,6 @@ else:
                             "price": o.get('price', 0)
                         }
                         
-                        # Controleer of er een user is ingelogd, zo ja, koppel het account eraan!
                         if st.session_state.get('user'):
                             db_order["user_id"] = st.session_state.user.id
 
@@ -667,7 +670,7 @@ else:
                     st.session_state.validate_step2 = False
                     st.session_state.scroll_up = False
                     st.session_state.selected_types = []
-                    st.session_state.profile_applied = False # Laat hem opnieuw invullen voor de volgende ronde
+                    st.session_state.shadow_state = {} 
                     for k, v in default_values.items():
                         st.session_state[k] = v
                     st.rerun()
