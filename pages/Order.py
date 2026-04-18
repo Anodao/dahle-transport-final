@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import requests
 import pandas as pd
+import pydeck as pdk
 from datetime import datetime
 from supabase import create_client
 
@@ -389,22 +390,76 @@ else:
                     with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
                 
                 st.write("")
-                # --- LIVE MAP GENERATOR ---
-                map_data = []
                 
+st.write("")
+                # --- LIVE MAP GENERATOR MET 3D LIJN (PYDECK) ---
+                p_coords = None
+                d_coords = None
+                
+                # Check of ophaaladres is ingevuld
                 if len(p_address) > 3 and len(p_city) > 2:
                     p_coords = get_coordinates(f"{p_address}, {p_zip} {p_city}")
-                    if p_coords: map_data.append({"lat": p_coords[0], "lon": p_coords[1]})
                         
+                # Check of afleveradres is ingevuld
                 if len(d_address) > 3 and len(d_city) > 2:
                     d_coords = get_coordinates(f"{d_address}, {d_zip} {d_city}")
-                    if d_coords: map_data.append({"lat": d_coords[0], "lon": d_coords[1]})
                 
-                if map_data:
-                    df_map = pd.DataFrame(map_data)
-                    st.map(df_map, color="#894b9d", zoom=4 if len(map_data) > 1 else 10)
+                if p_coords or d_coords:
+                    layers = []
+                    points = []
+                    
+                    if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "📤 Pickup"})
+                    if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "📥 Delivery"})
+                    
+                    # 1. De stippen op de kaart
+                    layers.append(
+                        pdk.Layer(
+                            "ScatterplotLayer",
+                            data=points,
+                            get_position="pos",
+                            get_color=[137, 75, 157, 255], # De paarse Dahle Transport kleur
+                            get_radius=15000, # Formaat van de stip
+                            pickable=True
+                        )
+                    )
+                    
+                    # 2. De mooie 3D boog/lijn tussen de twee stippen!
+                    if p_coords and d_coords:
+                        layers.append(
+                            pdk.Layer(
+                                "ArcLayer",
+                                data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}],
+                                get_source_position="source",
+                                get_target_position="target",
+                                get_source_color=[137, 75, 157, 200],
+                                get_target_color=[137, 75, 157, 200],
+                                get_width=5,
+                                get_tilt=15
+                            )
+                        )
+                        # Bereken het middenpunt om de camera op te focussen
+                        center_lat = (p_coords[0] + d_coords[0]) / 2
+                        center_lon = (p_coords[1] + d_coords[1]) / 2
+                        zoom = 3.5
+                        pitch = 40 # Zet de kaart een beetje schuin voor het 3D effect!
+                    else:
+                        # Als er maar 1 adres is, focus de camera daar dan direct op (recht van boven)
+                        center_lat = p_coords[0] if p_coords else d_coords[0]
+                        center_lon = p_coords[1] if p_coords else d_coords[1]
+                        zoom = 10
+                        pitch = 0
+
+                    view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)
+                    
+                    # Teken de geavanceerde kaart
+                    st.pydeck_chart(pdk.Deck(
+                        layers=layers,
+                        initial_view_state=view_state,
+                        tooltip={"text": "{name}"}
+                    ))
                 else:
-                    st.markdown("<div style='height: 250px; background-color: #262626; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>🗺️ Map will appear when you enter an address...</div>", unsafe_allow_html=True)
+                    # Grijze tijdelijke balk als er nog niks is ingevuld
+                    st.markdown("<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>🗺️ Map will appear when you enter an address...</div>", unsafe_allow_html=True)
                 
                 st.write("---")
                 
