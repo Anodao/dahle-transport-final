@@ -48,9 +48,9 @@ div[class^="viewerBadge"] { display: none !important; }
 .step-item.completed .step-circle { border-color: #894b9d; background-color: #894b9d; color: white; }
 .step-item.completed .step-label { color: #894b9d; }
 .line-completed { background-color: #894b9d; }
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; width: 100% !important; }
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; width: 100% !important; white-space: nowrap !important; }
 div.stButton > button[kind="primary"]:hover { background: #ffffff !important; color: #894b9d !important; border: 2px solid #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
-div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; padding: 14px 24px !important; border-radius: 6px !important; font-weight: 600 !important; font-size: 14px !important; border: 2px solid #894b9d !important; transition: all 0.3s ease !important; width: 100% !important; }
+div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; padding: 14px 24px !important; border-radius: 6px !important; font-weight: 600 !important; font-size: 14px !important; border: 2px solid #894b9d !important; transition: all 0.3s ease !important; width: 100% !important; white-space: nowrap !important; }
 div.stButton > button[kind="secondary"]:hover { background: #ffffff !important; border-color: #894b9d !important; color: #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important; }
 div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
@@ -74,73 +74,67 @@ def init_connection():
 try:
     supabase = init_connection()
 except Exception as e:
-    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
+    st.error("⚠️ Database connection failed.")
 
-# --- CHECK LOGIN STATUS ---
+# --- 1. WIE IS ER INGELOGD? ---
+current_user = None
 if 'user' not in st.session_state:
     session = supabase.auth.get_session()
     if session:
         st.session_state.user = session.user
-    else:
-        st.session_state.user = None
+        current_user = session.user
+else:
+    current_user = st.session_state.user
 
-# --- VEILIGE STANDAARDWAARDEN ---
+current_user_id = current_user.id if current_user else "guest"
+
+# --- 2. DE "KLUIS" (CACHED PROFILE) MAKEN ---
+# We halen het profiel 1 keer op en zetten het in een kluis die de Garbage Collector niet kan wissen!
+if st.session_state.get('cached_user_id') != current_user_id:
+    if current_user_id != "guest":
+        try:
+            prof_res = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
+            st.session_state.cached_profile = prof_res.data[0] if prof_res.data else {}
+        except:
+            st.session_state.cached_profile = {}
+    else:
+        st.session_state.cached_profile = {}
+    
+    st.session_state.cached_user_id = current_user_id
+
+# --- 3. STANDAARDWAARDEN BEPALEN VANUIT DE KLUIS ---
+prof = st.session_state.get('cached_profile', {})
+name_parts = str(prof.get('contact_name') or '').split(' ', 1)
+
 default_keys = {
     'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
     'pd_weight': 1.0, 'pd_oversized': False,
     'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100,
     'mdm_weight': 0.5,
-    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
-    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_phone': '', 'cont_code': '+47', 'cont_info': '',
-    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
+    'comp_name': str(prof.get('company_name') or ''),
+    'comp_reg': '',
+    'comp_addr': str(prof.get('address') or ''),
+    'comp_pc': str(prof.get('zip_code') or ''),
+    'comp_city': str(prof.get('city') or ''),
+    'comp_country': 'Norway',
+    'cont_fn': name_parts[0] if name_parts else '',
+    'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
+    'cont_email': current_user.email if current_user else '',
+    'cont_code': '+47',
+    'cont_phone': str(prof.get('phone') or ''),
+    'cont_info': '',
+    'p_addr': str(prof.get('address') or ''),
+    'p_zip': str(prof.get('zip_code') or ''),
+    'p_city': str(prof.get('city') or ''),
+    'd_addr': str(prof.get('del_address') or ''),
+    'd_zip': str(prof.get('del_zip') or ''),
+    'd_city': str(prof.get('del_city') or '')
 }
 
+# --- 4. VELDEN AANVULLEN ALS STREAMLIT ZE HEEFT GEWIST ---
 for k, v in default_keys.items():
     if k not in st.session_state:
         st.session_state[k] = v
-
-# --- SLIMME AUTO-FILL LOGICA VIA DATABASE ---
-# Check of we een 'gast' zijn, of een specifieke ingelogde gebruiker
-current_user_id = st.session_state.user.id if st.session_state.get('user') else "guest"
-
-# Voer de autofill alléén uit als de gebruiker verandert (bijv. van gast naar ingelogd)
-if st.session_state.get('last_autofilled_user') != current_user_id:
-    if current_user_id != "guest":
-        try:
-            prof_res = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
-            prof = prof_res.data[0] if prof_res.data else {}
-            
-            # Veilig de strings uitpakken (zodat we nooit een NoneType error krijgen)
-            contact_naam = str(prof.get('contact_name') or '')
-            name_parts = contact_naam.split(' ', 1)
-            
-            st.session_state['comp_name'] = str(prof.get('company_name') or '')
-            st.session_state['comp_addr'] = str(prof.get('address') or '')
-            st.session_state['comp_pc']   = str(prof.get('zip_code') or '')
-            st.session_state['comp_city'] = str(prof.get('city') or '')
-            
-            st.session_state['cont_fn'] = name_parts[0] if name_parts else ''
-            st.session_state['cont_ln'] = name_parts[1] if len(name_parts) > 1 else ''
-            st.session_state['cont_email'] = st.session_state.user.email
-            st.session_state['cont_phone'] = str(prof.get('phone') or '')
-            
-            st.session_state['p_addr'] = str(prof.get('address') or '')
-            st.session_state['p_zip']  = str(prof.get('zip_code') or '')
-            st.session_state['p_city'] = str(prof.get('city') or '')
-            
-            st.session_state['d_addr'] = str(prof.get('del_address') or '')
-            st.session_state['d_zip']  = str(prof.get('del_zip') or '')
-            st.session_state['d_city'] = str(prof.get('del_city') or '')
-            
-        except Exception as e:
-            pass 
-    else:
-        # Als het een gast is, wis dan alle velden (veilig!)
-        for k, v in default_keys.items():
-            st.session_state[k] = v
-            
-    # Markeer dat deze gebruiker is ge-autofilled
-    st.session_state['last_autofilled_user'] = current_user_id
 
 # --- OVERIGE SESSION STATES ---
 if 'orders' not in st.session_state: st.session_state.orders = []
@@ -161,10 +155,10 @@ def reset_form_state():
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
-    for k, v in default_keys.items():
-        st.session_state[k] = v
-    # Forceer dat hij bij de volgende refresh checkt of hij moet autofillen
-    st.session_state['last_autofilled_user'] = None
+    # Door de velden te verwijderen, dwingen we ze hierboven opnieuw in te laden vanuit de kluis!
+    for k in default_keys.keys():
+        if k in st.session_state:
+            del st.session_state[k]
 
 if "reset" in st.query_params:
     reset_form_state()
@@ -235,7 +229,6 @@ def get_live_price():
         total_price += weight_cost
         breakdown.append((f"Handling & Weight ({total_weight}kg)", weight_cost))
 
-    # VEILIGE STRING CONVERSIE: Dit lost de 'NoneType object has no attribute strip' crash op!
     p_addr = str(st.session_state.get('p_addr') or '').strip()
     p_city = str(st.session_state.get('p_city') or '').strip()
     d_addr = str(st.session_state.get('d_addr') or '').strip()
@@ -553,7 +546,6 @@ else:
             error_container = st.empty()
             missing_fields = False
             
-            # Veilig alle verplichte velden nalopen
             req_keys = ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'comp_country', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']
             for rk in req_keys:
                 if not str(st.session_state.get(rk) or '').strip():
@@ -608,8 +600,8 @@ else:
                         specs_list.append(f"📭 **Mail:** {w}kg ➔ {region_txt}")
                     
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
-                    if st.session_state.get('cont_info', '').strip(): 
-                        db_info += f"\n\nNotes: {st.session_state.get('cont_info').strip()}"
+                    if str(st.session_state.get('cont_info', '')).strip(): 
+                        db_info += f"\n\nNotes: {str(st.session_state.get('cont_info')).strip()}"
                     
                     calc_price, calc_breakdown = get_live_price()
                     
@@ -620,7 +612,7 @@ else:
                         "contact_name": f"{st.session_state.get('cont_fn', '')} {st.session_state.get('cont_ln', '')}",
                         "email": st.session_state.get('cont_email', ''),
                         "phone": f"{st.session_state.get('cont_code', '')} {st.session_state.get('cont_phone', '')}",
-                        "info_notes": st.session_state.get('cont_info', '').strip(),
+                        "info_notes": str(st.session_state.get('cont_info', '')).strip(),
                         "specs_list": specs_list,              
                         "db_info": db_info,                    
                         "types": st.session_state.selected_types,
