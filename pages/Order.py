@@ -57,7 +57,9 @@ st.markdown("""
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
     [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
-    footer { visibility: hidden; }
+    footer { display: none !important; }
+    [data-testid="stToolbar"] { display: none !important; }
+    div[class^="viewerBadge"] { display: none !important; }
     
     .block-container { padding-top: 110px; }
     .navbar {
@@ -124,12 +126,9 @@ st.markdown("""
     div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
     label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
     div[data-baseweb="select"] div { color: white; background-color: #333;}
-    
-    /* CSS voor de vastgeplakte (sticky) calculator kolom */
-    .sticky-calculator { position: sticky; top: 120px; z-index: 100; }
     </style>
     
-<div class="navbar">
+    <div class="navbar">
         <div class="nav-logo">
             <a href="/" target="_self" title="Go back to Home">
                 <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo">
@@ -152,39 +151,32 @@ st.markdown("""
 # =========================================================
 def get_live_price():
     total_price = 0
-    breakdown = [] # We gebruiken nu tuples (Naam, Prijs) voor strakke HTML uitlijning
+    breakdown = [] 
         
-    # Verlaagd basistarief
     base_fee = 49
     total_price += base_fee
     breakdown.append(("Base Fee", base_fee))
 
-    # PARCELS & DOCUMENTS
     if "Parcels & Documents" in st.session_state.selected_types:
         w_p = st.session_state.get('pd_weight', 1.0)
         shape_oversized = st.session_state.get('pd_oversized', False)
         region = st.session_state.get('pd_ship_where', 'Domestic')
         
-        # formule: 45 start + 8 per kg
         p_price = 45 + (w_p * 8)
-        if shape_oversized: p_price += 150 # Lagere oversized toeslag
+        if shape_oversized: p_price += 150 
         
-        # Region multiplier verlaagd
         if region == "Pan-European": p_price *= 1.8
         elif region == "Worldwide": p_price *= 3.5
         
         total_price += p_price
         breakdown.append((f"Parcels ({w_p}kg, {region})", p_price))
 
-    # CARGO & FREIGHT
     if "Cargo & Freight" in st.session_state.selected_types:
         w_f = st.session_state.get('cf_weight', 100)
         region = st.session_state.get('cf_ship_where', 'Domestic')
         
-        # Goedkopere formule: 450 start + 3 per kg
         f_price = 450 + (w_f * 3) 
         
-        # Vorm/Load toeslagen verlaagd
         if st.session_state.get('cf_pal'): f_price += 250
         if st.session_state.get('cf_full'): f_price += 2500
         if st.session_state.get('cf_lc'): f_price += 100
@@ -195,7 +187,6 @@ def get_live_price():
         total_price += f_price
         breakdown.append((f"Freight ({w_f}kg, {region})", f_price))
 
-    # MAIL & MARKETING
     if "Mail & Direct Marketing" in st.session_state.selected_types:
         w_m = st.session_state.get('mdm_weight', 0.5)
         region = st.session_state.get('mdm_ship_where', 'Pan-European')
@@ -213,7 +204,6 @@ def get_live_price():
 # DE WEBSITE LOGICA (DYNAMISCHE LAYOUT)
 # =========================================================
 
-# Helper voor de step tracker
 s = st.session_state.step
 def get_class(step_num):
     if s > step_num: return "completed"
@@ -239,12 +229,12 @@ tracker_html = f"""
 </div>
 """
 
-# 1. We printen de tracker NU over de VOLLE breedte (buiten de kolommen) zodat hij 100% gecentreerd is!
+# TRACKER BUITEN DE KOLOMMEN
 st.markdown(tracker_html, unsafe_allow_html=True)
-st.write("") # Extra ademruimte
+st.write("") 
 
-# --- STAP 1: GEEN CALCULATOR (Gecentreerde Layout) ---
 if st.session_state.step == 1:
+    # --- STAP 1: GEEN CALCULATOR ---
     col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
     
     with col_main:
@@ -320,13 +310,11 @@ if st.session_state.step == 1:
                     st.session_state.step = 2
                     st.rerun()
 
-# --- STAP 2 & 3: MET CALCULATOR (Aangepaste Layout) ---
 else:
-    # 1. We zetten alle onzichtbare code BUITEN de kolommen om hoogteverschil te voorkomen!
+    # --- STAP 2 & 3: MET CALCULATOR ---
     st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
     if st.session_state.get('scroll_up', False):
-        st.components.v1.html(
-            """<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
+        st.components.v1.html("""<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
         st.session_state.scroll_up = False 
         
     st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
@@ -348,7 +336,6 @@ else:
                 return f"{base} 🚨 :red[(Missing '@')]"
         return base
 
-    # 2. De kolommen voor de layout (met een extra kleine spacer rechts voor perfecte centrering)
     col_spacer_L, col_main, col_calc, col_spacer_R = st.columns([0.5, 6, 2.5, 0.5], gap="large")
     
     with col_main:
@@ -369,7 +356,6 @@ else:
             cf_full_val = False
             cf_lc_val = False
             
-            # --- SERVICE SELECTIE BLOKKEN ---
             for i, sel in enumerate(st.session_state.selected_types[:]):
                 with cols[i]:
                     with st.container(border=True):
@@ -387,10 +373,7 @@ else:
                         if sel == "Parcels & Documents":
                             st.number_input("Total Weight (kg)", min_value=0.5, value=st.session_state.get('pd_weight', 1.0), step=0.5, key="pd_weight")
                             st.checkbox("Oversized / Irregular Shape", value=st.session_state.get('pd_oversized', False), key="pd_oversized")
-                            st.radio("**Where do you ship? *** (Select one)", 
-                                     options=["Domestic", "Pan-European", "Worldwide"], 
-                                     captions=["within the country", "within the continent", "beyond the continent"],
-                                     key="pd_ship_where")
+                            st.radio("**Where do you ship? *** (Select one)", options=["Domestic", "Pan-European", "Worldwide"], captions=["within the country", "within the continent", "beyond the continent"], key="pd_ship_where")
                             
                         elif sel == "Cargo & Freight":
                             cf_lbl = "**Load Type ***"
@@ -403,28 +386,20 @@ else:
                             cf_lc_val = st.checkbox("Loose Cargo", value=st.session_state.get('cf_lc', False), key="cf_lc")
                                 
                             st.number_input("Total Est. Weight (kg)", min_value=50, value=st.session_state.get('cf_weight', 100), step=50, key="cf_weight")
-                            st.radio("**Where do you ship? *** (Select one)", 
-                                     options=["Domestic", "Pan-European", "Worldwide"], 
-                                     captions=["within the country", "within the continent", "beyond the continent"],
-                                     key="cf_ship_where")
+                            st.radio("**Where do you ship? *** (Select one)", options=["Domestic", "Pan-European", "Worldwide"], captions=["within the country", "within the continent", "beyond the continent"], key="cf_ship_where")
                             
                         elif sel == "Mail & Direct Marketing":
                             st.number_input("Total Weight (kg)", min_value=0.1, value=st.session_state.get('mdm_weight', 0.5), step=0.1, key="mdm_weight")
-                            st.radio("**Where do you ship? *** (Select one)", 
-                                     options=["Pan-European", "Worldwide"], 
-                                     captions=["within the continent", "beyond the continent"],
-                                     key="mdm_ship_where")
+                            st.radio("**Where do you ship? *** (Select one)", options=["Pan-European", "Worldwide"], captions=["within the continent", "beyond the continent"], key="mdm_ship_where")
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
             
-            # --- HET FORMULIER (Nu strak uitgelijnd in één hoofdcontainer!) ---
             with st.container(border=True):
                 st.markdown("<h3 style='margin-top: 0px;'>🏢 Company & Contact Details</h3>", unsafe_allow_html=True)
                 st.write("---")
                 
                 c_form_left, c_form_right = st.columns(2, gap="large")
-                
                 with c_form_left:
                     company_name = st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
                     company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
@@ -447,17 +422,14 @@ else:
                     st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
                     
                     c_code, c_phone = st.columns([1, 3])
-                    with c_code: 
-                        phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
-                    with c_phone: 
-                        phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
+                    with c_code: phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
+                    with c_phone: phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
     
                 st.write("")
                 st.markdown("<h3 style='margin-top: 20px;'>📍 Route Information</h3>", unsafe_allow_html=True)
                 st.write("---")
                 
                 c_route_left, c_route_right = st.columns(2, gap="large")
-                
                 with c_route_left:
                     st.markdown("**📤 Pickup Location**")
                     p_address = st.text_input(req_lbl("p_addr", "Pickup Address *"), key="p_addr", max_chars=150)
@@ -475,7 +447,6 @@ else:
                 st.write("")
                 additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
-            # --- VALIDATIE EN KNOPPEN ---
             st.write("")
             st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
             
@@ -492,10 +463,8 @@ else:
             invalid_email = bool(work_email.strip() and "@" not in work_email)
 
             if st.session_state.get('validate_step2', False):
-                if missing_fields:
-                    error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
-                elif invalid_email:
-                    error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
+                if missing_fields: error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
+                elif invalid_email: error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
             c_back, c_next = st.columns([1, 4])
             if c_back.button("← Go Back", type="secondary", use_container_width=True):
@@ -503,7 +472,7 @@ else:
                 st.session_state.validate_step2 = False 
                 st.rerun()
                 
-if c_next.button("Continue to Review →", type="primary", use_container_width=True):
+            if c_next.button("Continue to Review →", type="primary", use_container_width=True):
                 st.session_state.validate_step2 = True 
                 
                 if missing_fields or invalid_email:
@@ -513,9 +482,7 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
                     st.session_state.validate_step2 = False 
                     st.session_state.scroll_up = False
                     
-                    # --- SCHONE OPMAAK VOOR SPECIFICATIES ---
                     specs_list = []
-                    
                     if "Parcels & Documents" in st.session_state.selected_types:
                         w = st.session_state.get('pd_weight', 1.0)
                         sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
@@ -533,7 +500,6 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
                         w = st.session_state.get('mdm_weight', 0.5)
                         specs_list.append(f"📭 **Mail:** {w}kg ➔ {st.session_state.mdm_ship_where}")
                     
-                    # Voor de database maken we één gecombineerde tekst aan zonder Markdown-sterretjes
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
                     if additional_info.strip():
                         db_info += f"\n\nNotes: {additional_info.strip()}"
@@ -547,9 +513,9 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
                         "contact_name": f"{first_name} {last_name}",
                         "email": work_email,
                         "phone": f"{phone_code} {phone}",
-                        "info_notes": additional_info.strip(), # Alleen de notes voor de UI
-                        "specs_list": specs_list,              # Mooie lijst voor de UI
-                        "db_info": db_info,                    # Gecombineerde tekst voor de Database!
+                        "info_notes": additional_info.strip(),
+                        "specs_list": specs_list,              
+                        "db_info": db_info,                    
                         "types": st.session_state.selected_types,
                         "pickup_address": p_address,
                         "pickup_zip": p_zip,
@@ -563,7 +529,7 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
                     st.rerun()
 
         # =========================================================
-        # STAP 3: REVIEW (Nieuwe, superstrakke opmaak!)
+        # STAP 3: REVIEW (Strakke opmaak)
         # =========================================================
         elif st.session_state.step == 3:
             o = st.session_state.temp_order
@@ -571,7 +537,6 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
             st.markdown("<h3 style='margin-top: 0px;'>📝 Review your request</h3>", unsafe_allow_html=True)
             st.markdown("<p style='color: #888; font-size: 14px; margin-bottom: 20px;'>Please verify your details below before confirming.</p>", unsafe_allow_html=True)
             
-            # KADER 1: COMPANY & CONTACT
             with st.container(border=True):
                 st.markdown("#### 🏢 Company & Contact")
                 st.write("---")
@@ -591,7 +556,6 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
                     st.write("")
                     st.markdown(f"<span style='color:#888; font-size:12px;'>PHONE</span><br><b>{o['phone']}</b>", unsafe_allow_html=True)
             
-            # KADER 2: ROUTE
             with st.container(border=True):
                 st.markdown("#### 📍 Route Information")
                 st.write("---")
@@ -603,14 +567,12 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
                     st.markdown("<span style='color:#888; font-size:12px;'>📥 DELIVERY DESTINATION</span>", unsafe_allow_html=True)
                     st.markdown(f"<b>{o.get('delivery_address', '')}</b><br>{o.get('delivery_zip', '')} {o.get('delivery_city', '')}", unsafe_allow_html=True)
             
-            # KADER 3: SHIPMENT DETAILS
             with st.container(border=True):
                 st.markdown("#### 📦 Shipment Details")
                 st.write("---")
                 for spec in o['specs_list']:
                     st.markdown(spec)
                 
-                # Als er extra notities zijn, toon die dan netjes in een apart infoblok
                 if o['info_notes']:
                     st.write("")
                     st.markdown("<span style='color:#888; font-size:12px;'>ADDITIONAL NOTES</span>", unsafe_allow_html=True)
@@ -634,7 +596,7 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
                             "contact_name": o['contact_name'],
                             "email": o['email'],
                             "phone": o['phone'],
-                            "info": o['db_info'], # <--- Hier sturen we de schone tekst naar de database
+                            "info": o['db_info'], 
                             "types": ", ".join(o['types']),
                             "status": "New",
                             "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
@@ -679,7 +641,6 @@ if c_next.button("Continue to Review →", type="primary", use_container_width=T
     with col_calc:
         current_price, breakdown_lines = get_live_price()
         
-        # HTML ZONDER inspring-spaties om te voorkomen dat Streamlit het als platte tekst toont!
         receipt_items_html = ""
         for name, price in breakdown_lines:
             receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
