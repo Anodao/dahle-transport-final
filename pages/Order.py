@@ -26,16 +26,31 @@ try:
 except Exception as e:
     st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
 
-# --- ALLE INVULVELDEN DIE BEWAARD MOETEN BLIJVEN ---
-keys_to_save = [
-    'chk_parcels', 'chk_freight', 'chk_mail',
-    'pd_weight', 'pd_oversized', 'pd_ship_where',
-    'cf_pal', 'cf_full', 'cf_lc', 'cf_weight', 'cf_ship_where',
-    'mdm_weight', 'mdm_ship_where',
-    'comp_name', 'comp_reg', 'comp_addr', 'comp_pc', 'comp_city', 'comp_country',
-    'cont_fn', 'cont_ln', 'cont_email', 'cont_code', 'cont_phone', 'cont_info',
-    'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city'
-]
+# --- ONVERWOESTBAAR GEHEUGEN (Voorkomt dat velden leeg raken!) ---
+# We vertellen Streamlit vooraf welke velden hij NOOIT mag wissen.
+default_values = {
+    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
+    'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
+    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
+    'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
+    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
+    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_code': '+47', 'cont_phone': '', 'cont_info': '',
+    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
+}
+
+for k, v in default_values.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# --- OVERIGE SESSION STATES ---
+if 'orders' not in st.session_state: st.session_state.orders = []
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'selected_types' not in st.session_state: st.session_state.selected_types = []
+if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
+if 'show_error' not in st.session_state: st.session_state.show_error = False
+if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
+if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
+if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
 
 # --- LOGO RESET TRUCJE ---
 if "reset" in st.query_params:
@@ -46,43 +61,10 @@ if "reset" in st.query_params:
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
-    
-    # Wis het schaduwgeheugen
-    st.session_state.saved_form = {}
-    for k in keys_to_save:
-        if k in st.session_state: del st.session_state[k]
+    for k, v in default_values.items():
+        st.session_state[k] = v
     st.query_params.clear()
-
-# --- SESSION STATE & SCHADUWGEHEUGEN ---
-if 'orders' not in st.session_state: st.session_state.orders = []
-if 'step' not in st.session_state: st.session_state.step = 1
-if 'selected_types' not in st.session_state: st.session_state.selected_types = []
-if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
-if 'show_error' not in st.session_state: st.session_state.show_error = False
-if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
-if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
-if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
-
-# Creëer het schaduwgeheugen als dit de eerste keer is dat de pagina laadt
-if 'saved_form' not in st.session_state or not st.session_state.saved_form: 
-    st.session_state.saved_form = {
-        'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-        'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
-        'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
-        'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
-        'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
-        'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_code': '+47', 'cont_phone': '', 'cont_info': '',
-        'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
-    }
-
-# 1. Update schaduwgeheugen met actuele invulvelden (voordat ze verdwijnen)
-for k in keys_to_save:
-    if k in st.session_state:
-        st.session_state.saved_form[k] = st.session_state[k]
-
-# 2. Herstel schaduwgeheugen terug naar de pagina zodat je verder kunt werken
-for k, v in st.session_state.saved_form.items():
-    st.session_state[k] = v
+    st.rerun()
 
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
@@ -128,9 +110,9 @@ label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
 div[data-baseweb="select"] div { color: white; background-color: #333;}
 </style>
 <div class="navbar">
-    <div class="nav-logo"><a href="/" target="_self" title="Go back to Home"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo"></a></div>
-    <div class="nav-links"><a href="/" target="_self"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
-    <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/" target="_self" class="cta-btn">TA KONTAKT</a></div>
+    <div class="nav-logo"><a href="/?reset=true" target="_self" title="Go back to Home"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp" alt="Dahle Transport Logo"></a></div>
+    <div class="nav-links"><a href="/?reset=true" target="_self"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
+    <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/?reset=true" target="_self" class="cta-btn">TA KONTAKT</a></div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -177,21 +159,21 @@ def get_live_price():
     total_weight = 0
     
     if "Parcels & Documents" in st.session_state.selected_types:
-        w_p = st.session_state.get('pd_weight', 1.0)
+        w_p = st.session_state.pd_weight
         total_weight += w_p
         weight_cost += (w_p * 8)
-        if st.session_state.get('pd_oversized', False): weight_cost += 150 
+        if st.session_state.pd_oversized: weight_cost += 150 
             
     if "Cargo & Freight" in st.session_state.selected_types:
-        w_f = st.session_state.get('cf_weight', 100)
+        w_f = st.session_state.cf_weight
         total_weight += w_f
         weight_cost += (w_f * 3) 
-        if st.session_state.get('cf_pal'): weight_cost += 250
-        if st.session_state.get('cf_full'): weight_cost += 2500
-        if st.session_state.get('cf_lc'): weight_cost += 100
+        if st.session_state.cf_pal: weight_cost += 250
+        if st.session_state.cf_full: weight_cost += 2500
+        if st.session_state.cf_lc: weight_cost += 100
 
     if "Mail & Direct Marketing" in st.session_state.selected_types:
-        w_m = st.session_state.get('mdm_weight', 0.5)
+        w_m = st.session_state.mdm_weight
         total_weight += w_m
         weight_cost += (w_m * 15)
 
@@ -199,14 +181,14 @@ def get_live_price():
         total_price += weight_cost
         breakdown.append((f"Handling & Weight ({total_weight}kg)", weight_cost))
 
-    p_addr = st.session_state.get('p_addr', '').strip()
-    p_city = st.session_state.get('p_city', '').strip()
-    d_addr = st.session_state.get('d_addr', '').strip()
-    d_city = st.session_state.get('d_city', '').strip()
+    p_addr = st.session_state.p_addr.strip()
+    p_city = st.session_state.p_city.strip()
+    d_addr = st.session_state.d_addr.strip()
+    d_city = st.session_state.d_city.strip()
 
     if len(p_addr) > 3 and len(p_city) > 2 and len(d_addr) > 3 and len(d_city) > 2:
-        pickup_string = f"{p_addr}, {st.session_state.get('p_zip', '')} {p_city}"
-        delivery_string = f"{d_addr}, {st.session_state.get('d_zip', '')} {d_city}"
+        pickup_string = f"{p_addr}, {st.session_state.p_zip} {p_city}"
+        delivery_string = f"{d_addr}, {st.session_state.d_zip} {d_city}"
         
         pick_coords = get_coordinates(pickup_string)
         del_coords = get_coordinates(delivery_string)
@@ -227,6 +209,7 @@ def get_live_price():
         breakdown.append(("Awaiting route details...", 0))
 
     return total_price, breakdown
+
 
 # =========================================================
 # DE WEBSITE LOGICA (DYNAMISCHE LAYOUT)
@@ -314,15 +297,15 @@ else:
     st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
     
     def req_lbl(key, base_text):
-        if st.session_state.get('validate_step2', False):
+        if st.session_state.validate_step2:
             val = st.session_state.get(key, "")
             if not val or not str(val).strip(): return f"{base_text} 🚨 :red[(Required)]"
         return base_text
 
     def email_lbl():
         base = "Work Email *"
-        if st.session_state.get('validate_step2', False):
-            val = st.session_state.get('cont_email', "")
+        if st.session_state.validate_step2:
+            val = st.session_state.cont_email
             if not val or not str(val).strip(): return f"{base} 🚨 :red[(Required)]"
             elif "@" not in str(val): return f"{base} 🚨 :red[(Missing '@')]"
         return base
@@ -338,7 +321,6 @@ else:
 
             aantal_geselecteerd = len(st.session_state.selected_types)
             cols = st.columns(aantal_geselecteerd)
-            cf_pal_val, cf_full_val, cf_lc_val = False, False, False
             
             for i, sel in enumerate(st.session_state.selected_types[:]):
                 with cols[i]:
@@ -361,12 +343,12 @@ else:
                             
                         elif sel == "Cargo & Freight":
                             cf_lbl = "**Load Type ***"
-                            if st.session_state.get('validate_step2', False) and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
+                            if st.session_state.validate_step2 and not (st.session_state.cf_pal or st.session_state.cf_full or st.session_state.cf_lc):
                                 cf_lbl += " 🚨 :red[(Select at least one)]"
                             st.markdown(cf_lbl)
-                            cf_pal_val = st.checkbox("Pallet", key="cf_pal")
-                            cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
-                            cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
+                            st.checkbox("Pallet", key="cf_pal")
+                            st.checkbox("Full Container/Truck Load", key="cf_full")
+                            st.checkbox("Loose Cargo", key="cf_lc")
                             st.number_input("Total Est. Weight (kg)", min_value=50, step=50, key="cf_weight")
                             st.radio("**Where do you ship? ***", options=["Domestic", "Pan-European", "Worldwide"], captions=["within the country", "within the continent", "beyond the continent"], key="cf_ship_where")
                             
@@ -382,26 +364,26 @@ else:
                 st.write("---")
                 c_form_left, c_form_right = st.columns(2, gap="large")
                 with c_form_left:
-                    company_name = st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
-                    company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
-                    company_address = st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
+                    st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
+                    st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
+                    st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
                     c_pc, c_city = st.columns(2)
-                    with c_pc: postal_code = st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
-                    with c_city: city = st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
-                    country = st.text_input(req_lbl("comp_country", "Country *"), key="comp_country", max_chars=100)
+                    with c_pc: st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
+                    with c_city: st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
+                    st.text_input(req_lbl("comp_country", "Country *"), key="comp_country", max_chars=100)
     
                 with c_form_right:
                     c_fn, c_ln = st.columns(2)
-                    with c_fn: first_name = st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
-                    with c_ln: last_name = st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
-                    work_email = st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
+                    with c_fn: st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
+                    with c_ln: st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
+                    st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
                     phone_lbl = "Phone *"
-                    if st.session_state.get('validate_step2', False) and not st.session_state.get('cont_phone', '').strip():
+                    if st.session_state.validate_step2 and not st.session_state.cont_phone.strip():
                         phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
                     st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
                     c_code, c_phone = st.columns([1, 3])
-                    with c_code: phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
-                    with c_phone: phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
+                    with c_code: st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
+                    with c_phone: st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
     
                 st.write("")
                 st.markdown("<h3 style='margin-top: 20px;'>📍 Route Information</h3>", unsafe_allow_html=True)
@@ -409,16 +391,16 @@ else:
                 c_route_left, c_route_right = st.columns(2, gap="large")
                 with c_route_left:
                     st.markdown("**📤 Pickup Location**")
-                    p_address = st.text_input(req_lbl("p_addr", "Street Address *"), key="p_addr", max_chars=150)
+                    st.text_input(req_lbl("p_addr", "Street Address *"), key="p_addr", max_chars=150)
                     c_p_zip, c_p_city = st.columns(2)
-                    with c_p_zip: p_zip = st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
-                    with c_p_city: p_city = st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
+                    with c_p_zip: st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
+                    with c_p_city: st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
                 with c_route_right:
                     st.markdown("**📥 Delivery Destination**")
-                    d_address = st.text_input(req_lbl("d_addr", "Street Address *"), key="d_addr", max_chars=150)
+                    st.text_input(req_lbl("d_addr", "Street Address *"), key="d_addr", max_chars=150)
                     c_d_zip, c_d_city = st.columns(2)
-                    with c_d_zip: d_zip = st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
-                    with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
+                    with c_d_zip: st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
+                    with c_d_city: st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
                     
                 st.write("")
                 
@@ -426,11 +408,11 @@ else:
                 p_coords = None
                 d_coords = None
                 
-                if len(p_address) > 3 and len(p_city) > 2:
-                    p_coords = get_coordinates(f"{p_address}, {p_zip} {p_city}")
+                if len(st.session_state.p_addr) > 3 and len(st.session_state.p_city) > 2:
+                    p_coords = get_coordinates(f"{st.session_state.p_addr}, {st.session_state.p_zip} {st.session_state.p_city}")
                         
-                if len(d_address) > 3 and len(d_city) > 2:
-                    d_coords = get_coordinates(f"{d_address}, {d_zip} {d_city}")
+                if len(st.session_state.d_addr) > 3 and len(st.session_state.d_city) > 2:
+                    d_coords = get_coordinates(f"{st.session_state.d_addr}, {st.session_state.d_zip} {st.session_state.d_city}")
                 
                 if p_coords or d_coords:
                     layers = []
@@ -484,7 +466,7 @@ else:
                     st.markdown("<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>🗺️ Map will appear when you enter an address...</div>", unsafe_allow_html=True)
                 
                 st.write("---")
-                additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
+                st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
             st.write("")
             st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
@@ -492,12 +474,16 @@ else:
             error_container = st.empty()
             missing_fields = False
             
-            if not company_name.strip() or not company_address.strip() or not postal_code.strip() or not city.strip() or not first_name.strip() or not last_name.strip() or not work_email.strip() or not phone.strip() or not country.strip() or not p_address.strip() or not p_zip.strip() or not p_city.strip() or not d_address.strip() or not d_zip.strip() or not d_city.strip(): missing_fields = True
+            if not st.session_state.comp_name.strip() or not st.session_state.comp_addr.strip() or not st.session_state.comp_pc.strip() or not st.session_state.comp_city.strip() or not st.session_state.cont_fn.strip() or not st.session_state.cont_ln.strip() or not st.session_state.cont_email.strip() or not st.session_state.cont_phone.strip() or not st.session_state.comp_country.strip() or not st.session_state.p_addr.strip() or not st.session_state.p_zip.strip() or not st.session_state.p_city.strip() or not st.session_state.d_addr.strip() or not st.session_state.d_zip.strip() or not st.session_state.d_city.strip(): 
+                missing_fields = True
+            
             if "Cargo & Freight" in st.session_state.selected_types:
-                if not (cf_pal_val or cf_full_val or cf_lc_val): missing_fields = True
-            invalid_email = bool(work_email.strip() and "@" not in work_email)
+                if not (st.session_state.cf_pal or st.session_state.cf_full or st.session_state.cf_lc): 
+                    missing_fields = True
+            
+            invalid_email = bool(st.session_state.cont_email.strip() and "@" not in st.session_state.cont_email)
 
-            if st.session_state.get('validate_step2', False):
+            if st.session_state.validate_step2:
                 if missing_fields: error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
                 elif invalid_email: error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
@@ -518,44 +504,45 @@ else:
                     
                     specs_list = []
                     if "Parcels & Documents" in st.session_state.selected_types:
-                        w = st.session_state.get('pd_weight', 1.0)
-                        sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
+                        w = st.session_state.pd_weight
+                        sz = "Oversized" if st.session_state.pd_oversized else "Standard"
                         specs_list.append(f"📦 **Parcels:** {w}kg ({sz}) ➔ {st.session_state.pd_ship_where}")
                     
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
-                        if cf_pal_val: loads.append("Pallet")
-                        if cf_full_val: loads.append("Full Container")
-                        if cf_lc_val: loads.append("Loose Cargo")
-                        w = st.session_state.get('cf_weight', 100)
+                        if st.session_state.cf_pal: loads.append("Pallet")
+                        if st.session_state.cf_full: loads.append("Full Container")
+                        if st.session_state.cf_lc: loads.append("Loose Cargo")
+                        w = st.session_state.cf_weight
                         specs_list.append(f"🚛 **Freight:** {', '.join(loads)} | {w}kg ➔ {st.session_state.cf_ship_where}")
                     
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
-                        w = st.session_state.get('mdm_weight', 0.5)
+                        w = st.session_state.mdm_weight
                         specs_list.append(f"📭 **Mail:** {w}kg ➔ {st.session_state.mdm_ship_where}")
                     
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
-                    if additional_info.strip(): db_info += f"\n\nNotes: {additional_info.strip()}"
+                    if st.session_state.cont_info.strip(): 
+                        db_info += f"\n\nNotes: {st.session_state.cont_info.strip()}"
                     
                     calc_price, calc_breakdown = get_live_price()
                     
                     st.session_state.temp_order = {
-                        "company": company_name, 
-                        "reg_no": company_reg,
-                        "address": f"{company_address}, {postal_code} {city}, {country}",
-                        "contact_name": f"{first_name} {last_name}",
-                        "email": work_email,
-                        "phone": f"{phone_code} {phone}",
-                        "info_notes": additional_info.strip(),
+                        "company": st.session_state.comp_name, 
+                        "reg_no": st.session_state.comp_reg,
+                        "address": f"{st.session_state.comp_addr}, {st.session_state.comp_pc} {st.session_state.comp_city}, {st.session_state.comp_country}",
+                        "contact_name": f"{st.session_state.cont_fn} {st.session_state.cont_ln}",
+                        "email": st.session_state.cont_email,
+                        "phone": f"{st.session_state.cont_code} {st.session_state.cont_phone}",
+                        "info_notes": st.session_state.cont_info.strip(),
                         "specs_list": specs_list,              
                         "db_info": db_info,                    
                         "types": st.session_state.selected_types,
-                        "pickup_address": p_address,
-                        "pickup_zip": p_zip,
-                        "pickup_city": p_city,
-                        "delivery_address": d_address,
-                        "delivery_zip": d_zip,
-                        "delivery_city": d_city,
+                        "pickup_address": st.session_state.p_addr,
+                        "pickup_zip": st.session_state.p_zip,
+                        "pickup_city": st.session_state.p_city,
+                        "delivery_address": st.session_state.d_addr,
+                        "delivery_zip": st.session_state.d_zip,
+                        "delivery_city": st.session_state.d_city,
                         "price": calc_price,
                         "price_breakdown": calc_breakdown
                     }
@@ -642,10 +629,8 @@ else:
                     st.session_state.validate_step2 = False
                     st.session_state.scroll_up = False
                     st.session_state.selected_types = []
-                    
-                    st.session_state.saved_form = {}
-                    for k in keys_to_save:
-                        if k in st.session_state: del st.session_state[k]
+                    for k, v in default_values.items():
+                        st.session_state[k] = v
                     st.rerun()
 
     with col_calc:
