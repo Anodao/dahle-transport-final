@@ -64,17 +64,19 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </div>
 """, unsafe_allow_html=True)
 
-# --- SUPABASE CONNECTIE ---
-@st.cache_resource
+# --- SUPABASE CONNECTIE (VEILIG: UNIEK PER GEBRUIKER!) ---
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
     return create_client(url, key)
 
-try:
-    supabase = init_connection()
-except Exception as e:
-    st.error("⚠️ Database connection failed.")
+if 'supabase_client' not in st.session_state:
+    try:
+        st.session_state.supabase_client = init_connection()
+    except Exception as e:
+        st.error("⚠️ Database connection failed.")
+
+supabase = st.session_state.supabase_client
 
 # --- CHECK LIVE LOGIN STATUS ---
 current_session = supabase.auth.get_session()
@@ -373,7 +375,6 @@ else:
                                 st.session_state.validate_step2 = False
                                 st.rerun() 
 
-                        # BIJ DE INPUTS GEBRUIKEN WE NU DE 'value=' PARAMETER OM DE KLUIS UIT TE LEZEN!
                         if sel == "Parcels & Documents":
                             st.number_input("Total Weight (kg)", min_value=0.5, step=0.5, value=st.session_state.get('pd_weight', 1.0), key="pd_weight")
                             st.checkbox("Oversized / Irregular Shape", value=st.session_state.get('pd_oversized', False), key="pd_oversized")
