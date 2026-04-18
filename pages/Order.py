@@ -26,33 +26,64 @@ try:
 except Exception as e:
     st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
 
+# --- ALLE INVULVELDEN DIE BEWAARD MOETEN BLIJVEN ---
+keys_to_save = [
+    'chk_parcels', 'chk_freight', 'chk_mail',
+    'pd_weight', 'pd_oversized', 'pd_ship_where',
+    'cf_pal', 'cf_full', 'cf_lc', 'cf_weight', 'cf_ship_where',
+    'mdm_weight', 'mdm_ship_where',
+    'comp_name', 'comp_reg', 'comp_addr', 'comp_pc', 'comp_city', 'comp_country',
+    'cont_fn', 'cont_ln', 'cont_email', 'cont_code', 'cont_phone', 'cont_info',
+    'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city'
+]
+
 # --- LOGO RESET TRUCJE ---
 if "reset" in st.query_params:
     st.session_state.step = 1
     st.session_state.selected_types = [] 
     st.session_state.temp_order = {}
-    st.session_state.chk_parcels = False
-    st.session_state.chk_freight = False
-    st.session_state.chk_mail = False
     st.session_state.show_error = False
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
+    
+    # Wis het schaduwgeheugen
+    st.session_state.saved_form = {}
+    for k in keys_to_save:
+        if k in st.session_state: del st.session_state[k]
     st.query_params.clear()
 
-# --- SESSION STATE ---
+# --- SESSION STATE & SCHADUWGEHEUGEN ---
 if 'orders' not in st.session_state: st.session_state.orders = []
 if 'step' not in st.session_state: st.session_state.step = 1
 if 'selected_types' not in st.session_state: st.session_state.selected_types = []
 if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
-if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
-if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
-if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 if 'show_error' not in st.session_state: st.session_state.show_error = False
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
-    
+
+# Creëer het schaduwgeheugen als dit de eerste keer is dat de pagina laadt
+if 'saved_form' not in st.session_state or not st.session_state.saved_form: 
+    st.session_state.saved_form = {
+        'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
+        'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
+        'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
+        'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
+        'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
+        'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_code': '+47', 'cont_phone': '', 'cont_info': '',
+        'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
+    }
+
+# 1. Update schaduwgeheugen met actuele invulvelden (voordat ze verdwijnen)
+for k in keys_to_save:
+    if k in st.session_state:
+        st.session_state.saved_form[k] = st.session_state[k]
+
+# 2. Herstel schaduwgeheugen terug naar de pagina zodat je verder kunt werken
+for k, v in st.session_state.saved_form.items():
+    st.session_state[k] = v
+
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
 <style>
@@ -118,7 +149,6 @@ def get_coordinates(address_string):
     except: pass
     return None
 
-# NIEUW: Deze functie haalt nu ook de lijn (geometry) op!
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
@@ -182,7 +212,6 @@ def get_live_price():
         del_coords = get_coordinates(delivery_string)
         
         if pick_coords and del_coords:
-            # We hebben _ toegevoegd om de geometrie te negeren, we hebben hier alleen afstand nodig
             dist_hq_pick, _ = get_route_data(HQ_COORDS, pick_coords)
             dist_pick_del, _ = get_route_data(pick_coords, del_coords)
             
@@ -326,8 +355,8 @@ else:
                                 st.rerun() 
 
                         if sel == "Parcels & Documents":
-                            st.number_input("Total Weight (kg)", min_value=0.5, value=st.session_state.get('pd_weight', 1.0), step=0.5, key="pd_weight")
-                            st.checkbox("Oversized / Irregular Shape", value=st.session_state.get('pd_oversized', False), key="pd_oversized")
+                            st.number_input("Total Weight (kg)", min_value=0.5, step=0.5, key="pd_weight")
+                            st.checkbox("Oversized / Irregular Shape", key="pd_oversized")
                             st.radio("**Where do you ship? ***", options=["Domestic", "Pan-European", "Worldwide"], captions=["within the country", "within the continent", "beyond the continent"], key="pd_ship_where")
                             
                         elif sel == "Cargo & Freight":
@@ -335,14 +364,14 @@ else:
                             if st.session_state.get('validate_step2', False) and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')):
                                 cf_lbl += " 🚨 :red[(Select at least one)]"
                             st.markdown(cf_lbl)
-                            cf_pal_val = st.checkbox("Pallet", value=st.session_state.get('cf_pal', False), key="cf_pal")
-                            cf_full_val = st.checkbox("Full Container/Truck Load", value=st.session_state.get('cf_full', False), key="cf_full")
-                            cf_lc_val = st.checkbox("Loose Cargo", value=st.session_state.get('cf_lc', False), key="cf_lc")
-                            st.number_input("Total Est. Weight (kg)", min_value=50, value=st.session_state.get('cf_weight', 100), step=50, key="cf_weight")
+                            cf_pal_val = st.checkbox("Pallet", key="cf_pal")
+                            cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
+                            cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
+                            st.number_input("Total Est. Weight (kg)", min_value=50, step=50, key="cf_weight")
                             st.radio("**Where do you ship? ***", options=["Domestic", "Pan-European", "Worldwide"], captions=["within the country", "within the continent", "beyond the continent"], key="cf_ship_where")
                             
                         elif sel == "Mail & Direct Marketing":
-                            st.number_input("Total Weight (kg)", min_value=0.1, value=st.session_state.get('mdm_weight', 0.5), step=0.1, key="mdm_weight")
+                            st.number_input("Total Weight (kg)", min_value=0.1, step=0.1, key="mdm_weight")
                             st.radio("**Where do you ship? ***", options=["Pan-European", "Worldwide"], captions=["within the continent", "beyond the continent"], key="mdm_ship_where")
                             
             st.markdown("</div>", unsafe_allow_html=True)
@@ -359,7 +388,7 @@ else:
                     c_pc, c_city = st.columns(2)
                     with c_pc: postal_code = st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
                     with c_city: city = st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
-                    country = st.text_input(req_lbl("comp_country", "Country *"), value="Norway", key="comp_country", max_chars=100)
+                    country = st.text_input(req_lbl("comp_country", "Country *"), key="comp_country", max_chars=100)
     
                 with c_form_right:
                     c_fn, c_ln = st.columns(2)
@@ -410,7 +439,6 @@ else:
                     if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "📤 Pickup"})
                     if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "📥 Delivery"})
                     
-                    # Kleinere stippen op de kaart
                     layers.append(
                         pdk.Layer(
                             "ScatterplotLayer",
@@ -424,7 +452,6 @@ else:
                         )
                     )
                     
-                    # Teken pas een lijn als beide coördinaten bekend zijn!
                     if p_coords and d_coords:
                         _, route_geom = get_route_data(p_coords, d_coords)
                         
@@ -444,7 +471,7 @@ else:
                         center_lat = (p_coords[0] + d_coords[0]) / 2
                         center_lon = (p_coords[1] + d_coords[1]) / 2
                         zoom = 4.5
-                        pitch = 20 # Iets platter, mooi voor een wegenkaart
+                        pitch = 20 
                     else:
                         center_lat = p_coords[0] if p_coords else d_coords[0]
                         center_lon = p_coords[1] if p_coords else d_coords[1]
@@ -452,7 +479,6 @@ else:
                         pitch = 0
 
                     view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)
-                    
                     st.pydeck_chart(pdk.Deck(layers=layers, initial_view_state=view_state, tooltip={"text": "{name}"}))
                 else:
                     st.markdown("<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>🗺️ Map will appear when you enter an address...</div>", unsafe_allow_html=True)
@@ -616,11 +642,10 @@ else:
                     st.session_state.validate_step2 = False
                     st.session_state.scroll_up = False
                     st.session_state.selected_types = []
-                    st.session_state.chk_parcels = False
-                    st.session_state.chk_freight = False
-                    st.session_state.chk_mail = False
-                    for key in ['p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
-                        if key in st.session_state: del st.session_state[key]
+                    
+                    st.session_state.saved_form = {}
+                    for k in keys_to_save:
+                        if k in st.session_state: del st.session_state[k]
                     st.rerun()
 
     with col_calc:
