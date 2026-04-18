@@ -36,9 +36,6 @@ if 'user' not in st.session_state:
     else:
         st.session_state.user = None
 
-if 'last_order_signature' not in st.session_state:
-    st.session_state.last_order_signature = None
-
 if 'active_tab' not in st.session_state:
     st.session_state.active_tab = "My Shipments"
 
@@ -142,7 +139,6 @@ if st.session_state.user is None:
             st.write("")
             if st.button("Log In", type="primary", use_container_width=True):
                 if login_email and login_pass:
-                    # --- HIER IS DE LAAD ANIMATIE TOEGEVOEGD ---
                     with st.spinner("Bezig met inloggen... Een moment geduld a.u.b. ⏳"):
                         try:
                             auth_response = supabase.auth.sign_in_with_password({
@@ -172,7 +168,6 @@ if st.session_state.user is None:
             st.write("")
             if st.button("Create Account", type="primary", use_container_width=True):
                 if reg_email and reg_pass and reg_company and reg_fname and reg_lname:
-                    # --- HIER OOK EEN LAAD ANIMATIE VOOR REGISTRATIE ---
                     with st.spinner("Account wordt aangemaakt... ⏳"):
                         try:
                             auth_res = supabase.auth.sign_up({
@@ -224,8 +219,22 @@ else:
     del_address = profile.get("del_address", "")
     del_zip = profile.get("del_zip", "")
     del_city = profile.get("del_city", "")
+    
+    # Sla de profielgegevens op in de sessie zodat Order.py ze straks kan oppakken!
+    st.session_state.user_profile = {
+        'comp_name': company_name,
+        'cont_name': contact_name,
+        'email': email_addr,
+        'phone': phone_nr,
+        'address': address,
+        'zip_code': zip_code,
+        'city': city,
+        'del_address': del_address,
+        'del_zip': del_zip,
+        'del_city': del_city
+    }
 
-    # 2. Haal direct alle orders op (Zodat we de metrics bovenaan kunnen tonen)
+    # 2. Haal orders op
     try:
         orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
         user_orders = orders_res.data
@@ -273,9 +282,9 @@ else:
             st.rerun()
             
     with col_menu2:
-        if st.button("➕ New Order", type="primary" if st.session_state.active_tab == "New Order" else "secondary", use_container_width=True):
-            st.session_state.active_tab = "New Order"
-            st.rerun()
+        # AANGEPAST: Deze knop gaat nu direct naar Order.py in plaats van de tab te veranderen!
+        if st.button("➕ New Order", type="secondary", use_container_width=True):
+            st.switch_page("pages/Order.py")
             
     with col_menu3:
         if st.button("⚙️ Profile Settings", type="primary" if st.session_state.active_tab == "Profile Settings" else "secondary", use_container_width=True):
@@ -329,10 +338,8 @@ else:
                         st.markdown("#### 📝 Additional Info")
                         st.write(f"{o.get('info', '-')}")
                     
-                    # LOGICA: Klant kan zelf een 'New' order annuleren (GECENTREERDE KNOP)
                     if o['status'] == 'New':
                         st.write("---")
-                        # 3 kolommen: de middelste is 2x zo breed, dit drukt de knop perfect in het midden!
                         c_space1, c_cancel, c_space2 = st.columns([1, 2, 1])
                         with c_cancel:
                             if st.button("❌ Cancel This Order", key=f"cancel_{o['id']}", type="secondary", use_container_width=True):
@@ -347,102 +354,7 @@ else:
                     st.markdown("<br>", unsafe_allow_html=True)
 
     # =========================================================
-    # CONTENT 2: NIEUWE ORDER
-    # =========================================================
-    elif st.session_state.active_tab == "New Order":
-        
-        st.markdown("### ➕ Quick Order Form")
-        st.markdown(f"<p style='color:#aaaaaa;'>Book a new shipment. Your details (<b>{company_name}</b>) are automatically attached.</p>", unsafe_allow_html=True)
-        
-        with st.container(border=True):
-            st.markdown("#### 1. What are you shipping?")
-            
-            c_ship1, c_ship2, c_ship3 = st.columns(3)
-            with c_ship1: q_parcels = st.checkbox("Parcels & Documents", key="q_parcels")
-            with c_ship2: q_freight = st.checkbox("Cargo & Freight", key="q_freight")
-            with c_ship3: q_mail = st.checkbox("Mail & Marketing", key="q_mail")
-            
-            q_load_types = []
-            if q_freight:
-                st.markdown("<p style='color:#b070c6; font-size:14px; font-weight:600;'>Select Freight Options:</p>", unsafe_allow_html=True)
-                fc1, fc2, fc3 = st.columns(3)
-                with fc1: q_pal = st.checkbox("Pallet", key="q_pal")
-                with fc2: q_full = st.checkbox("Full Container/Truck", key="q_full")
-                with fc3: q_lc = st.checkbox("Loose Cargo", key="q_lc")
-                if q_pal: q_load_types.append("Pallet")
-                if q_full: q_load_types.append("Full Container")
-                if q_lc: q_load_types.append("Loose Cargo")
-            
-            st.write("---")
-            st.markdown("#### 2. Route Information")
-            rc1, rc2 = st.columns(2, gap="large")
-            with rc1:
-                st.markdown("**📤 Pickup Location**")
-                q_p_address = st.text_input("Address *", value=address, key="q_p_add")
-                q_p_zip = st.text_input("Zip Code *", value=zip_code, key="q_p_zip")
-                q_p_city = st.text_input("City *", value=city, key="q_p_city")
-            with rc2:
-                st.markdown("**📥 Delivery Destination**")
-                q_d_address = st.text_input("Address *", value=del_address, key="q_d_add")
-                q_d_zip = st.text_input("Zip Code *", value=del_zip, key="q_d_zip")
-                q_d_city = st.text_input("City *", value=del_city, key="q_d_city")
-            
-            st.write("---")
-            st.markdown("#### 3. Order Specifications")
-            q_info = st.text_area("Describe what you ship, approx. weight, special requirements, etc.", key="q_info")
-            
-            st.write("")
-            if st.button("🚀 Submit Quick Order", type="primary", use_container_width=True):
-                selected_types = []
-                if q_parcels: selected_types.append("Parcels & Documents")
-                if q_freight: selected_types.append("Cargo & Freight")
-                if q_mail: selected_types.append("Mail & Direct Marketing")
-                
-                if not selected_types:
-                    st.error("⚠️ Please select at least one shipment type.")
-                elif not (q_p_address and q_p_zip and q_p_city and q_d_address and q_d_zip and q_d_city):
-                    st.error("⚠️ Please fill in all the Route Information fields.")
-                else:
-                    compiled_info = q_info + "\n\n--- Quick Order Specs ---\n" if q_info else "--- Quick Order Specs ---\n"
-                    if q_freight and q_load_types:
-                        compiled_info += f"🚛 Freight Load: {', '.join(q_load_types)}\n"
-                        
-                    current_signature = f"{q_p_address}-{q_d_address}-{compiled_info}"
-                    
-                    if st.session_state.last_order_signature == current_signature:
-                        st.warning("⏳ Je hebt deze exacte order zojuist al verstuurd! We hebben hem in goede orde ontvangen.")
-                    else:
-                        db_order = {
-                            "company": company_name,
-                            "reg_no": "",  
-                            "address": f"{q_p_address}, {q_p_zip} {q_p_city}",
-                            "contact_name": contact_name,
-                            "email": email_addr,
-                            "phone": phone_nr,
-                            "types": ", ".join(selected_types),
-                            "info": compiled_info,
-                            "status": "New",
-                            "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                            "pickup_address": q_p_address,
-                            "pickup_zip": q_p_zip,
-                            "pickup_city": q_p_city,
-                            "delivery_address": q_d_address,
-                            "delivery_zip": q_d_zip,
-                            "delivery_city": q_d_city,
-                            "user_id": user_id 
-                        }
-                        
-                        # --- LAAD ANIMATIE VOOR HET PLAATSEN VAN EEN ORDER ---
-                        with st.spinner("Je order wordt veilig verstuurd... ⏳"):
-                            try:
-                                supabase.table("orders").insert(db_order).execute()
-                                st.session_state.last_order_signature = current_signature
-                                st.success("🎉 Order submitted successfully! You can see it in your 'My Shipments' tab.")
-                            except Exception as e:
-                                st.error(f"⚠️ Failed to send order. Error: {e}")
-
-    # =========================================================
-    # CONTENT 3: PROFIEL BEHEREN
+    # CONTENT 3: PROFIEL BEHEREN (Content 2 is nu weggehaald)
     # =========================================================
     elif st.session_state.active_tab == "Profile Settings":
         
@@ -486,7 +398,6 @@ else:
                     "del_city": upd_del_city
                 }
                 
-                # --- LAAD ANIMATIE VOOR OPSLAAN VAN PROFIEL ---
                 with st.spinner("Profiel wordt bijgewerkt... ⏳"):
                     try:
                         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
