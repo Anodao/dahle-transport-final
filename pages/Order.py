@@ -104,7 +104,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 """, unsafe_allow_html=True)
 
 # --- ROUTING API FUNCTIES ---
-HQ_COORDS = (63.4305, 10.3951) # Trondheim hoofdkwartier. Pas aan indien nodig!
+HQ_COORDS = (63.4305, 10.3951) # Trondheim hoofdkwartier.
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -374,33 +374,28 @@ else:
                 st.markdown("<h3 style='margin-top: 20px;'>📍 Route Information</h3>", unsafe_allow_html=True)
                 st.write("---")
                 c_route_left, c_route_right = st.columns(2, gap="large")
-                
                 with c_route_left:
                     st.markdown("**📤 Pickup Location**")
                     p_address = st.text_input(req_lbl("p_addr", "Street Address *"), key="p_addr", max_chars=150)
                     c_p_zip, c_p_city = st.columns(2)
                     with c_p_zip: p_zip = st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
                     with c_p_city: p_city = st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
-                    
                 with c_route_right:
                     st.markdown("**📥 Delivery Destination**")
                     d_address = st.text_input(req_lbl("d_addr", "Street Address *"), key="d_addr", max_chars=150)
                     c_d_zip, c_d_city = st.columns(2)
                     with c_d_zip: d_zip = st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
                     with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
-                
+                    
                 st.write("")
                 
-st.write("")
                 # --- LIVE MAP GENERATOR MET 3D LIJN (PYDECK) ---
                 p_coords = None
                 d_coords = None
                 
-                # Check of ophaaladres is ingevuld
                 if len(p_address) > 3 and len(p_city) > 2:
                     p_coords = get_coordinates(f"{p_address}, {p_zip} {p_city}")
                         
-                # Check of afleveradres is ingevuld
                 if len(d_address) > 3 and len(d_city) > 2:
                     d_coords = get_coordinates(f"{d_address}, {d_zip} {d_city}")
                 
@@ -411,19 +406,17 @@ st.write("")
                     if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "📤 Pickup"})
                     if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "📥 Delivery"})
                     
-                    # 1. De stippen op de kaart
                     layers.append(
                         pdk.Layer(
                             "ScatterplotLayer",
                             data=points,
                             get_position="pos",
-                            get_color=[137, 75, 157, 255], # De paarse Dahle Transport kleur
-                            get_radius=15000, # Formaat van de stip
+                            get_color=[137, 75, 157, 255], 
+                            get_radius=15000,
                             pickable=True
                         )
                     )
                     
-                    # 2. De mooie 3D boog/lijn tussen de twee stippen!
                     if p_coords and d_coords:
                         layers.append(
                             pdk.Layer(
@@ -437,13 +430,11 @@ st.write("")
                                 get_tilt=15
                             )
                         )
-                        # Bereken het middenpunt om de camera op te focussen
                         center_lat = (p_coords[0] + d_coords[0]) / 2
                         center_lon = (p_coords[1] + d_coords[1]) / 2
                         zoom = 3.5
-                        pitch = 40 # Zet de kaart een beetje schuin voor het 3D effect!
+                        pitch = 40
                     else:
-                        # Als er maar 1 adres is, focus de camera daar dan direct op (recht van boven)
                         center_lat = p_coords[0] if p_coords else d_coords[0]
                         center_lon = p_coords[1] if p_coords else d_coords[1]
                         zoom = 10
@@ -451,18 +442,11 @@ st.write("")
 
                     view_state = pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)
                     
-                    # Teken de geavanceerde kaart
-                    st.pydeck_chart(pdk.Deck(
-                        layers=layers,
-                        initial_view_state=view_state,
-                        tooltip={"text": "{name}"}
-                    ))
+                    st.pydeck_chart(pdk.Deck(layers=layers, initial_view_state=view_state, tooltip={"text": "{name}"}))
                 else:
-                    # Grijze tijdelijke balk als er nog niks is ingevuld
                     st.markdown("<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>🗺️ Map will appear when you enter an address...</div>", unsafe_allow_html=True)
                 
                 st.write("---")
-                
                 additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
             st.write("")
