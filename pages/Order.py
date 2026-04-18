@@ -642,55 +642,30 @@ else:
                             del st.session_state[key]
                     st.rerun()
 
-    # =========================================================
+# =========================================================
     # RECHTERKOLOM (PROFESSIONELE KASSABON)
     # =========================================================
     with col_calc:
         current_price, breakdown_lines = get_live_price()
         
-        # HTML voor een strakke, professionele 'receipt' card
+        # HTML zonder spaties aan het begin om de Markdown-bug te voorkomen!
         receipt_items_html = ""
         for name, price in breakdown_lines:
-            receipt_items_html += f"""
-            <div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;">
-                <span>{name}</span>
-                <span>{price:,.0f}</span>
-            </div>
-            """
+            receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
             
-        receipt_html = f"""
-        <style>
-        .receipt-card {{
-            background: linear-gradient(180deg, #1e1e20 0%, #171719 100%);
-            border: 1px solid #333; border-radius: 12px; padding: 24px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            position: sticky; top: 120px;
-        }}
-        </style>
-        
-        <div class="receipt-card">
-            <div style="color: #b070c6; font-size: 18px; font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">
-                💰 Live Estimate
-            </div>
-            <div style="color: #888; font-size: 12px; margin-bottom: 25px;">
-                Your price updates automatically.
-            </div>
-            
-            {receipt_items_html}
-            
-            <div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-size: 14px; font-weight: 600; color: #fff;">Total</span>
-                <span style="font-size: 26px; font-weight: 700; color: #fff;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span>
-            </div>
-            <div style="text-align: right; font-size: 11px; color: #666; margin-top: -3px;">
-                Excl. MVA (VAT)
-            </div>
-        </div>
-        """
-        st.markdown(receipt_html, unsafe_allow_html=True)
+        receipt_html = f"""<style>
+.receipt-card {{ background: linear-gradient(180deg, #1e1e20 0%, #171719 100%); border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: sticky; top: 120px; }}
+</style>
+<div class="receipt-card">
+<div style="color: #b070c6; font-size: 18px; font-weight: 700; margin-bottom: 5px; display: flex; align-items: center; gap: 8px;">💰 Live Estimate</div>
+<div style="color: #888; font-size: 12px; margin-bottom: 25px;">Your price updates automatically.</div>
+{receipt_items_html}
+<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div>
+<div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">Total</span><span style="font-size: 26px; font-weight: 700; color: #fff;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div>
+<div style="text-align: right; font-size: 11px; color: #666; margin-top: -3px;">Excl. MVA (VAT)</div>
+</div>"""
 
+        st.markdown(receipt_html, unsafe_allow_html=True)
 
 # =========================================================
 # DE KNOPPEN ONDERAAN DE PAGINA
