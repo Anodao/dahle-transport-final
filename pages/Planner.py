@@ -90,23 +90,34 @@ all_orders = fetch_all_orders()
 # =========================================================
 with st.expander("📊 Bekijk Statistieken & KPI's", expanded=True):
     
-    # --- Datum Filter UI ---
+    # --- Datum Filter UI (Nu met 'Show All' optie) ---
     col_filter, _ = st.columns([1, 2])
     with col_filter:
-        default_start = datetime.now().date() - timedelta(days=30)
-        default_end = datetime.now().date()
-        date_range = st.date_input("📅 Filter op datum:", value=(default_start, default_end))
+        filter_optie = st.selectbox("📅 Filter periode:", ["Laatste 30 dagen", "Alle orders", "Aangepaste datum..."])
+        
+        start_date = None
+        end_date = None
+        
+        if filter_optie == "Laatste 30 dagen":
+            start_date = datetime.now().date() - timedelta(days=30)
+            end_date = datetime.now().date()
+        elif filter_optie == "Aangepaste datum...":
+            default_start = datetime.now().date() - timedelta(days=30)
+            date_range = st.date_input("Kies datum:", value=(default_start, datetime.now().date()))
+            if isinstance(date_range, tuple) and len(date_range) == 2:
+                start_date, end_date = date_range
 
     # --- Data Filter Logica ---
     filtered_orders = all_orders
-    if isinstance(date_range, tuple) and len(date_range) == 2:
-        start_date, end_date = date_range
+    
+    # Als start_date en end_date zijn ingevuld (dus NIET bij 'Alle orders'), dan filteren we:
+    if start_date and end_date:
         temp_orders = []
         for o in all_orders:
             raw_date = o.get('received_date')
             if raw_date:
                 try:
-                    # Zet de datum string om naar een echt datum object om te vergelijken
+                    # Zet de datum string om naar een echt datum object
                     order_date = datetime.strptime(raw_date[:10], "%Y-%m-%d").date()
                     if start_date <= order_date <= end_date:
                         temp_orders.append(o)
