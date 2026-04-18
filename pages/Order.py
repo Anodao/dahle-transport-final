@@ -1,11 +1,11 @@
 import streamlit as st
 import time
 from datetime import datetime
-from supabase import create_client, Client
+from supabase import create_client
 
 # --- PAGE CONFIG ---
 st.set_page_config(
-    page_title="Dahle Transport - Home",
+    page_title="Dahle Transport - Order",
     page_icon="🚚",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -46,7 +46,6 @@ if 'chk_parcels' not in st.session_state: st.session_state.chk_parcels = False
 if 'chk_freight' not in st.session_state: st.session_state.chk_freight = False
 if 'chk_mail' not in st.session_state: st.session_state.chk_mail = False
 if 'show_error' not in st.session_state: st.session_state.show_error = False
-if 'order_counter' not in st.session_state: st.session_state.order_counter = 1000
 if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
@@ -57,13 +56,9 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
-    /* --- HEADER & SIDEBAR FIX --- */
-    [data-testid="collapsedControl"] { display: none !important; }
-    [data-testid="stSidebar"] { display: none !important; }
-    header[data-testid="stHeader"] { background: transparent !important; pointer-events: none !important; display: none !important;}
+    [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
     footer { visibility: hidden; }
     
-    /* --- NAVBAR --- */
     .block-container { padding-top: 110px; }
     .navbar {
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
@@ -81,7 +76,6 @@ st.markdown("""
     .nav-links span:hover { color: #894b9d; }
     .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
     
-    /* Knoppen styling Navbar */
     .cta-btn { 
         background-color: #894b9d; color: white !important; padding: 10px 24px;
         border-radius: 50px; text-decoration: none !important; font-weight: 600; 
@@ -98,7 +92,6 @@ st.markdown("""
     }
     .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
 
-    /* --- STEP TRACKER --- */
     .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
     .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
     .step-circle {
@@ -113,57 +106,27 @@ st.markdown("""
     .step-item.completed .step-label { color: #894b9d; }
     .line-completed { background-color: #894b9d; }
 
-    /* --- KINETIC BUTTON STYLING --- */
     div.stButton > button[kind="primary"] { 
         background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; 
-        color: #ffffff !important; 
-        border: 2px solid transparent !important; 
-        border-radius: 6px !important; 
-        padding: 14px 28px !important; 
-        font-weight: 600 !important; 
-        font-size: 15px !important;
-        letter-spacing: 0.02em !important;
-        text-transform: none !important;
-        box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        width: 100% !important;
+        color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; 
+        padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important;
+        box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; width: 100% !important;
     }
-    
-    div.stButton > button[kind="primary"]:hover { 
-        background: #ffffff !important; 
-        color: #894b9d !important;
-        border: 2px solid #894b9d !important;
-        transform: translateY(-2px) !important;
-        box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important;
-    }
-    
-    div.stButton > button[kind="primary"]:active { transform: translateY(0px) !important; }
+    div.stButton > button[kind="primary"]:hover { background: #ffffff !important; color: #894b9d !important; border: 2px solid #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
 
     div.stButton > button[kind="secondary"] {
-        background: transparent !important; 
-        color: #e0c2ed !important; 
-        padding: 14px 24px !important;
-        border-radius: 6px !important; 
-        font-weight: 600 !important; 
-        font-size: 14px !important; 
-        letter-spacing: 0.02em !important; 
-        border: 2px solid #894b9d !important; 
-        transition: all 0.3s ease !important;
-        width: 100% !important;
+        background: transparent !important; color: #e0c2ed !important; padding: 14px 24px !important; border-radius: 6px !important; 
+        font-weight: 600 !important; font-size: 14px !important; border: 2px solid #894b9d !important; transition: all 0.3s ease !important; width: 100% !important;
     }
-    div.stButton > button[kind="secondary"]:hover { 
-        background: #ffffff !important; 
-        border-color: #894b9d !important;
-        color: #894b9d !important; 
-        transform: translateY(-2px) !important;
-        box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important;
-    }
+    div.stButton > button[kind="secondary"]:hover { background: #ffffff !important; border-color: #894b9d !important; color: #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important; }
 
-    /* --- ALGEMENE FORMS --- */
     div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
     div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
     label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
     div[data-baseweb="select"] div { color: white; background-color: #333;}
+    
+    /* CSS voor de vastgeplakte (sticky) calculator kolom */
+    .sticky-calculator { position: sticky; top: 120px; z-index: 100; }
     </style>
     
 <div class="navbar">
@@ -173,7 +136,7 @@ st.markdown("""
             </a>
         </div>
         <div class="nav-links">
-            <a href="/"><span>Hjem</span></a>
+            <a href="/" target="_self"><span>Hjem</span></a>
             <span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span>
         </div>
         <div class="nav-cta">
@@ -183,11 +146,78 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
+
 # =========================================================
-# DE WEBSITE LOGICA
+# PRIJS CALCULATIE LOGICA
+# =========================================================
+def get_live_price():
+    total_price = 0
+    breakdown = []
+    
+    # Als we nog in stap 1 zijn zonder selectie
+    if not st.session_state.selected_types and st.session_state.step == 1:
+        return 0, ["Selecteer een dienst om de prijs te zien."]
+        
+    # Basistarief per order
+    base_fee = 150
+    total_price += base_fee
+    breakdown.append(f"Base Fee: {base_fee} NOK")
+
+    # PARCELS & DOCUMENTS
+    if "Parcels & Documents" in st.session_state.selected_types:
+        w_p = st.session_state.get('pd_weight', 1.0)
+        shape_oversized = st.session_state.get('pd_oversized', False)
+        region = st.session_state.get('pd_ship_where', 'Domestic')
+        
+        # Formule: 80 start + 15 per kg
+        p_price = 80 + (w_p * 15)
+        if shape_oversized: p_price += 250 # Oversized toeslag
+        
+        # Region multiplier
+        if region == "Pan-European": p_price *= 2.5
+        elif region == "Worldwide": p_price *= 5.0
+        
+        total_price += p_price
+        breakdown.append(f"Parcels ({w_p}kg, {region}): {p_price:,.0f} NOK")
+
+    # CARGO & FREIGHT
+    if "Cargo & Freight" in st.session_state.selected_types:
+        w_f = st.session_state.get('cf_weight', 100)
+        region = st.session_state.get('cf_ship_where', 'Domestic')
+        
+        f_price = 1000 + (w_f * 5) # 1000 start + 5 per kg
+        
+        # Vorm/Load toeslagen
+        if st.session_state.get('cf_pal'): f_price += 400
+        if st.session_state.get('cf_full'): f_price += 5000
+        if st.session_state.get('cf_lc'): f_price += 200
+        
+        if region == "Pan-European": f_price *= 2.0
+        elif region == "Worldwide": f_price *= 4.5
+        
+        total_price += f_price
+        breakdown.append(f"Freight ({w_f}kg, {region}): {f_price:,.0f} NOK")
+
+    # MAIL & MARKETING
+    if "Mail & Direct Marketing" in st.session_state.selected_types:
+        w_m = st.session_state.get('mdm_weight', 0.5)
+        region = st.session_state.get('mdm_ship_where', 'Pan-European')
+        
+        m_price = 45 + (w_m * 25)
+        if region == "Worldwide": m_price *= 3.0
+        
+        total_price += m_price
+        breakdown.append(f"Mail ({w_m}kg, {region}): {m_price:,.0f} NOK")
+
+    return total_price, breakdown
+
+
+# =========================================================
+# DE WEBSITE LOGICA (NU MET CALCULATOR KOLOM!)
 # =========================================================
 
-col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
+# AANGEPAST: col_calc toegevoegd aan de rechterkant!
+col_spacer_L, col_main, col_calc = st.columns([0.5, 6, 2.5], gap="large")
 
 with col_main:
     
@@ -223,52 +253,29 @@ with col_main:
     if st.session_state.step == 1:
         st.markdown("""
         <style>
-        /* Basis styling voor de vierkanten */
-        div[data-testid="stVerticalBlockBorderWrapper"] {
-            position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important;
-            background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%;
-        }
-        
-        /* Hover effect over de vierkanten */
-        div[data-testid="stVerticalBlockBorderWrapper"]:hover {
-            border-color: #666 !important; background-color: #262626 !important; transform: translateY(-3px);
-        }
-        
-        /* De checkbox over de hele kaart leggen zodat je overal kan klikken */
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after {
-            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10;
-        }
+        div[data-testid="stVerticalBlockBorderWrapper"] { position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important; background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover { border-color: #666 !important; background-color: #262626 !important; transform: translateY(-3px); }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; }
         div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] { margin-bottom: 5px; padding-top: 0px; }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] {
-            transform: scale(1.6); margin-right: 15px; border-color: #888;
-        }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label p {
-            font-size: 20px !important; font-weight: 700 !important; color: white !important;
-        }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.6); margin-right: 15px; border-color: #888; }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label p { font-size: 20px !important; font-weight: 700 !important; color: white !important; }
         </style>
         """, unsafe_allow_html=True)
         
-        # --- DYNAMISCHE CSS VOOR HET WITTE ACHTERGROND EFFECT ---
         dynamic_css = ""
         
         if st.session_state.chk_parcels:
-            dynamic_css += '''
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
-            '''
+            dynamic_css += '''div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; }
+            div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
+            div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
         if st.session_state.chk_freight:
-            dynamic_css += '''
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
-            '''
+            dynamic_css += '''div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
+            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
         if st.session_state.chk_mail:
-            dynamic_css += '''
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
-            div[data-testid="stColumn"]:nth-child(2) div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }
-            '''
+            dynamic_css += '''div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; }
+            div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; }
+            div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
             
         if dynamic_css:
             st.markdown(f"<style>{dynamic_css}</style>", unsafe_allow_html=True)
@@ -281,44 +288,17 @@ with col_main:
         with c1:
             with st.container(border=True):
                 st.checkbox("Parcels & Documents", key="chk_parcels")
-                st.markdown("""
-                    <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 31.5kg</span>
-                    <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
-                        <li>Light to medium weight shipments</li><li>B2B/B2C</li>
-                    </ul>
-                    <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
-                        Commonly shipped items:
-                        <div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">✉️ 📦 📚</div>
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown("""<span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 31.5kg</span><ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;"><li>Light to medium weight shipments</li><li>B2B/B2C</li></ul><div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">Commonly shipped items:<div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">✉️ 📦 📚</div></div>""", unsafe_allow_html=True)
 
         with c2:
             with st.container(border=True):
                 st.checkbox("Cargo & Freight", key="chk_freight")
-                st.markdown("""
-                    <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically over 31.5kg+</span>
-                    <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
-                        <li>Heavier shipments using pallets or containers</li><li>B2B</li>
-                    </ul>
-                    <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
-                        Commonly shipped items:
-                        <div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">🚛 🏗️</div>
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown("""<span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically over 31.5kg+</span><ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;"><li>Heavier shipments using pallets or containers</li><li>B2B</li></ul><div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">Commonly shipped items:<div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">🚛 🏗️</div></div>""", unsafe_allow_html=True)
 
         with c3:
             with st.container(border=True):
                 st.checkbox("Mail & Marketing", key="chk_mail")
-                st.markdown("""
-                    <span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 2kg</span>
-                    <ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;">
-                        <li>Lightweight goods</li><li>International business mail (letters, brochures, books)</li>
-                    </ul>
-                    <div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">
-                        Commonly shipped items:
-                        <div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">📭 📄</div>
-                    </div>
-                """, unsafe_allow_html=True)
+                st.markdown("""<span style="display: inline-block; padding: 4px 12px; border: 1px solid #666; border-radius: 20px; font-size: 12px; color: #ccc; margin-bottom: 20px;">Typically up to 2kg</span><ul style="font-size: 14px; color: #bbb; line-height: 1.6; padding-left: 20px; margin-bottom: 30px; min-height: 80px;"><li>Lightweight goods</li><li>International business mail (letters, brochures, books)</li></ul><div style="text-align: center; font-size: 12px; color: #aaa; border-top: 1px solid #444; padding-top: 20px; margin-top: 30px;">Commonly shipped items:<div style="font-size: 32px; margin-top: 10px; display: flex; gap: 20px; justify-content: center;">📭 📄</div></div>""", unsafe_allow_html=True)
 
         if st.session_state.show_error:
             st.markdown("<p style='text-align: center; color: #ff4b4b; font-weight: bold; margin-top: 20px;'>❌ Please select at least one option.</p>", unsafe_allow_html=True)
@@ -353,29 +333,10 @@ with col_main:
         
         if st.session_state.get('scroll_up', False):
             st.components.v1.html(
-                """
-                <script>
-                    const doc = window.parent.document;
-                    const el = doc.getElementById("error-top");
-                    if(el) {
-                        el.scrollIntoView({behavior: "smooth"});
-                    }
-                </script>
-                """, height=0
-            )
+                """<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
             st.session_state.scroll_up = False 
             
-        st.markdown("""
-        <style>
-        .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;}
-        .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;}
-        .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;}
-        .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; }
-        .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; }
-        .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; }
-        .step2-panel div[role="radiogroup"] { gap: 0.5rem; }
-        </style>
-        """, unsafe_allow_html=True)
+        st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
         
         def req_lbl(key, base_text):
             if st.session_state.get('validate_step2', False):
@@ -422,6 +383,10 @@ with col_main:
                             st.rerun() 
 
                     if sel == "Parcels & Documents":
+                        # NIEUW: Gewicht & Vorm Input
+                        st.number_input("Total Weight (kg)", min_value=0.5, value=st.session_state.get('pd_weight', 1.0), step=0.5, key="pd_weight")
+                        st.checkbox("Oversized / Irregular Shape", value=st.session_state.get('pd_oversized', False), key="pd_oversized")
+                        
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
                                  captions=["within the country", "within the continent", "beyond the continent"],
@@ -433,9 +398,12 @@ with col_main:
                             cf_lbl += " 🚨 :red[(Select at least one)]"
                         st.markdown(cf_lbl)
                         
-                        cf_pal_val = st.checkbox("Pallet", key="cf_pal")
-                        cf_full_val = st.checkbox("Full Container/Truck Load", key="cf_full")
-                        cf_lc_val = st.checkbox("Loose Cargo", key="cf_lc")
+                        cf_pal_val = st.checkbox("Pallet", value=st.session_state.get('cf_pal', False), key="cf_pal")
+                        cf_full_val = st.checkbox("Full Container/Truck Load", value=st.session_state.get('cf_full', False), key="cf_full")
+                        cf_lc_val = st.checkbox("Loose Cargo", value=st.session_state.get('cf_lc', False), key="cf_lc")
+                            
+                        # NIEUW: Gewicht Input
+                        st.number_input("Total Est. Weight (kg)", min_value=50, value=st.session_state.get('cf_weight', 100), step=50, key="cf_weight")
                             
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Domestic", "Pan-European", "Worldwide"], 
@@ -443,6 +411,9 @@ with col_main:
                                  key="cf_ship_where")
                         
                     elif sel == "Mail & Direct Marketing":
+                        # NIEUW: Gewicht Input
+                        st.number_input("Total Weight (kg)", min_value=0.1, value=st.session_state.get('mdm_weight', 0.5), step=0.1, key="mdm_weight")
+                        
                         st.radio("**Where do you ship? *** (Select one)", 
                                  options=["Pan-European", "Worldwide"], 
                                  captions=["within the continent", "beyond the continent"],
@@ -451,7 +422,6 @@ with col_main:
         st.markdown("</div>", unsafe_allow_html=True)
         
         st.markdown("<br><br>", unsafe_allow_html=True)
-        
         st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
         
         c_form_left, c_form_right = st.columns(2, gap="large")
@@ -548,17 +518,24 @@ with col_main:
                 compiled_info = additional_info + "\n\n--- Order Specifications ---\n" if additional_info else "--- Order Specifications ---\n"
                 
                 if "Parcels & Documents" in st.session_state.selected_types:
-                    compiled_info += f"📦 Parcels: Shipment to {st.session_state.pd_ship_where}.\n"
+                    w = st.session_state.get('pd_weight', 1.0)
+                    sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
+                    compiled_info += f"📦 Parcels: {w}kg ({sz}), to {st.session_state.pd_ship_where}.\n"
                 
                 if "Cargo & Freight" in st.session_state.selected_types:
                     loads = []
                     if cf_pal_val: loads.append("Pallet")
                     if cf_full_val: loads.append("Full Container")
                     if cf_lc_val: loads.append("Loose Cargo")
-                    compiled_info += f"🚛 Freight: Load: {', '.join(loads)} to {st.session_state.cf_ship_where}.\n"
+                    w = st.session_state.get('cf_weight', 100)
+                    compiled_info += f"🚛 Freight: Load: {', '.join(loads)}, {w}kg to {st.session_state.cf_ship_where}.\n"
                 
                 if "Mail & Direct Marketing" in st.session_state.selected_types:
-                    compiled_info += f"📭 Mail: Shipment to {st.session_state.mdm_ship_where}.\n"
+                    w = st.session_state.get('mdm_weight', 0.5)
+                    compiled_info += f"📭 Mail: {w}kg to {st.session_state.mdm_ship_where}.\n"
+                
+                # Sla ook de berekende prijs op!
+                calc_price, _ = get_live_price()
                 
                 st.session_state.temp_order = {
                     "company": company_name, 
@@ -574,7 +551,8 @@ with col_main:
                     "pickup_city": p_city,
                     "delivery_address": d_address,
                     "delivery_zip": d_zip,
-                    "delivery_city": d_city
+                    "delivery_city": d_city,
+                    "price": calc_price # <--- PRIJS AAN DATABASE TOEGEVOEGD
                 }
                 st.session_state.step = 3
                 st.rerun()
@@ -641,7 +619,8 @@ with col_main:
                         "pickup_city": o.get('pickup_city', ''),
                         "delivery_address": o.get('delivery_address', ''),
                         "delivery_zip": o.get('delivery_zip', ''),
-                        "delivery_city": o.get('delivery_city', '')
+                        "delivery_city": o.get('delivery_city', ''),
+                        "price": o.get('price', 0) # <--- Slaat de prijs op in de database!
                     }
                     
                     try:
@@ -650,7 +629,7 @@ with col_main:
                         st.session_state.is_submitted = True
                         st.rerun()
                     except Exception as e:
-                        st.error("⚠️ Failed to send order to the database. Please try again later.")
+                        st.error("⚠️ Failed to send order to the database. Ensure the 'price' column exists in your Supabase 'orders' table!")
                         
         else:
             st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
@@ -670,12 +649,38 @@ with col_main:
                         del st.session_state[key]
                 st.rerun()
 
+
 # =========================================================
-# DE KNOPPEN ONDERAAN DE PAGINA (NU 3 STUKS!)
+# DE NIEUWE RECHTERKOLOM (LIVE CALCULATOR)
+# =========================================================
+with col_calc:
+    st.markdown("<div class='sticky-calculator'>", unsafe_allow_html=True)
+    
+    with st.container(border=True):
+        st.markdown("<h3 style='margin-top:0px; color:#894b9d;'>💰 Live Estimate</h3>", unsafe_allow_html=True)
+        st.write("Your price updates automatically as you adjust your transport details.")
+        
+        st.write("---")
+        
+        # Roep de logica aan die we bovenaan hebben gedefinieerd
+        current_price, breakdown_lines = get_live_price()
+        
+        # Toon de specificatie regels (Base fee, gewicht, etc)
+        for line in breakdown_lines:
+            st.markdown(f"<p style='font-size: 14px; color: #bbb; margin:0;'>{line}</p>", unsafe_allow_html=True)
+            
+        st.write("---")
+        st.markdown(f"<h2 style='text-align: right; margin:0;'>{current_price:,.0f} NOK</h2>", unsafe_allow_html=True)
+        st.markdown("<p style='text-align: right; font-size: 12px; color: #888;'>Excl. MVA (VAT)</p>", unsafe_allow_html=True)
+        
+    st.markdown("</div>", unsafe_allow_html=True)
+
+
+# =========================================================
+# DE KNOPPEN ONDERAAN DE PAGINA
 # =========================================================
 st.write("---")
 
-# Maak 3 kolommen in plaats van 2
 c_bottom1, c_bottom2, c_bottom3 = st.columns(3, gap="large")
 
 with c_bottom1:
@@ -687,6 +692,5 @@ with c_bottom2:
         st.switch_page("pages/Dashboard.py")
 
 with c_bottom3:
-    # De nieuwe knop naar de Login pagina!
     if st.button("Open Customer Portal", type="primary", use_container_width=True):
         st.switch_page("pages/Login.py")
