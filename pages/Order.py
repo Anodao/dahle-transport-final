@@ -14,82 +14,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- SUPABASE CONNECTIE ---
-@st.cache_resource
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
-
-try:
-    supabase = init_connection()
-except Exception as e:
-    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
-
-# --- PROFIEL GEGEVENS OPHALEN UIT LOGIN.PY ---
-prof = st.session_state.get('user_profile', {})
-
-# Splits de naam netjes op in Voor- en Achternaam voor het formulier
-full_name = prof.get('cont_name', '')
-name_parts = full_name.split(' ', 1)
-f_name = name_parts[0] if name_parts else ''
-l_name = name_parts[1] if len(name_parts) > 1 else ''
-
-# --- ONVERWOESTBAAR GEHEUGEN (MET AUTO-FILL) ---
-default_values = {
-    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-    'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
-    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
-    'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
-    'comp_name': prof.get('comp_name', ''), 
-    'comp_reg': '', 
-    'comp_addr': prof.get('address', ''), 
-    'comp_pc': prof.get('zip_code', ''), 
-    'comp_city': prof.get('city', ''), 
-    'comp_country': 'Norway',
-    'cont_fn': f_name, 
-    'cont_ln': l_name, 
-    'cont_email': prof.get('email', ''), 
-    'cont_code': '+47', 
-    'cont_phone': prof.get('phone', ''), 
-    'cont_info': '',
-    'p_addr': prof.get('address', ''), 
-    'p_zip': prof.get('zip_code', ''), 
-    'p_city': prof.get('city', ''), 
-    'd_addr': prof.get('del_address', ''), 
-    'd_zip': prof.get('del_zip', ''), 
-    'd_city': prof.get('del_city', '')
-}
-
-for k, v in default_values.items():
-    if k not in st.session_state:
-        st.session_state[k] = v
-
-# --- OVERIGE SESSION STATES ---
-if 'orders' not in st.session_state: st.session_state.orders = []
-if 'step' not in st.session_state: st.session_state.step = 1
-if 'selected_types' not in st.session_state: st.session_state.selected_types = []
-if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
-if 'show_error' not in st.session_state: st.session_state.show_error = False
-if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
-if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
-if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
-
-# --- LOGO RESET TRUCJE ---
-if "reset" in st.query_params:
-    st.session_state.step = 1
-    st.session_state.selected_types = [] 
-    st.session_state.temp_order = {}
-    st.session_state.show_error = False
-    st.session_state.is_submitted = False
-    st.session_state.validate_step2 = False
-    st.session_state.scroll_up = False
-    for k, v in default_values.items():
-        st.session_state[k] = v
-    st.query_params.clear()
-    st.rerun()
-
-# --- CSS STYLING GLOBAL & NAVBAR HTML ---
+# --- CSS STYLING GLOBAL & NAVBAR HTML (MOVED TO TOP TO PREVENT FLASHING!) ---
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -138,6 +63,91 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
     <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/?reset=true" target="_self" class="cta-btn">TA KONTAKT</a></div>
 </div>
 """, unsafe_allow_html=True)
+
+# --- SUPABASE CONNECTIE ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+try:
+    supabase = init_connection()
+except Exception as e:
+    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
+
+# --- SESSION & AUTO-FILL LOGICA ---
+# Reset de profile_applied flag als een gebruiker uitlogt
+if 'user' not in st.session_state or st.session_state.user is None:
+    st.session_state['profile_applied'] = False
+    st.session_state['user_profile'] = {}
+
+# Initialiseer basis session states
+if 'orders' not in st.session_state: st.session_state.orders = []
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'selected_types' not in st.session_state: st.session_state.selected_types = []
+if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
+if 'show_error' not in st.session_state: st.session_state.show_error = False
+if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
+if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
+if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
+
+# 1. Maak het formulier in het geheugen aan als 'leeg' (als ze er niet zijn)
+default_values = {
+    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
+    'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
+    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
+    'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
+    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
+    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_code': '+47', 'cont_phone': '', 'cont_info': '',
+    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
+}
+for k, v in default_values.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# 2. Overschrijf het lege geheugen met profiel-data (eenmalig per login)
+prof = st.session_state.get('user_profile', {})
+if prof and not st.session_state.get('profile_applied'):
+    full_name = prof.get('cont_name', '')
+    name_parts = full_name.split(' ', 1)
+    f_name = name_parts[0] if name_parts else ''
+    l_name = name_parts[1] if len(name_parts) > 1 else ''
+    
+    st.session_state['comp_name'] = prof.get('comp_name', '')
+    st.session_state['cont_fn'] = f_name
+    st.session_state['cont_ln'] = l_name
+    st.session_state['cont_email'] = prof.get('email', '')
+    st.session_state['cont_phone'] = prof.get('phone', '')
+    
+    st.session_state['comp_addr'] = prof.get('address', '')
+    st.session_state['comp_pc'] = prof.get('zip_code', '')
+    st.session_state['comp_city'] = prof.get('city', '')
+    
+    st.session_state['p_addr'] = prof.get('address', '')
+    st.session_state['p_zip'] = prof.get('zip_code', '')
+    st.session_state['p_city'] = prof.get('city', '')
+    
+    st.session_state['d_addr'] = prof.get('del_address', '')
+    st.session_state['d_zip'] = prof.get('del_zip', '')
+    st.session_state['d_city'] = prof.get('del_city', '')
+    
+    st.session_state['profile_applied'] = True
+
+# --- LOGO RESET TRUCJE ---
+if "reset" in st.query_params:
+    st.session_state.step = 1
+    st.session_state.selected_types = [] 
+    st.session_state.temp_order = {}
+    st.session_state.show_error = False
+    st.session_state.is_submitted = False
+    st.session_state.validate_step2 = False
+    st.session_state.scroll_up = False
+    st.session_state.profile_applied = False # Laat hem opnieuw invullen bij reset
+    for k, v in default_values.items():
+        st.session_state[k] = v
+    st.query_params.clear()
+    st.rerun()
 
 # --- ROUTING API FUNCTIES ---
 HQ_COORDS = (63.4305, 10.3951) # Trondheim hoofdkwartier.
@@ -320,15 +330,15 @@ else:
     st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
     
     def req_lbl(key, base_text):
-        if st.session_state.get('validate_step2', False):
+        if st.session_state.validate_step2:
             val = st.session_state.get(key, "")
             if not val or not str(val).strip(): return f"{base_text} 🚨 :red[(Required)]"
         return base_text
 
     def email_lbl():
         base = "Work Email *"
-        if st.session_state.get('validate_step2', False):
-            val = st.session_state.get('cont_email', "")
+        if st.session_state.validate_step2:
+            val = st.session_state.cont_email
             if not val or not str(val).strip(): return f"{base} 🚨 :red[(Required)]"
             elif "@" not in str(val): return f"{base} 🚨 :red[(Missing '@')]"
         return base
@@ -636,6 +646,11 @@ else:
                             "delivery_address": o.get('delivery_address', ''), "delivery_zip": o.get('delivery_zip', ''), "delivery_city": o.get('delivery_city', ''),
                             "price": o.get('price', 0)
                         }
+                        
+                        # Controleer of er een user is ingelogd, zo ja, koppel het account eraan!
+                        if st.session_state.get('user'):
+                            db_order["user_id"] = st.session_state.user.id
+
                         try:
                             supabase.table("orders").insert(db_order).execute()
                             st.balloons()
@@ -652,6 +667,7 @@ else:
                     st.session_state.validate_step2 = False
                     st.session_state.scroll_up = False
                     st.session_state.selected_types = []
+                    st.session_state.profile_applied = False # Laat hem opnieuw invullen voor de volgende ronde
                     for k, v in default_values.items():
                         st.session_state[k] = v
                     st.rerun()
