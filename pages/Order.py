@@ -466,7 +466,7 @@ else:
                 if missing_fields: error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
                 elif invalid_email: error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
-            c_back, c_next = st.columns([1, 4])
+c_back, c_next = st.columns([1, 4])
             if c_back.button("← Go Back", type="secondary", use_container_width=True):
                 st.session_state.step = 1
                 st.session_state.validate_step2 = False 
@@ -504,7 +504,8 @@ else:
                     if additional_info.strip():
                         db_info += f"\n\nNotes: {additional_info.strip()}"
                     
-                    calc_price, _ = get_live_price()
+                    # PRIJS BEREKENEN EN BEVRIEZEN VOOR STAP 3
+                    calc_price, calc_breakdown = get_live_price()
                     
                     st.session_state.temp_order = {
                         "company": company_name, 
@@ -523,13 +524,14 @@ else:
                         "delivery_address": d_address,
                         "delivery_zip": d_zip,
                         "delivery_city": d_city,
-                        "price": calc_price
+                        "price": calc_price,
+                        "price_breakdown": calc_breakdown # Sla de bon regels ook op!
                     }
                     st.session_state.step = 3
                     st.rerun()
 
         # =========================================================
-        # STAP 3: REVIEW (Strakke opmaak)
+        # STAP 3: REVIEW (Met duidelijke labels)
         # =========================================================
         elif st.session_state.step == 3:
             o = st.session_state.temp_order
@@ -561,11 +563,15 @@ else:
                 st.write("---")
                 col_s3, col_s4 = st.columns(2)
                 with col_s3:
-                    st.markdown("<span style='color:#888; font-size:12px;'>📤 PICKUP LOCATION</span>", unsafe_allow_html=True)
-                    st.markdown(f"<b>{o.get('pickup_address', '')}</b><br>{o.get('pickup_zip', '')} {o.get('pickup_city', '')}", unsafe_allow_html=True)
+                    st.markdown("<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 10px;'>📤 PICKUP LOCATION</div>", unsafe_allow_html=True)
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>STREET ADDRESS</span><br><b>{o.get('pickup_address', '-')}</b>", unsafe_allow_html=True)
+                    st.write("")
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>ZIP CODE & CITY</span><br><b>{o.get('pickup_zip', '-')} {o.get('pickup_city', '-')}</b>", unsafe_allow_html=True)
                 with col_s4:
-                    st.markdown("<span style='color:#888; font-size:12px;'>📥 DELIVERY DESTINATION</span>", unsafe_allow_html=True)
-                    st.markdown(f"<b>{o.get('delivery_address', '')}</b><br>{o.get('delivery_zip', '')} {o.get('delivery_city', '')}", unsafe_allow_html=True)
+                    st.markdown("<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 10px;'>📥 DELIVERY DESTINATION</div>", unsafe_allow_html=True)
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>STREET ADDRESS</span><br><b>{o.get('delivery_address', '-')}</b>", unsafe_allow_html=True)
+                    st.write("")
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>ZIP CODE & CITY</span><br><b>{o.get('delivery_zip', '-')} {o.get('delivery_city', '-')}</b>", unsafe_allow_html=True)
             
             with st.container(border=True):
                 st.markdown("#### 📦 Shipment Details")
@@ -639,7 +645,12 @@ else:
     # RECHTERKOLOM (PROFESSIONELE KASSABON)
     # =========================================================
     with col_calc:
-        current_price, breakdown_lines = get_live_price()
+        # Als we in stap 3 zijn, gebruik de bevroren data zodat het niet reset!
+        if st.session_state.step == 3:
+            current_price = st.session_state.temp_order.get('price', 0)
+            breakdown_lines = st.session_state.temp_order.get('price_breakdown', [])
+        else:
+            current_price, breakdown_lines = get_live_price()
         
         receipt_items_html = ""
         for name, price in breakdown_lines:
