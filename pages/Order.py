@@ -322,39 +322,40 @@ if st.session_state.step == 1:
 
 # --- STAP 2 & 3: MET CALCULATOR (Aangepaste Layout) ---
 else:
-    col_spacer_L, col_main, col_calc = st.columns([0.5, 6, 2.5], gap="large")
+    # 1. We zetten alle onzichtbare code BUITEN de kolommen om hoogteverschil te voorkomen!
+    st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
+    if st.session_state.get('scroll_up', False):
+        st.components.v1.html(
+            """<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
+        st.session_state.scroll_up = False 
+        
+    st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
+    
+    def req_lbl(key, base_text):
+        if st.session_state.get('validate_step2', False):
+            val = st.session_state.get(key, "")
+            if not val or not str(val).strip():
+                return f"{base_text} 🚨 :red[(Required)]"
+        return base_text
+
+    def email_lbl():
+        base = "Work Email *"
+        if st.session_state.get('validate_step2', False):
+            val = st.session_state.get('cont_email', "")
+            if not val or not str(val).strip():
+                return f"{base} 🚨 :red[(Required)]"
+            elif "@" not in str(val):
+                return f"{base} 🚨 :red[(Missing '@')]"
+        return base
+
+    # 2. De kolommen voor de layout (met een extra kleine spacer rechts voor perfecte centrering)
+    col_spacer_L, col_main, col_calc, col_spacer_R = st.columns([0.5, 6, 2.5, 0.5], gap="large")
     
     with col_main:
         # =========================================================
         # STAP 2: DYNAMISCHE DETAILS + CONTACT FORMULIER
         # =========================================================
         if st.session_state.step == 2:
-            st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
-            
-            if st.session_state.get('scroll_up', False):
-                st.components.v1.html(
-                    """<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
-                st.session_state.scroll_up = False 
-                
-            st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
-            
-            def req_lbl(key, base_text):
-                if st.session_state.get('validate_step2', False):
-                    val = st.session_state.get(key, "")
-                    if not val or not str(val).strip():
-                        return f"{base_text} 🚨 :red[(Required)]"
-                return base_text
-
-            def email_lbl():
-                base = "Work Email *"
-                if st.session_state.get('validate_step2', False):
-                    val = st.session_state.get('cont_email', "")
-                    if not val or not str(val).strip():
-                        return f"{base} 🚨 :red[(Required)]"
-                    elif "@" not in str(val):
-                        return f"{base} 🚨 :red[(Missing '@')]"
-                return base
-
             st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
             
             if not st.session_state.selected_types:
@@ -368,6 +369,7 @@ else:
             cf_full_val = False
             cf_lc_val = False
             
+            # --- SERVICE SELECTIE BLOKKEN ---
             for i, sel in enumerate(st.session_state.selected_types[:]):
                 with cols[i]:
                     with st.container(border=True):
@@ -414,64 +416,66 @@ else:
                                      key="mdm_ship_where")
                             
             st.markdown("</div>", unsafe_allow_html=True)
+            st.write("")
             
-            st.markdown("<br><br>", unsafe_allow_html=True)
-            st.markdown("<p style='text-align: center; color: #888; font-size: 14px; margin-bottom: 40px;'>All fields marked with an asterisk (*) are mandatory</p>", unsafe_allow_html=True)
-            
-            c_form_left, c_form_right = st.columns(2, gap="large")
-            
-            with c_form_left:
-                st.markdown("#### Company Details")
-                company_name = st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
-                company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
-                company_address = st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
-                c_pc, c_city = st.columns(2)
-                with c_pc: postal_code = st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
-                with c_city: city = st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
-                country = st.text_input(req_lbl("comp_country", "Country *"), value="Norway", key="comp_country", max_chars=100)
-
-            with c_form_right:
-                st.markdown("#### Contact Person")
-                c_fn, c_ln = st.columns(2)
-                with c_fn: first_name = st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
-                with c_ln: last_name = st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
+            # --- HET FORMULIER (Nu strak uitgelijnd in één hoofdcontainer!) ---
+            with st.container(border=True):
+                st.markdown("<h3 style='margin-top: 0px;'>🏢 Company & Contact Details</h3>", unsafe_allow_html=True)
+                st.write("---")
                 
-                work_email = st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
+                c_form_left, c_form_right = st.columns(2, gap="large")
                 
-                phone_lbl = "Phone *"
-                if st.session_state.get('validate_step2', False) and not st.session_state.get('cont_phone', '').strip():
-                    phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
-                st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
+                with c_form_left:
+                    company_name = st.text_input(req_lbl("comp_name", "Company Name *"), key="comp_name", max_chars=100)
+                    company_reg = st.text_input("Company Registration No. (optional)", key="comp_reg", max_chars=50)
+                    company_address = st.text_input(req_lbl("comp_addr", "Company Address *"), key="comp_addr", max_chars=150)
+                    c_pc, c_city = st.columns(2)
+                    with c_pc: postal_code = st.text_input(req_lbl("comp_pc", "Postal Code *"), key="comp_pc", max_chars=20)
+                    with c_city: city = st.text_input(req_lbl("comp_city", "City *"), key="comp_city", max_chars=100)
+                    country = st.text_input(req_lbl("comp_country", "Country *"), value="Norway", key="comp_country", max_chars=100)
+    
+                with c_form_right:
+                    c_fn, c_ln = st.columns(2)
+                    with c_fn: first_name = st.text_input(req_lbl("cont_fn", "First Name *"), key="cont_fn", max_chars=50)
+                    with c_ln: last_name = st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
+                    
+                    work_email = st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
+                    
+                    phone_lbl = "Phone *"
+                    if st.session_state.get('validate_step2', False) and not st.session_state.get('cont_phone', '').strip():
+                        phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
+                    st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
+                    
+                    c_code, c_phone = st.columns([1, 3])
+                    with c_code: 
+                        phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
+                    with c_phone: 
+                        phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
+    
+                st.write("")
+                st.markdown("<h3 style='margin-top: 20px;'>📍 Route Information</h3>", unsafe_allow_html=True)
+                st.write("---")
                 
-                c_code, c_phone = st.columns([1, 3])
-                with c_code: 
-                    phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
-                with c_phone: 
-                    phone = st.text_input("Phone", placeholder="e.g. 123 456 789", label_visibility="collapsed", key="cont_phone", max_chars=20)
-
-            st.markdown("<br>", unsafe_allow_html=True)
-
-            st.markdown("#### Route Information")
-            c_route_left, c_route_right = st.columns(2, gap="large")
-            
-            with c_route_left:
-                st.markdown("**📤 Pickup Location**")
-                p_address = st.text_input(req_lbl("p_addr", "Pickup Address *"), key="p_addr", max_chars=150)
-                c_p_zip, c_p_city = st.columns(2)
-                with c_p_zip: p_zip = st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
-                with c_p_city: p_city = st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
+                c_route_left, c_route_right = st.columns(2, gap="large")
                 
-            with c_route_right:
-                st.markdown("**📥 Delivery Destination**")
-                d_address = st.text_input(req_lbl("d_addr", "Delivery Address *"), key="d_addr", max_chars=150)
-                c_d_zip, c_d_city = st.columns(2)
-                with c_d_zip: d_zip = st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
-                with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
-                
-            st.markdown("<br>", unsafe_allow_html=True)
+                with c_route_left:
+                    st.markdown("**📤 Pickup Location**")
+                    p_address = st.text_input(req_lbl("p_addr", "Pickup Address *"), key="p_addr", max_chars=150)
+                    c_p_zip, c_p_city = st.columns(2)
+                    with c_p_zip: p_zip = st.text_input(req_lbl("p_zip", "Zip Code *"), key="p_zip", max_chars=20)
+                    with c_p_city: p_city = st.text_input(req_lbl("p_city", "City *"), key="p_city", max_chars=100)
+                    
+                with c_route_right:
+                    st.markdown("**📥 Delivery Destination**")
+                    d_address = st.text_input(req_lbl("d_addr", "Delivery Address *"), key="d_addr", max_chars=150)
+                    c_d_zip, c_d_city = st.columns(2)
+                    with c_d_zip: d_zip = st.text_input(req_lbl("d_zip", "Zip Code *"), key="d_zip", max_chars=20)
+                    with c_d_city: d_city = st.text_input(req_lbl("d_city", "City *"), key="d_city", max_chars=100)
+                    
+                st.write("")
+                additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
 
-            additional_info = st.text_area("Additional Information (optional)", placeholder="Describe what you ship, approx. weight, any special requirements, etc.", max_chars=300, key="cont_info")
-
+            # --- VALIDATIE EN KNOPPEN ---
             st.write("")
             st.markdown("<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>If you would like to learn more about how Dahle Transport uses your personal data, please read our privacy notice which you can find in the footer.</p>", unsafe_allow_html=True)
             
@@ -648,16 +652,16 @@ else:
     with col_calc:
         current_price, breakdown_lines = get_live_price()
         
+        # HTML ZONDER inspring-spaties om te voorkomen dat Streamlit het als platte tekst toont!
         receipt_items_html = ""
         for name, price in breakdown_lines:
             receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
             
         receipt_html = f"""<style>
-.receipt-card {{ background: linear-gradient(180deg, #1e1e20 0%, #171719 100%); border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: sticky; top: 120px; }}
+.receipt-card {{ background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: sticky; top: 120px; }}
 </style>
 <div class="receipt-card">
-<div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; border-bottom: 1px solid #333; padding-bottom: 10px;">Estimated Cost</div>
-<div style="color: #888; font-size: 12px; margin-top: 15px; margin-bottom: 20px;">Based on provided shipment details.</div>
+<div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">Estimated Cost</div>
 {receipt_items_html}
 <div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div>
 <div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">Total</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div>
