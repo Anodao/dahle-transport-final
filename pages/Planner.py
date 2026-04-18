@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from supabase import create_client
 
 # --- PAGE CONFIG ---
@@ -46,6 +46,9 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 
 /* Verberg overbodige Streamlit zijbalk/header */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+footer { display: none !important; }
+div[class^="viewerBadge"] { display: none !important; }
 
 /* Custom Navbar bovenaan */
 .block-container { padding-top: 120px !important; }
@@ -62,11 +65,11 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
 <div class="navbar">
     <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
     <div class="nav-links">
-        <a href="/">Hjem</a>
-        <a href="/">Om oss</a>
-        <a href="/">Tjenester</a>
-        <a href="/">Galleri</a>
-        <a href="/">Kontakt</a>
+        <a href="/" target="_self">Hjem</a>
+        <a href="/" target="_self">Om oss</a>
+        <a href="/" target="_self">Tjenester</a>
+        <a href="/" target="_self">Galleri</a>
+        <a href="/" target="_self">Kontakt</a>
     </div>
     <div><a href="/" target="_self" class="cta-btn-outline">← BACK TO HOME</a></div>
 </div>
@@ -77,33 +80,70 @@ def fetch_all_orders():
     try:
         res = supabase.table("orders").select("*").order("id", desc=True).execute()
         return res.data
-    except: return []
+    except: 
+        return []
 
 all_orders = fetch_all_orders()
 
 # =========================================================
-# KPI DASHBOARD (Nu inklapbaar met bolletjes)
+# KPI DASHBOARD (Inklapbaar, met Datumfilter en 5 kolommen)
 # =========================================================
-count_pending = sum(1 for o in all_orders if o['status'] == 'New')
-count_progress = sum(1 for o in all_orders if o['status'] == 'In Progress')
-count_done = sum(1 for o in all_orders if o['status'] in ['Processed', 'Delivered'])
-total_orders = len(all_orders)
+with st.expander("📊 Bekijk Statistieken & KPI's", expanded=True):
+    
+    # --- Datum Filter UI ---
+    col_filter, _ = st.columns([1, 2])
+    with col_filter:
+        default_start = datetime.now().date() - timedelta(days=30)
+        default_end = datetime.now().date()
+        date_range = st.date_input("📅 Filter op datum:", value=(default_start, default_end))
 
-# st.expander maakt het inklapbaar. expanded=False zorgt dat hij standaard dicht zit.
-with st.expander("📊 Bekijk Statistieken & KPI's", expanded=False):
-    m1, m2, m3, m4 = st.columns(4)
+    # --- Data Filter Logica ---
+    filtered_orders = all_orders
+    if isinstance(date_range, tuple) and len(date_range) == 2:
+        start_date, end_date = date_range
+        temp_orders = []
+        for o in all_orders:
+            raw_date = o.get('received_date')
+            if raw_date:
+                try:
+                    # Zet de datum string om naar een echt datum object om te vergelijken
+                    order_date = datetime.strptime(raw_date[:10], "%Y-%m-%d").date()
+                    if start_date <= order_date <= end_date:
+                        temp_orders.append(o)
+                except ValueError:
+                    pass # Negeer orders met een foute datum
+        filtered_orders = temp_orders
+
+    # --- Berekeningen toepassen op de gefilterde data ---
+    count_pending = sum(1 for o in filtered_orders if o['status'] == 'New')
+    count_progress = sum(1 for o in filtered_orders if o['status'] == 'In Progress')
+    count_done = sum(1 for o in filtered_orders if o['status'] in ['Processed', 'Delivered'])
+    count_cancelled = sum(1 for o in filtered_orders if o['status'] == 'Cancelled')
+    total_orders = len(filtered_orders)
+
+    # --- Strakke 5-koloms weergave ---
+    m1, m2, m3, m4, m5 = st.columns(5)
+    
     with m1:
         with st.container(border=True):
-            st.metric("🔴 Action Required", count_pending)
+            st.markdown("<div style='font-size: 14px; color: #ccc;'>🔴 Action Required</div>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_pending}</h2>", unsafe_allow_html=True)
     with m2:
         with st.container(border=True):
-            st.metric("🟡 Active Routes", count_progress)
+            st.markdown("<div style='font-size: 14px; color: #ccc;'>🟡 Active Routes</div>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_progress}</h2>", unsafe_allow_html=True)
     with m3:
         with st.container(border=True):
-            st.metric("🟢 Completed", count_done)
+            st.markdown("<div style='font-size: 14px; color: #ccc;'>🟢 Completed</div>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_done}</h2>", unsafe_allow_html=True)
     with m4:
         with st.container(border=True):
-            st.metric("📋 Total Orders", total_orders)
+            st.markdown("<div style='font-size: 14px; color: #ccc;'>⚫ Cancelled</div>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_cancelled}</h2>", unsafe_allow_html=True)
+    with m5:
+        with st.container(border=True):
+            st.markdown("<div style='font-size: 14px; color: #ccc;'>📋 Total Orders</div>", unsafe_allow_html=True)
+            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{total_orders}</h2>", unsafe_allow_html=True)
 
 st.write("---")
 
@@ -115,7 +155,6 @@ col_list, col_details = st.columns([1, 2], gap="large")
 with col_list:
     st.markdown("<h2>Inbox</h2>", unsafe_allow_html=True)
     
-    # NIEUWE TAB TOEGEVOEGD: Cancelled (❌)
     tab_new, tab_prog, tab_done, tab_fail = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done", "❌ Cancelled"])
     
     with tab_new:
@@ -153,7 +192,6 @@ with col_list:
                     st.session_state.selected_order_id = o['id']
                     st.rerun()
 
-    # LOGICA VOOR DE NIEUWE CANCELLED TAB
     with tab_fail:
         failed = [o for o in all_orders if o['status'] == 'Cancelled']
         if not failed: st.info("No cancelled orders.")
@@ -216,7 +254,6 @@ with col_details:
             st.write("")
             
             st.markdown("#### Control Panel")
-            # CANCELLED TOEGEVOEGD AAN DROPDOWN STATUS
             status_list = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
             try:
                 current_idx = status_list.index(order['status'])
@@ -225,7 +262,6 @@ with col_details:
                 
             new_status = st.selectbox("Update Order Status", options=status_list, index=current_idx)
             
-            # DELETE KNOP VERWIJDERD, ALLEEN OPSLAAN KNOP OVERGEBLEVEN OVER VOLLE BREEDTE
             if st.button("💾 Save Updates", type="primary", use_container_width=True):
                 update_data = {
                     "status": new_status,
