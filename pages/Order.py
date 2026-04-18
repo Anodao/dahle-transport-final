@@ -118,16 +118,19 @@ def get_coordinates(address_string):
     except: pass
     return None
 
+# NIEUW: Deze functie haalt nu ook de lijn (geometry) op!
 @st.cache_data(ttl=3600, show_spinner=False)
-def get_driving_distance(coord1, coord2):
-    if not coord1 or not coord2: return None
-    url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=false"
+def get_route_data(coord1, coord2):
+    if not coord1 or not coord2: return None, None
+    url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
         resp = requests.get(url).json()
         if resp.get("code") == "Ok":
-            return resp["routes"][0]["distance"] / 1000.0 
+            dist = resp["routes"][0]["distance"] / 1000.0 
+            geom = resp["routes"][0]["geometry"]["coordinates"]
+            return dist, geom
     except: pass
-    return None
+    return None, None
 
 # =========================================================
 # PRIJS CALCULATIE LOGICA
@@ -179,8 +182,9 @@ def get_live_price():
         del_coords = get_coordinates(delivery_string)
         
         if pick_coords and del_coords:
-            dist_hq_pick = get_driving_distance(HQ_COORDS, pick_coords)
-            dist_pick_del = get_driving_distance(pick_coords, del_coords)
+            # We hebben _ toegevoegd om de geometrie te negeren, we hebben hier alleen afstand nodig
+            dist_hq_pick, _ = get_route_data(HQ_COORDS, pick_coords)
+            dist_pick_del, _ = get_route_data(pick_coords, del_coords)
             
             if dist_hq_pick is not None and dist_pick_del is not None:
                 total_km = dist_hq_pick + dist_pick_del
@@ -389,7 +393,7 @@ else:
                     
                 st.write("")
                 
-                # --- LIVE MAP GENERATOR MET 3D LIJN (PYDECK) ---
+                # --- LIVE MAP GENERATOR MET ECHTE ROUTE (PYDECK) ---
                 p_coords = None
                 d_coords = None
                 
@@ -406,34 +410,41 @@ else:
                     if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "📤 Pickup"})
                     if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "📥 Delivery"})
                     
+                    # Kleinere stippen op de kaart
                     layers.append(
                         pdk.Layer(
                             "ScatterplotLayer",
                             data=points,
                             get_position="pos",
                             get_color=[137, 75, 157, 255], 
-                            get_radius=15000,
+                            get_radius=1000,
+                            radius_min_pixels=6,
+                            radius_max_pixels=15,
                             pickable=True
                         )
                     )
                     
+                    # Teken pas een lijn als beide coördinaten bekend zijn!
                     if p_coords and d_coords:
-                        layers.append(
-                            pdk.Layer(
-                                "ArcLayer",
-                                data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}],
-                                get_source_position="source",
-                                get_target_position="target",
-                                get_source_color=[137, 75, 157, 200],
-                                get_target_color=[137, 75, 157, 200],
-                                get_width=5,
-                                get_tilt=15
+                        _, route_geom = get_route_data(p_coords, d_coords)
+                        
+                        if route_geom:
+                            layers.append(
+                                pdk.Layer(
+                                    "PathLayer",
+                                    data=[{"path": route_geom}],
+                                    get_path="path",
+                                    get_color=[137, 75, 157, 200],
+                                    width_scale=20,
+                                    width_min_pixels=3,
+                                    get_width=5
+                                )
                             )
-                        )
+                        
                         center_lat = (p_coords[0] + d_coords[0]) / 2
                         center_lon = (p_coords[1] + d_coords[1]) / 2
-                        zoom = 3.5
-                        pitch = 40
+                        zoom = 4.5
+                        pitch = 20 # Iets platter, mooi voor een wegenkaart
                     else:
                         center_lat = p_coords[0] if p_coords else d_coords[0]
                         center_lon = p_coords[1] if p_coords else d_coords[1]
