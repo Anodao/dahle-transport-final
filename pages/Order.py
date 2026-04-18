@@ -26,16 +26,39 @@ try:
 except Exception as e:
     st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
 
-# --- ONVERWOESTBAAR GEHEUGEN (Voorkomt dat velden leeg raken!) ---
-# We vertellen Streamlit vooraf welke velden hij NOOIT mag wissen.
+# --- PROFIEL GEGEVENS OPHALEN UIT LOGIN.PY ---
+prof = st.session_state.get('user_profile', {})
+
+# Splits de naam netjes op in Voor- en Achternaam voor het formulier
+full_name = prof.get('cont_name', '')
+name_parts = full_name.split(' ', 1)
+f_name = name_parts[0] if name_parts else ''
+l_name = name_parts[1] if len(name_parts) > 1 else ''
+
+# --- ONVERWOESTBAAR GEHEUGEN (MET AUTO-FILL) ---
 default_values = {
     'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
     'pd_weight': 1.0, 'pd_oversized': False, 'pd_ship_where': 'Domestic',
     'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100, 'cf_ship_where': 'Domestic',
     'mdm_weight': 0.5, 'mdm_ship_where': 'Pan-European',
-    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
-    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_code': '+47', 'cont_phone': '', 'cont_info': '',
-    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
+    'comp_name': prof.get('comp_name', ''), 
+    'comp_reg': '', 
+    'comp_addr': prof.get('address', ''), 
+    'comp_pc': prof.get('zip_code', ''), 
+    'comp_city': prof.get('city', ''), 
+    'comp_country': 'Norway',
+    'cont_fn': f_name, 
+    'cont_ln': l_name, 
+    'cont_email': prof.get('email', ''), 
+    'cont_code': '+47', 
+    'cont_phone': prof.get('phone', ''), 
+    'cont_info': '',
+    'p_addr': prof.get('address', ''), 
+    'p_zip': prof.get('zip_code', ''), 
+    'p_city': prof.get('city', ''), 
+    'd_addr': prof.get('del_address', ''), 
+    'd_zip': prof.get('del_zip', ''), 
+    'd_city': prof.get('del_city', '')
 }
 
 for k, v in default_values.items():
@@ -297,15 +320,15 @@ else:
     st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
     
     def req_lbl(key, base_text):
-        if st.session_state.validate_step2:
+        if st.session_state.get('validate_step2', False):
             val = st.session_state.get(key, "")
             if not val or not str(val).strip(): return f"{base_text} 🚨 :red[(Required)]"
         return base_text
 
     def email_lbl():
         base = "Work Email *"
-        if st.session_state.validate_step2:
-            val = st.session_state.cont_email
+        if st.session_state.get('validate_step2', False):
+            val = st.session_state.get('cont_email', "")
             if not val or not str(val).strip(): return f"{base} 🚨 :red[(Required)]"
             elif "@" not in str(val): return f"{base} 🚨 :red[(Missing '@')]"
         return base
