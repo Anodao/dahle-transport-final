@@ -84,7 +84,7 @@ if 'user' not in st.session_state:
     else:
         st.session_state.user = None
 
-# --- VEILIGE STANDAARDWAARDEN (VERKOMT DE ERROR!) ---
+# --- VEILIGE STANDAARDWAARDEN ---
 default_keys = {
     'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
     'pd_weight': 1.0, 'pd_oversized': False,
@@ -95,45 +95,52 @@ default_keys = {
     'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
 }
 
-# Zorg dat alles in het geheugen staat vóór we beginnen
 for k, v in default_keys.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-# --- AUTO-FILL LOGICA VIA DATABASE ---
-if 'autofill_done' not in st.session_state:
-    st.session_state.autofill_done = False
+# --- SLIMME AUTO-FILL LOGICA VIA DATABASE ---
+# Check of we een 'gast' zijn, of een specifieke ingelogde gebruiker
+current_user_id = st.session_state.user.id if st.session_state.get('user') else "guest"
 
-if not st.session_state.autofill_done:
-    if st.session_state.user:
+# Voer de autofill alléén uit als de gebruiker verandert (bijv. van gast naar ingelogd)
+if st.session_state.get('last_autofilled_user') != current_user_id:
+    if current_user_id != "guest":
         try:
-            prof_res = supabase.table("profiles").select("*").eq("id", st.session_state.user.id).execute()
+            prof_res = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
             prof = prof_res.data[0] if prof_res.data else {}
             
-            name_parts = prof.get('contact_name', '').split(' ', 1)
+            # Veilig de strings uitpakken (zodat we nooit een NoneType error krijgen)
+            contact_naam = str(prof.get('contact_name') or '')
+            name_parts = contact_naam.split(' ', 1)
             
-            st.session_state['comp_name'] = prof.get('company_name', '')
-            st.session_state['comp_addr'] = prof.get('address', '')
-            st.session_state['comp_pc'] = prof.get('zip_code', '')
-            st.session_state['comp_city'] = prof.get('city', '')
+            st.session_state['comp_name'] = str(prof.get('company_name') or '')
+            st.session_state['comp_addr'] = str(prof.get('address') or '')
+            st.session_state['comp_pc']   = str(prof.get('zip_code') or '')
+            st.session_state['comp_city'] = str(prof.get('city') or '')
             
             st.session_state['cont_fn'] = name_parts[0] if name_parts else ''
             st.session_state['cont_ln'] = name_parts[1] if len(name_parts) > 1 else ''
             st.session_state['cont_email'] = st.session_state.user.email
-            st.session_state['cont_phone'] = prof.get('phone', '')
+            st.session_state['cont_phone'] = str(prof.get('phone') or '')
             
-            st.session_state['p_addr'] = prof.get('address', '')
-            st.session_state['p_zip'] = prof.get('zip_code', '')
-            st.session_state['p_city'] = prof.get('city', '')
+            st.session_state['p_addr'] = str(prof.get('address') or '')
+            st.session_state['p_zip']  = str(prof.get('zip_code') or '')
+            st.session_state['p_city'] = str(prof.get('city') or '')
             
-            st.session_state['d_addr'] = prof.get('del_address', '')
-            st.session_state['d_zip'] = prof.get('del_zip', '')
-            st.session_state['d_city'] = prof.get('del_city', '')
+            st.session_state['d_addr'] = str(prof.get('del_address') or '')
+            st.session_state['d_zip']  = str(prof.get('del_zip') or '')
+            st.session_state['d_city'] = str(prof.get('del_city') or '')
             
         except Exception as e:
             pass 
+    else:
+        # Als het een gast is, wis dan alle velden (veilig!)
+        for k, v in default_keys.items():
+            st.session_state[k] = v
             
-    st.session_state.autofill_done = True
+    # Markeer dat deze gebruiker is ge-autofilled
+    st.session_state['last_autofilled_user'] = current_user_id
 
 # --- OVERIGE SESSION STATES ---
 if 'orders' not in st.session_state: st.session_state.orders = []
@@ -154,13 +161,10 @@ def reset_form_state():
     st.session_state.is_submitted = False
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
-    
-    # Reset alle default velden
     for k, v in default_keys.items():
         st.session_state[k] = v
-        
-    # Heractiveer de autofill voor de volgende keer
-    st.session_state.autofill_done = False
+    # Forceer dat hij bij de volgende refresh checkt of hij moet autofillen
+    st.session_state['last_autofilled_user'] = None
 
 if "reset" in st.query_params:
     reset_form_state()
@@ -231,10 +235,11 @@ def get_live_price():
         total_price += weight_cost
         breakdown.append((f"Handling & Weight ({total_weight}kg)", weight_cost))
 
-    p_addr = st.session_state.get('p_addr', '').strip()
-    p_city = st.session_state.get('p_city', '').strip()
-    d_addr = st.session_state.get('d_addr', '').strip()
-    d_city = st.session_state.get('d_city', '').strip()
+    # VEILIGE STRING CONVERSIE: Dit lost de 'NoneType object has no attribute strip' crash op!
+    p_addr = str(st.session_state.get('p_addr') or '').strip()
+    p_city = str(st.session_state.get('p_city') or '').strip()
+    d_addr = str(st.session_state.get('d_addr') or '').strip()
+    d_city = str(st.session_state.get('d_city') or '').strip()
 
     if len(p_addr) > 3 and len(p_city) > 2 and len(d_addr) > 3 and len(d_city) > 2:
         pickup_string = f"{p_addr}, {st.session_state.get('p_zip', '')} {p_city}"
@@ -287,6 +292,17 @@ st.write("")
 if st.session_state.step == 1:
     col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
     with col_main:
+        st.markdown("""
+        <style>
+        div[data-testid="stVerticalBlockBorderWrapper"] { position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important; background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%; }
+        div[data-testid="stVerticalBlockBorderWrapper"]:hover { border-color: #666 !important; background-color: #262626 !important; transform: translateY(-3px); }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] { margin-bottom: 5px; padding-top: 0px; }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.6); margin-right: 15px; border-color: #888; }
+        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label p { font-size: 20px !important; font-weight: 700 !important; color: white !important; }
+        </style>
+        """, unsafe_allow_html=True)
+        
         dynamic_css = ""
         if st.session_state.get('chk_parcels'): dynamic_css += '''div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
         if st.session_state.get('chk_freight'): dynamic_css += '''div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
@@ -321,9 +337,9 @@ if st.session_state.step == 1:
         with c_btn2:
             if st.button("Next Step", type="primary", use_container_width=True):
                 selected = []
-                if st.session_state.chk_parcels: selected.append("Parcels & Documents")
-                if st.session_state.chk_freight: selected.append("Cargo & Freight")
-                if st.session_state.chk_mail: selected.append("Mail & Direct Marketing")
+                if st.session_state.get('chk_parcels'): selected.append("Parcels & Documents")
+                if st.session_state.get('chk_freight'): selected.append("Cargo & Freight")
+                if st.session_state.get('chk_mail'): selected.append("Mail & Direct Marketing")
                 if len(selected) == 0:
                     st.session_state.show_error = True
                     st.rerun()
@@ -343,16 +359,16 @@ else:
     
     def req_lbl(key, base_text):
         if st.session_state.validate_step2:
-            val = st.session_state.get(key, "")
-            if not val or not str(val).strip(): return f"{base_text} 🚨 :red[(Required)]"
+            val = str(st.session_state.get(key) or "")
+            if not val.strip(): return f"{base_text} 🚨 :red[(Required)]"
         return base_text
 
     def email_lbl():
         base = "Work Email *"
         if st.session_state.validate_step2:
-            val = st.session_state.get('cont_email', "")
-            if not val or not str(val).strip(): return f"{base} 🚨 :red[(Required)]"
-            elif "@" not in str(val): return f"{base} 🚨 :red[(Missing '@')]"
+            val = str(st.session_state.get('cont_email') or "")
+            if not val.strip(): return f"{base} 🚨 :red[(Required)]"
+            elif "@" not in val: return f"{base} 🚨 :red[(Missing '@')]"
         return base
 
     col_spacer_L, col_main, col_calc, col_spacer_R = st.columns([0.5, 6, 2.5, 0.5], gap="large")
@@ -420,7 +436,9 @@ else:
                     with c_ln: st.text_input(req_lbl("cont_ln", "Last Name *"), key="cont_ln", max_chars=50)
                     st.text_input(email_lbl(), placeholder="example@email.no", key="cont_email", max_chars=150)
                     phone_lbl = "Phone *"
-                    if st.session_state.validate_step2 and not st.session_state.get('cont_phone', '').strip():
+                    
+                    phone_val = str(st.session_state.get('cont_phone') or '').strip()
+                    if st.session_state.validate_step2 and not phone_val:
                         phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
                     st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{phone_lbl}</label>", unsafe_allow_html=True)
                     c_code, c_phone = st.columns([1, 3])
@@ -450,11 +468,16 @@ else:
                 p_coords = None
                 d_coords = None
                 
-                if len(st.session_state.get('p_addr','')) > 3 and len(st.session_state.get('p_city','')) > 2:
-                    p_coords = get_coordinates(f"{st.session_state.p_addr}, {st.session_state.p_zip} {st.session_state.p_city}")
+                p_addr_map = str(st.session_state.get('p_addr') or '').strip()
+                p_city_map = str(st.session_state.get('p_city') or '').strip()
+                d_addr_map = str(st.session_state.get('d_addr') or '').strip()
+                d_city_map = str(st.session_state.get('d_city') or '').strip()
+                
+                if len(p_addr_map) > 3 and len(p_city_map) > 2:
+                    p_coords = get_coordinates(f"{p_addr_map}, {st.session_state.get('p_zip', '')} {p_city_map}")
                         
-                if len(st.session_state.get('d_addr','')) > 3 and len(st.session_state.get('d_city','')) > 2:
-                    d_coords = get_coordinates(f"{st.session_state.d_addr}, {st.session_state.d_zip} {st.session_state.d_city}")
+                if len(d_addr_map) > 3 and len(d_city_map) > 2:
+                    d_coords = get_coordinates(f"{d_addr_map}, {st.session_state.get('d_zip', '')} {d_city_map}")
                 
                 if p_coords or d_coords:
                     layers = []
@@ -530,14 +553,19 @@ else:
             error_container = st.empty()
             missing_fields = False
             
-            if not st.session_state.get('comp_name','').strip() or not st.session_state.get('comp_addr','').strip() or not st.session_state.get('comp_pc','').strip() or not st.session_state.get('comp_city','').strip() or not st.session_state.get('cont_fn','').strip() or not st.session_state.get('cont_ln','').strip() or not st.session_state.get('cont_email','').strip() or not st.session_state.get('cont_phone','').strip() or not st.session_state.get('comp_country','').strip() or not st.session_state.get('p_addr','').strip() or not st.session_state.get('p_zip','').strip() or not st.session_state.get('p_city','').strip() or not st.session_state.get('d_addr','').strip() or not st.session_state.get('d_zip','').strip() or not st.session_state.get('d_city','').strip(): 
-                missing_fields = True
+            # Veilig alle verplichte velden nalopen
+            req_keys = ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'comp_country', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']
+            for rk in req_keys:
+                if not str(st.session_state.get(rk) or '').strip():
+                    missing_fields = True
+                    break
             
             if "Cargo & Freight" in st.session_state.selected_types:
                 if not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')): 
                     missing_fields = True
             
-            invalid_email = bool(st.session_state.get('cont_email','').strip() and "@" not in st.session_state.get('cont_email',''))
+            email_val = str(st.session_state.get('cont_email') or '').strip()
+            invalid_email = bool(email_val and "@" not in email_val)
 
             if st.session_state.validate_step2:
                 if missing_fields: error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
@@ -581,27 +609,27 @@ else:
                     
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
                     if st.session_state.get('cont_info', '').strip(): 
-                        db_info += f"\n\nNotes: {st.session_state.cont_info.strip()}"
+                        db_info += f"\n\nNotes: {st.session_state.get('cont_info').strip()}"
                     
                     calc_price, calc_breakdown = get_live_price()
                     
                     st.session_state.temp_order = {
-                        "company": st.session_state.comp_name, 
-                        "reg_no": st.session_state.comp_reg,
-                        "address": f"{st.session_state.comp_addr}, {st.session_state.comp_pc} {st.session_state.comp_city}, {st.session_state.comp_country}",
-                        "contact_name": f"{st.session_state.cont_fn} {st.session_state.cont_ln}",
-                        "email": st.session_state.cont_email,
-                        "phone": f"{st.session_state.cont_code} {st.session_state.cont_phone}",
-                        "info_notes": st.session_state.cont_info.strip(),
+                        "company": st.session_state.get('comp_name', ''), 
+                        "reg_no": st.session_state.get('comp_reg', ''),
+                        "address": f"{st.session_state.get('comp_addr', '')}, {st.session_state.get('comp_pc', '')} {st.session_state.get('comp_city', '')}, {st.session_state.get('comp_country', '')}",
+                        "contact_name": f"{st.session_state.get('cont_fn', '')} {st.session_state.get('cont_ln', '')}",
+                        "email": st.session_state.get('cont_email', ''),
+                        "phone": f"{st.session_state.get('cont_code', '')} {st.session_state.get('cont_phone', '')}",
+                        "info_notes": st.session_state.get('cont_info', '').strip(),
                         "specs_list": specs_list,              
                         "db_info": db_info,                    
                         "types": st.session_state.selected_types,
-                        "pickup_address": st.session_state.p_addr,
-                        "pickup_zip": st.session_state.p_zip,
-                        "pickup_city": st.session_state.p_city,
-                        "delivery_address": st.session_state.d_addr,
-                        "delivery_zip": st.session_state.d_zip,
-                        "delivery_city": st.session_state.d_city,
+                        "pickup_address": st.session_state.get('p_addr', ''),
+                        "pickup_zip": st.session_state.get('p_zip', ''),
+                        "pickup_city": st.session_state.get('p_city', ''),
+                        "delivery_address": st.session_state.get('d_addr', ''),
+                        "delivery_zip": st.session_state.get('d_zip', ''),
+                        "delivery_city": st.session_state.get('d_city', ''),
                         "price": calc_price,
                         "price_breakdown": calc_breakdown
                     }
