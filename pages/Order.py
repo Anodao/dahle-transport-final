@@ -466,7 +466,7 @@ else:
                 if missing_fields: error_container.error("⚠️ Please fill in all highlighted mandatory fields (*) before continuing.")
                 elif invalid_email: error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
-c_back, c_next = st.columns([1, 4])
+            c_back, c_next = st.columns([1, 4])
             if c_back.button("← Go Back", type="secondary", use_container_width=True):
                 st.session_state.step = 1
                 st.session_state.validate_step2 = False 
@@ -504,7 +504,6 @@ c_back, c_next = st.columns([1, 4])
                     if additional_info.strip():
                         db_info += f"\n\nNotes: {additional_info.strip()}"
                     
-                    # PRIJS BEREKENEN EN BEVRIEZEN VOOR STAP 3
                     calc_price, calc_breakdown = get_live_price()
                     
                     st.session_state.temp_order = {
@@ -525,13 +524,13 @@ c_back, c_next = st.columns([1, 4])
                         "delivery_zip": d_zip,
                         "delivery_city": d_city,
                         "price": calc_price,
-                        "price_breakdown": calc_breakdown # Sla de bon regels ook op!
+                        "price_breakdown": calc_breakdown
                     }
                     st.session_state.step = 3
                     st.rerun()
 
         # =========================================================
-        # STAP 3: REVIEW (Met duidelijke labels)
+        # STAP 3: REVIEW (Strakke opmaak)
         # =========================================================
         elif st.session_state.step == 3:
             o = st.session_state.temp_order
@@ -645,7 +644,6 @@ c_back, c_next = st.columns([1, 4])
     # RECHTERKOLOM (PROFESSIONELE KASSABON)
     # =========================================================
     with col_calc:
-        # Als we in stap 3 zijn, gebruik de bevroren data zodat het niet reset!
         if st.session_state.step == 3:
             current_price = st.session_state.temp_order.get('price', 0)
             breakdown_lines = st.session_state.temp_order.get('price_breakdown', [])
