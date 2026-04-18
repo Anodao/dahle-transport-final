@@ -14,99 +14,6 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- SUPABASE CONNECTIE ---
-@st.cache_resource
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
-
-try:
-    supabase = init_connection()
-except Exception as e:
-    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
-
-# --- CHECK LOGIN STATUS (Belangrijk voor refresh!) ---
-if 'user' not in st.session_state:
-    session = supabase.auth.get_session()
-    if session:
-        st.session_state.user = session.user
-    else:
-        st.session_state.user = None
-
-# --- AUTO-FILL LOGICA VIA DATABASE ---
-# We doen dit eenmalig zodra de pagina (of een nieuwe order) laadt
-if 'autofill_done' not in st.session_state:
-    st.session_state.autofill_done = False
-
-if not st.session_state.autofill_done:
-    if st.session_state.user:
-        try:
-            # Haal profiel live uit de database!
-            prof_res = supabase.table("profiles").select("*").eq("id", st.session_state.user.id).execute()
-            prof = prof_res.data[0] if prof_res.data else {}
-            
-            name_parts = prof.get('contact_name', '').split(' ', 1)
-            
-            # Koppel de database waarden direct aan de keys van je invulvelden
-            st.session_state['comp_name'] = prof.get('company_name', '')
-            st.session_state['comp_addr'] = prof.get('address', '')
-            st.session_state['comp_pc'] = prof.get('zip_code', '')
-            st.session_state['comp_city'] = prof.get('city', '')
-            st.session_state['comp_country'] = 'Norway'
-            
-            st.session_state['cont_fn'] = name_parts[0] if name_parts else ''
-            st.session_state['cont_ln'] = name_parts[1] if len(name_parts) > 1 else ''
-            st.session_state['cont_email'] = st.session_state.user.email
-            st.session_state['cont_phone'] = prof.get('phone', '')
-            st.session_state['cont_code'] = '+47'
-            
-            st.session_state['p_addr'] = prof.get('address', '')
-            st.session_state['p_zip'] = prof.get('zip_code', '')
-            st.session_state['p_city'] = prof.get('city', '')
-            
-            st.session_state['d_addr'] = prof.get('del_address', '')
-            st.session_state['d_zip'] = prof.get('del_zip', '')
-            st.session_state['d_city'] = prof.get('del_city', '')
-            
-        except Exception as e:
-            pass # Als het mislukt, laten we het formulier gewoon leeg
-            
-    st.session_state.autofill_done = True
-
-# --- OVERIGE SESSION STATES ---
-if 'orders' not in st.session_state: st.session_state.orders = []
-if 'step' not in st.session_state: st.session_state.step = 1
-if 'selected_types' not in st.session_state: st.session_state.selected_types = []
-if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
-if 'show_error' not in st.session_state: st.session_state.show_error = False
-if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
-if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
-if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
-
-# --- LOGO RESET TRUCJE ---
-def reset_form_state():
-    st.session_state.step = 1
-    st.session_state.selected_types = [] 
-    st.session_state.temp_order = {}
-    st.session_state.show_error = False
-    st.session_state.is_submitted = False
-    st.session_state.validate_step2 = False
-    st.session_state.scroll_up = False
-    
-    # Verwijder de oude velden zodat Auto-Fill ze straks opnieuw kan inladen
-    keys_to_clear = ['comp_name', 'comp_reg', 'comp_addr', 'comp_pc', 'comp_city', 'comp_country', 
-                     'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'cont_code', 'cont_info',
-                     'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city', 'autofill_done']
-    for k in keys_to_clear:
-        if k in st.session_state:
-            del st.session_state[k]
-
-if "reset" in st.query_params:
-    reset_form_state()
-    st.query_params.clear()
-    st.rerun()
-
 # --- CSS STYLING GLOBAL & NAVBAR HTML ---
 st.markdown("""
 <style>
@@ -141,9 +48,9 @@ div[class^="viewerBadge"] { display: none !important; }
 .step-item.completed .step-circle { border-color: #894b9d; background-color: #894b9d; color: white; }
 .step-item.completed .step-label { color: #894b9d; }
 .line-completed { background-color: #894b9d; }
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; }
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important; width: 100% !important; }
 div.stButton > button[kind="primary"]:hover { background: #ffffff !important; color: #894b9d !important; border: 2px solid #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
-div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; padding: 14px 24px !important; border-radius: 6px !important; font-weight: 600 !important; font-size: 14px !important; border: 2px solid #894b9d !important; transition: all 0.3s ease !important; }
+div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; padding: 14px 24px !important; border-radius: 6px !important; font-weight: 600 !important; font-size: 14px !important; border: 2px solid #894b9d !important; transition: all 0.3s ease !important; width: 100% !important; }
 div.stButton > button[kind="secondary"]:hover { background: #ffffff !important; border-color: #894b9d !important; color: #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 4px 12px rgba(137, 75, 157, 0.3) !important; }
 div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textarea"] { background-color: #333; border-radius: 8px; }
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
@@ -157,8 +64,111 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </div>
 """, unsafe_allow_html=True)
 
+# --- SUPABASE CONNECTIE ---
+@st.cache_resource
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+try:
+    supabase = init_connection()
+except Exception as e:
+    st.error("⚠️ Database connection failed. Please check the Secrets settings in your Streamlit Cloud dashboard.")
+
+# --- CHECK LOGIN STATUS ---
+if 'user' not in st.session_state:
+    session = supabase.auth.get_session()
+    if session:
+        st.session_state.user = session.user
+    else:
+        st.session_state.user = None
+
+# --- VEILIGE STANDAARDWAARDEN (VERKOMT DE ERROR!) ---
+default_keys = {
+    'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
+    'pd_weight': 1.0, 'pd_oversized': False,
+    'cf_pal': False, 'cf_full': False, 'cf_lc': False, 'cf_weight': 100,
+    'mdm_weight': 0.5,
+    'comp_name': '', 'comp_reg': '', 'comp_addr': '', 'comp_pc': '', 'comp_city': '', 'comp_country': 'Norway',
+    'cont_fn': '', 'cont_ln': '', 'cont_email': '', 'cont_phone': '', 'cont_code': '+47', 'cont_info': '',
+    'p_addr': '', 'p_zip': '', 'p_city': '', 'd_addr': '', 'd_zip': '', 'd_city': ''
+}
+
+# Zorg dat alles in het geheugen staat vóór we beginnen
+for k, v in default_keys.items():
+    if k not in st.session_state:
+        st.session_state[k] = v
+
+# --- AUTO-FILL LOGICA VIA DATABASE ---
+if 'autofill_done' not in st.session_state:
+    st.session_state.autofill_done = False
+
+if not st.session_state.autofill_done:
+    if st.session_state.user:
+        try:
+            prof_res = supabase.table("profiles").select("*").eq("id", st.session_state.user.id).execute()
+            prof = prof_res.data[0] if prof_res.data else {}
+            
+            name_parts = prof.get('contact_name', '').split(' ', 1)
+            
+            st.session_state['comp_name'] = prof.get('company_name', '')
+            st.session_state['comp_addr'] = prof.get('address', '')
+            st.session_state['comp_pc'] = prof.get('zip_code', '')
+            st.session_state['comp_city'] = prof.get('city', '')
+            
+            st.session_state['cont_fn'] = name_parts[0] if name_parts else ''
+            st.session_state['cont_ln'] = name_parts[1] if len(name_parts) > 1 else ''
+            st.session_state['cont_email'] = st.session_state.user.email
+            st.session_state['cont_phone'] = prof.get('phone', '')
+            
+            st.session_state['p_addr'] = prof.get('address', '')
+            st.session_state['p_zip'] = prof.get('zip_code', '')
+            st.session_state['p_city'] = prof.get('city', '')
+            
+            st.session_state['d_addr'] = prof.get('del_address', '')
+            st.session_state['d_zip'] = prof.get('del_zip', '')
+            st.session_state['d_city'] = prof.get('del_city', '')
+            
+        except Exception as e:
+            pass 
+            
+    st.session_state.autofill_done = True
+
+# --- OVERIGE SESSION STATES ---
+if 'orders' not in st.session_state: st.session_state.orders = []
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'selected_types' not in st.session_state: st.session_state.selected_types = []
+if 'temp_order' not in st.session_state: st.session_state.temp_order = {}
+if 'show_error' not in st.session_state: st.session_state.show_error = False
+if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
+if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
+if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
+
+# --- LOGO RESET TRUCJE ---
+def reset_form_state():
+    st.session_state.step = 1
+    st.session_state.selected_types = [] 
+    st.session_state.temp_order = {}
+    st.session_state.show_error = False
+    st.session_state.is_submitted = False
+    st.session_state.validate_step2 = False
+    st.session_state.scroll_up = False
+    
+    # Reset alle default velden
+    for k, v in default_keys.items():
+        st.session_state[k] = v
+        
+    # Heractiveer de autofill voor de volgende keer
+    st.session_state.autofill_done = False
+
+if "reset" in st.query_params:
+    reset_form_state()
+    st.query_params.clear()
+    st.rerun()
+
 # --- ROUTING API FUNCTIES ---
-HQ_COORDS = (63.4305, 10.3951) # Trondheim hoofdkwartier.
+HQ_COORDS = (63.4305, 10.3951) # Trondheim
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -277,21 +287,10 @@ st.write("")
 if st.session_state.step == 1:
     col_spacer_L, col_main, col_spacer_R = st.columns([1, 6, 1])
     with col_main:
-        st.markdown("""
-        <style>
-        div[data-testid="stVerticalBlockBorderWrapper"] { position: relative !important; border-radius: 12px !important; transition: all 0.3s ease !important; background-color: #1e1e1e !important; border: 2px solid #333 !important; padding: 25px !important; height: 100%; }
-        div[data-testid="stVerticalBlockBorderWrapper"]:hover { border-color: #666 !important; background-color: #262626 !important; transform: translateY(-3px); }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label::after { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] { margin-bottom: 5px; padding-top: 0px; }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { transform: scale(1.6); margin-right: 15px; border-color: #888; }
-        div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label p { font-size: 20px !important; font-weight: 700 !important; color: white !important; }
-        </style>
-        """, unsafe_allow_html=True)
-        
         dynamic_css = ""
-        if st.session_state.chk_parcels: dynamic_css += '''div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
-        if st.session_state.chk_freight: dynamic_css += '''div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
-        if st.session_state.chk_mail: dynamic_css += '''div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
+        if st.session_state.get('chk_parcels'): dynamic_css += '''div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(1) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
+        if st.session_state.get('chk_freight'): dynamic_css += '''div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(2) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
+        if st.session_state.get('chk_mail'): dynamic_css += '''div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 2px solid #ffffff !important; transform: translateY(-5px); box-shadow: 0 10px 30px rgba(255,255,255,0.15) !important; } div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] * { color: #111111 !important; } div[data-testid="stColumn"]:nth-child(3) div[data-testid="stVerticalBlockBorderWrapper"] div[data-testid="stCheckbox"] label span[role="checkbox"] { background-color: #894b9d !important; border-color: #894b9d !important; }'''
             
         if dynamic_css: st.markdown(f"<style>{dynamic_css}</style>", unsafe_allow_html=True)
 
@@ -447,7 +446,7 @@ else:
                     
                 st.write("")
                 
-                # --- LIVE MAP GENERATOR ---
+                # --- LIVE MAP GENERATOR MET ECHTE ROUTE (PYDECK) ---
                 p_coords = None
                 d_coords = None
                 
@@ -545,12 +544,12 @@ else:
                 elif invalid_email: error_container.error("⚠️ Please enter a valid email address containing an '@' symbol.")
 
             c_back, c_next = st.columns([1, 4])
-            if c_back.button("← Go Back", type="secondary"):
+            if c_back.button("← Go Back", type="secondary", use_container_width=True):
                 st.session_state.step = 1
                 st.session_state.validate_step2 = False 
                 st.rerun()
                 
-            if c_next.button("Continue to Review →", type="primary"):
+            if c_next.button("Continue to Review →", type="primary", use_container_width=True):
                 st.session_state.validate_step2 = True 
                 if missing_fields or invalid_email:
                     st.session_state.scroll_up = True
@@ -659,11 +658,11 @@ else:
             if not st.session_state.is_submitted:
                 c_b1, c_b2 = st.columns([1, 4])
                 with c_b1:
-                    if st.button("← Edit Details", type="secondary"):
+                    if st.button("← Edit Details", type="secondary", use_container_width=True):
                         st.session_state.step = 2
                         st.rerun()
                 with c_b2:
-                    if st.button("✅ CONFIRM & SEND REQUEST", type="primary"):
+                    if st.button("✅ CONFIRM & SEND REQUEST", type="primary", use_container_width=True):
                         db_order = {
                             "company": o['company'], "reg_no": o['reg_no'], "address": o['address'],
                             "contact_name": o['contact_name'], "email": o['email'], "phone": o['phone'],
@@ -687,7 +686,7 @@ else:
             else:
                 st.success("🎉 Your transport request has been sent successfully! We will get in touch shortly.")
                 st.info("You can review your submitted details above.")
-                if st.button("← Start a New Request", type="primary"):
+                if st.button("← Start a New Request", type="primary", use_container_width=True):
                     reset_form_state()
                     st.rerun()
 
