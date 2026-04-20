@@ -4,24 +4,27 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 
-# Zorg dat de database verbinding wordt meegenomen naar deze pagina
-if 'supabase_client' in st.session_state:
-    supabase = st.session_state.supabase_client
-else:
-    st.error("Niet ingelogd met database.")
-    st.stop()
+import streamlit as st
+from supabase import create_client
 
-# --- PAGE CONFIG ---
-st.set_page_config(
-    page_title="Dahle Transport - Customer Portal",
-    page_icon="🔐",
-    layout="centered",
-    initial_sidebar_state="collapsed"
-)
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+if 'supabase_client' not in st.session_state:
+    try:
+        st.session_state.supabase_client = init_connection()
+    except Exception as e:
+        st.error("⚠️ Database connection failed.")
+        st.stop()
+
+supabase = st.session_state.supabase_client
+
+st.set_page_config(page_title="Dahle Transport - Customer Portal", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
 cookie_manager = stx.CookieManager()
 
-# --- SUPABASE CONNECTIE ---
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
@@ -42,22 +45,16 @@ if 'active_tab' not in st.session_state:
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-# =========================================================
-# DE MAGIC FIX: DATABASE VOLLEDIG INLOGGEN VIA COOKIES
-# =========================================================
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
 if st.session_state.user is None and acc_token and ref_token:
     try:
-        # Dit logt niet alleen de UI in, maar ook de database uitsmijter!
         session = supabase.auth.set_session(acc_token, ref_token)
         st.session_state.user = session.user
     except Exception:
         pass
 
-
-# --- CSS STYLING & NAVBAR ---
 st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -99,10 +96,6 @@ st.markdown("""
     </div>
 """, unsafe_allow_html=True)
 
-
-# =========================================================
-# LOGIC: ALS DE GEBRUIKER NIET IS INGELOGD
-# =========================================================
 if st.session_state.user is None:
     st.markdown("<h2 style='text-align: center; color: #b070c6;'>Customer Portal</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>Log in to manage your shipments and details.</p>", unsafe_allow_html=True)
@@ -129,8 +122,6 @@ if st.session_state.user is None:
                             "password": login_pass
                         })
                         st.session_state.user = auth_response.user
-                        
-                        # SLA BEIDE TOKENS OP VOOR DE DATABASE UITSMIJTER
                         cookie_manager.set('dahle_acc', auth_response.session.access_token, key="set_a")
                         cookie_manager.set('dahle_ref', auth_response.session.refresh_token, key="set_r")
                         
@@ -162,10 +153,8 @@ if st.session_state.user is None:
                                 "email": reg_email,
                                 "password": reg_pass
                             })
-                            
                             new_user_id = auth_res.user.id
                             full_name = f"{reg_fname} {reg_lname}"
-                            
                             profile_data = {
                                 "id": new_user_id,
                                 "company_name": reg_company,
@@ -179,13 +168,9 @@ if st.session_state.user is None:
                 else:
                     st.warning("⚠️ Please fill in all mandatory fields (*).")
 
-# =========================================================
-# LOGIC: ALS DE GEBRUIKER SUCCESVOL IS INGELOGD
-# =========================================================
 else:
     user_id = st.session_state.user.id
     
-    # 1. Haal het profiel op
     try:
         prof_res = supabase.table("profiles").select("*").eq("id", user_id).execute()
         profile = prof_res.data[0] if prof_res.data else {}
@@ -204,7 +189,6 @@ else:
     del_zip = profile.get("del_zip", "")
     del_city = profile.get("del_city", "")
 
-    # 2. Haal orders op
     try:
         orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
         user_orders = orders_res.data
@@ -215,7 +199,6 @@ else:
     pending_orders = sum(1 for o in user_orders if o['status'] == 'New')
     processed_orders = sum(1 for o in user_orders if o['status'] in ['Processed', 'Delivered'])
 
-    # --- DASHBOARD HEADER ---
     c_head1, c_head2 = st.columns([3, 1])
     with c_head1:
         st.markdown(f"<h2 style='color: #b070c6; margin-bottom: 0px;'>Welcome back, {company_name}!</h2>", unsafe_allow_html=True)
@@ -231,9 +214,6 @@ else:
             
     st.write("---")
     
-    # =========================================================
-    # VASTE DASHBOARD TITEL & STATISTIEKEN 
-    # =========================================================
     st.markdown("### 📦 Your Shipment History")
     m1, m2, m3 = st.columns(3)
     m1.metric("Total Shipments", total_orders)
@@ -241,9 +221,6 @@ else:
     m3.metric("Processed", processed_orders)
     st.write("---")
 
-    # =========================================================
-    # MENU NAVIGATIE KNOPPEN 
-    # =========================================================
     col_menu1, col_menu2, col_menu3 = st.columns(3)
     with col_menu1:
         if st.button("📦 My Shipments", type="primary" if st.session_state.active_tab == "My Shipments" else "secondary", use_container_width=True):
@@ -258,9 +235,6 @@ else:
             st.rerun()
     st.write("") 
 
-    # =========================================================
-    # CONTENT 1: ORDER HISTORIE
-    # =========================================================
     if st.session_state.active_tab == "My Shipments":
         if not user_orders:
             st.info("📊 You haven't placed any orders with this account yet. Go to 'New Order' to get started!")
@@ -302,9 +276,6 @@ else:
                         
                     st.markdown("<br>", unsafe_allow_html=True)
 
-    # =========================================================
-    # CONTENT 3: PROFIEL BEHEREN
-    # =========================================================
     elif st.session_state.active_tab == "Profile Settings":
         st.markdown("### ⚙️ Manage Your Profile")
         st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
@@ -345,7 +316,6 @@ else:
                     "del_zip": upd_del_zip,
                     "del_city": upd_del_city
                 }
-                
                 with st.spinner("Profiel wordt bijgewerkt... ⏳"):
                     try:
                         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
