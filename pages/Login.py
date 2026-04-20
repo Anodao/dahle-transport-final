@@ -4,6 +4,13 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 
+# Zorg dat de database verbinding wordt meegenomen naar deze pagina
+if 'supabase_client' in st.session_state:
+    supabase = st.session_state.supabase_client
+else:
+    st.error("Niet ingelogd met database.")
+    st.stop()
+
 # --- PAGE CONFIG ---
 st.set_page_config(
     page_title="Dahle Transport - Customer Portal",
