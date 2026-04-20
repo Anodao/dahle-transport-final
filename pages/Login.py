@@ -129,16 +129,25 @@ if st.session_state.user is None:
             login_email = st.text_input("Email Address", key="log_email")
             login_pass = st.text_input("Password", type="password", key="log_pass")
             
-            st.write("")
-            if st.button("Log In", type="primary", use_container_width=True):
+if st.button("Log In", type="primary", use_container_width=True):
                 if login_email and login_pass:
                     with st.spinner("Bezig met inloggen... Een moment geduld a.u.b. ⏳"):
+                        
+                        # FORCEER de animatie om op het scherm te verschijnen
+                        import time
+                        time.sleep(0.5) 
+                        
                         try:
                             auth_response = supabase.auth.sign_in_with_password({
                                 "email": login_email,
                                 "password": login_pass
                             })
                             st.session_state.user = auth_response.user
+                            
+                            # VISUELE FEEDBACK: Laat zien dat het gelukt is
+                            st.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
+                            time.sleep(1) # Geef de bezoeker 1 seconde om dit bericht te lezen
+                            
                             st.rerun()
                         except Exception as e:
                             st.error("❌ Incorrect email or password. Please try again.")
