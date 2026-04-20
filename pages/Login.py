@@ -2,6 +2,7 @@ import streamlit as st
 import time
 from datetime import datetime
 from supabase import create_client
+from streamlit_cookies_controller import CookieController
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -10,6 +11,9 @@ st.set_page_config(
     layout="centered",
     initial_sidebar_state="collapsed"
 )
+
+# --- INIT COOKIE CONTROLLER ---
+controller = CookieController()
 
 # --- SUPABASE CONNECTIE ---
 def init_connection():
@@ -30,17 +34,22 @@ supabase = st.session_state.supabase_client
 if 'active_tab' not in st.session_state:
     st.session_state.active_tab = "My Shipments"
 
-# --- HERSTEL OF VERNIETIG SESSIE (VEILIGHEIDSCHECK) ---
-current_session = supabase.auth.get_session()
-
-if current_session:
-    st.session_state.user = current_session.user
-else:
+if 'user' not in st.session_state:
     st.session_state.user = None
-    keys_to_clear = ['user_profile', 'cached_profile', 'cached_user_id', 'last_seen_user_id', 'autofill_done']
-    for key in keys_to_clear:
-        if key in st.session_state:
-            del st.session_state[key]
+
+# --- HERSTEL SESSIE VIA COOKIES (ANTI-F5 REFRESH) ---
+# 1. Kijken we of we nog een cookie hebben van een vorige sessie
+saved_token = controller.get('dahle_auth_token')
+
+# 2. Als we lokaal geen gebruiker hebben, maar wél een cookie, herstel de sessie!
+if st.session_state.user is None and saved_token:
+    try:
+        # Check bij Supabase of de opgeslagen cookie-sleutel nog geldig is
+        user_response = supabase.auth.get_user(saved_token)
+        st.session_state.user = user_response.user
+    except Exception:
+        # Cookie is verlopen of ongeldig, doe niks en laat ze opnieuw inloggen
+        pass
 
 # --- CSS STYLING & NAVBAR (DARK MODE) ---
 st.markdown("""
@@ -123,23 +132,16 @@ if st.session_state.user is None:
 
         with tab_login:
             st.write("")
-            
-            # --- DE NIEUWE FORMULIER OPLOSSING ---
             with st.form("login_form", clear_on_submit=False):
                 login_email = st.text_input("Email Address", key="log_email")
                 login_pass = st.text_input("Password", type="password", key="log_pass")
                 st.write("")
-                
-                # De form_submit_button activeert pas als je écht klikt (of op Enter drukt!)
                 submitted = st.form_submit_button("Log In", type="primary", use_container_width=True)
             
-            # Een lege 'doos' reserveren om direct onze meldingen in te gooien
             status_bericht = st.empty()
             
-            # Wat gebeurt er na de klik?
             if submitted:
                 if login_email and login_pass:
-                    # 1. Toon direct een permanente melding in de 'doos'
                     status_bericht.info("Bezig met inloggen... ⏳")
                     
                     try:
@@ -149,13 +151,15 @@ if st.session_state.user is None:
                         })
                         st.session_state.user = auth_response.user
                         
-                        # 2. Vervang het blauwe info bericht door een groene succes melding
+                        # --- HIER SLAAN WE DE COOKIE OP ---
+                        # Deze bewaart de inlogsessie in de browser!
+                        controller.set('dahle_auth_token', auth_response.session.access_token)
+                        
                         status_bericht.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
-                        time.sleep(1) # Tijd om het te lezen
+                        time.sleep(1) 
                         st.rerun()
                         
                     except Exception as e:
-                        # 3. Vervang het bericht door een rode foutmelding
                         status_bericht.error("❌ Incorrect email or password. Please try again.")
                 else:
                     status_bericht.warning("⚠️ Please fill in both fields.")
@@ -247,11 +251,13 @@ else:
     with c_head2:
         st.write("")
         if st.button("🚪 Log Out", type="secondary", use_container_width=True):
-            # HARDE LOGOUT PROCEDURE
+            
+            # --- HIER VERWIJDEREN WE DE COOKIE NETJES BIJ UITLOGGEN ---
+            controller.remove('dahle_auth_token')
+            
             supabase.auth.sign_out()
             st.session_state.user = None
             
-            # Verwijder alle sporen van de gebruiker uit het geheugen
             keys_to_clear = ['user_profile', 'cached_profile', 'cached_user_id', 'last_seen_user_id', 'autofill_done']
             for key in keys_to_clear:
                 if key in st.session_state:
