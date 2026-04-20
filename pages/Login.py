@@ -31,19 +31,16 @@ if 'active_tab' not in st.session_state:
     st.session_state.active_tab = "My Shipments"
 
 # --- HERSTEL OF VERNIETIG SESSIE (VEILIGHEIDSCHECK) ---
-# Check altijd de LIVE status van Supabase, niet alleen wat we lokaal hebben opgeslagen.
 current_session = supabase.auth.get_session()
 
 if current_session:
     st.session_state.user = current_session.user
 else:
-    # Als er geen live Supabase sessie is, dwing dan een harde reset af van ALLE gebruikersdata
     st.session_state.user = None
     keys_to_clear = ['user_profile', 'cached_profile', 'cached_user_id', 'last_seen_user_id', 'autofill_done']
     for key in keys_to_clear:
         if key in st.session_state:
             del st.session_state[key]
-
 
 # --- CSS STYLING & NAVBAR (DARK MODE) ---
 st.markdown("""
@@ -129,14 +126,13 @@ if st.session_state.user is None:
             login_email = st.text_input("Email Address", key="log_email")
             login_pass = st.text_input("Password", type="password", key="log_pass")
             
-if st.button("Log In", type="primary", use_container_width=True):
+            st.write("")
+            
+            # --- DE NIEUWE EN CORRECT UITGELIJNDE LOG-IN KNOP ---
+            if st.button("Log In", type="primary", use_container_width=True):
                 if login_email and login_pass:
                     with st.spinner("Bezig met inloggen... Een moment geduld a.u.b. ⏳"):
-                        
-                        # FORCEER de animatie om op het scherm te verschijnen
-                        import time
-                        time.sleep(0.5) 
-                        
+                        time.sleep(0.5) # Forceer de animatie om zichtbaar te worden
                         try:
                             auth_response = supabase.auth.sign_in_with_password({
                                 "email": login_email,
@@ -144,10 +140,8 @@ if st.button("Log In", type="primary", use_container_width=True):
                             })
                             st.session_state.user = auth_response.user
                             
-                            # VISUELE FEEDBACK: Laat zien dat het gelukt is
                             st.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
-                            time.sleep(1) # Geef de bezoeker 1 seconde om dit bericht te lezen
-                            
+                            time.sleep(1) # Geef de bezoeker tijd om het te lezen
                             st.rerun()
                         except Exception as e:
                             st.error("❌ Incorrect email or password. Please try again.")
@@ -398,7 +392,6 @@ else:
                         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
                         st.success("✅ Profile updated successfully! Je standaard adressen worden nu automatisch ingevuld bij een nieuwe bestelling.")
                         
-                        # Forceer een data verversing in Order.py door de kluis sleutel aan te passen
                         st.session_state['last_seen_user_id'] = None 
                         
                         time.sleep(2.5)
