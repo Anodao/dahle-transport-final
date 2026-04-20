@@ -2,7 +2,7 @@ import streamlit as st
 import time
 from datetime import datetime
 from supabase import create_client
-from streamlit_cookies_manager import EncryptedCookieManager
+import extra_streamlit_components as stx
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -12,19 +12,9 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- INIT COOKIE MANAGER (DE STABIELE MANIER) ---
-# We gebruiken een wachtwoord om de data veilig te versleutelen
-if 'cookies' not in st.session_state:
-    st.session_state.cookies = EncryptedCookieManager(
-        prefix="dahle",
-        password="dahle-transport-veilig-wachtwoord-2026" 
-    )
-
-cookies = st.session_state.cookies
-
-# CRUCIAAL: Wacht tot de browser klaar is met het doorgeven van cookies
-if not cookies.ready():
-    st.stop()
+# --- INIT DE STABIELE COOKIE MANAGER ---
+# Deze laadt geruisloos op de achtergrond zonder de app te bevriezen
+cookie_manager = stx.CookieManager()
 
 # --- SUPABASE CONNECTIE ---
 def init_connection():
@@ -49,14 +39,14 @@ if 'user' not in st.session_state:
     st.session_state.user = None
 
 # --- HERSTEL SESSIE VIA COOKIES (ANTI-F5 REFRESH) ---
-saved_token = cookies.get('auth_token')
+saved_token = cookie_manager.get('dahle_token')
 
 if st.session_state.user is None and saved_token:
     try:
         user_response = supabase.auth.get_user(saved_token)
         st.session_state.user = user_response.user
     except Exception:
-        # Token is verlopen, doe niks
+        # Token is verlopen of leeg, negeer het rustig
         pass
 
 # --- CSS STYLING & NAVBAR (DARK MODE) ---
@@ -160,11 +150,10 @@ if st.session_state.user is None:
                         st.session_state.user = auth_response.user
                         
                         # --- HIER SLAAN WE DE COOKIE OP ---
-                        cookies['auth_token'] = auth_response.session.access_token
-                        cookies.save() # Dwingt de browser om het direct op te slaan
+                        cookie_manager.set('dahle_token', auth_response.session.access_token, key="set_login_cookie")
                         
                         status_bericht.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
-                        time.sleep(1) 
+                        time.sleep(1.5) 
                         st.rerun()
                         
                     except Exception as e:
@@ -260,9 +249,8 @@ else:
         st.write("")
         if st.button("🚪 Log Out", type="secondary", use_container_width=True):
             
-            # --- HIER VERWIJDEREN WE DE COOKIE ---
-            cookies['auth_token'] = ""
-            cookies.save()
+            # --- VERWIJDER DE COOKIE ---
+            cookie_manager.delete('dahle_token', key="delete_cookie")
             
             supabase.auth.sign_out()
             st.session_state.user = None
