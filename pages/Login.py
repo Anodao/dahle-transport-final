@@ -121,10 +121,10 @@ if st.session_state.user is None:
     with st.container(border=True):
         tab_login, tab_register = st.tabs(["🔒 Log In", "📝 Create Account"])
 
-with tab_login:
+        with tab_login:
             st.write("")
             
-            # --- OPLOSSING: We pakken alles in een Formulier (st.form) ---
+            # --- DE NIEUWE FORMULIER OPLOSSING ---
             with st.form("login_form", clear_on_submit=False):
                 login_email = st.text_input("Email Address", key="log_email")
                 login_pass = st.text_input("Password", type="password", key="log_pass")
@@ -139,7 +139,7 @@ with tab_login:
             # Wat gebeurt er na de klik?
             if submitted:
                 if login_email and login_pass:
-                    # 1. Toon direct een permanente melding in de 'doos' (geen verdwijnend wieltje)
+                    # 1. Toon direct een permanente melding in de 'doos'
                     status_bericht.info("Bezig met inloggen... ⏳")
                     
                     try:
