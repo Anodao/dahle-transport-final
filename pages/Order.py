@@ -64,7 +64,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </div>
 """, unsafe_allow_html=True)
 
-# --- SUPABASE CONNECTIE (VEILIG: UNIEK PER GEBRUIKER!) ---
+# --- SUPABASE CONNECTIE ---
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
@@ -99,7 +99,6 @@ if st.session_state.get('last_seen_user_id') != current_user_id:
                 raw_prof = prof_res.data[0]
                 name_parts = str(raw_prof.get('contact_name', '')).split(' ', 1)
                 
-                # We slaan het op in een gewone dictionary, los van de UI elementen!
                 safe_profile = {
                     'comp_name': str(raw_prof.get('company_name') or ''),
                     'cont_fn': name_parts[0] if name_parts else '',
@@ -119,11 +118,9 @@ if st.session_state.get('last_seen_user_id') != current_user_id:
         except:
             pass
             
-    # Zet de kluis in het geheugen
     st.session_state['user_db_profile'] = safe_profile
     st.session_state['last_seen_user_id'] = current_user_id
 
-# Haal de kluis op (Leeg als gast, gevuld als ingelogd)
 prof = st.session_state.get('user_db_profile', {})
 
 # --- OVERIGE SESSION STATES ---
@@ -136,7 +133,6 @@ if 'is_submitted' not in st.session_state: st.session_state.is_submitted = False
 if 'validate_step2' not in st.session_state: st.session_state.validate_step2 = False
 if 'scroll_up' not in st.session_state: st.session_state.scroll_up = False
 
-# Basis states voor de checkboxes in Stap 1
 default_checks = ['chk_parcels', 'chk_freight', 'chk_mail']
 for k in default_checks:
     if k not in st.session_state: st.session_state[k] = False
@@ -151,7 +147,6 @@ def reset_form_state():
     st.session_state.validate_step2 = False
     st.session_state.scroll_up = False
     st.session_state['last_seen_user_id'] = None 
-    # Wis alle ingevulde velden
     keys_to_clear = ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']
     for k in keys_to_clear:
         if k in st.session_state: del st.session_state[k]
@@ -162,7 +157,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # --- ROUTING API FUNCTIES ---
-HQ_COORDS = (63.4305, 10.3951) # Trondheim
+HQ_COORDS = (63.4305, 10.3951)
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -328,12 +323,25 @@ if st.session_state.step == 1:
                     st.rerun()
 
 else:
+    # Voeg CSS toe om de 3e kolom (waar het bonnetje in staat) 'sticky' te maken
+    st.markdown("""
+    <style>
+    div[data-testid="column"]:nth-of-type(3),
+    div[data-testid="stColumn"]:nth-of-type(3) {
+        position: -webkit-sticky !important;
+        position: sticky !important;
+        top: 110px !important;
+        align-self: flex-start !important;
+        z-index: 100;
+    }
+    .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }
+    </style>
+    """, unsafe_allow_html=True)
+    
     st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
     if st.session_state.get('scroll_up', False):
         st.components.v1.html("""<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
         st.session_state.scroll_up = False 
-        
-    st.markdown("""<style>.step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; }</style>""", unsafe_allow_html=True)
     
     def req_lbl(key, base_text):
         if st.session_state.validate_step2:
@@ -707,7 +715,7 @@ else:
         for name, price in breakdown_lines:
             receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
             
-        receipt_html = f"""<style>.receipt-card {{ background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); position: sticky; top: 120px; }}</style><div class="receipt-card"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">Estimated Cost</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">Total</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">Excl. MVA (VAT)</div></div>"""
+        receipt_html = f"""<div class="receipt-card" style="background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">Estimated Cost</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">Total</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">Excl. MVA (VAT)</div></div>"""
         st.markdown(receipt_html, unsafe_allow_html=True)
 
 st.write("---")
