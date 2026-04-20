@@ -121,32 +121,44 @@ if st.session_state.user is None:
     with st.container(border=True):
         tab_login, tab_register = st.tabs(["🔒 Log In", "📝 Create Account"])
 
-        with tab_login:
-            st.write("")
-            login_email = st.text_input("Email Address", key="log_email")
-            login_pass = st.text_input("Password", type="password", key="log_pass")
-            
+with tab_login:
             st.write("")
             
-            # --- DE NIEUWE EN CORRECT UITGELIJNDE LOG-IN KNOP ---
-            if st.button("Log In", type="primary", use_container_width=True):
+            # --- OPLOSSING: We pakken alles in een Formulier (st.form) ---
+            with st.form("login_form", clear_on_submit=False):
+                login_email = st.text_input("Email Address", key="log_email")
+                login_pass = st.text_input("Password", type="password", key="log_pass")
+                st.write("")
+                
+                # De form_submit_button activeert pas als je écht klikt (of op Enter drukt!)
+                submitted = st.form_submit_button("Log In", type="primary", use_container_width=True)
+            
+            # Een lege 'doos' reserveren om direct onze meldingen in te gooien
+            status_bericht = st.empty()
+            
+            # Wat gebeurt er na de klik?
+            if submitted:
                 if login_email and login_pass:
-                    with st.spinner("Bezig met inloggen... Een moment geduld a.u.b. ⏳"):
-                        time.sleep(0.5) # Forceer de animatie om zichtbaar te worden
-                        try:
-                            auth_response = supabase.auth.sign_in_with_password({
-                                "email": login_email,
-                                "password": login_pass
-                            })
-                            st.session_state.user = auth_response.user
-                            
-                            st.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
-                            time.sleep(1) # Geef de bezoeker tijd om het te lezen
-                            st.rerun()
-                        except Exception as e:
-                            st.error("❌ Incorrect email or password. Please try again.")
+                    # 1. Toon direct een permanente melding in de 'doos' (geen verdwijnend wieltje)
+                    status_bericht.info("Bezig met inloggen... ⏳")
+                    
+                    try:
+                        auth_response = supabase.auth.sign_in_with_password({
+                            "email": login_email,
+                            "password": login_pass
+                        })
+                        st.session_state.user = auth_response.user
+                        
+                        # 2. Vervang het blauwe info bericht door een groene succes melding
+                        status_bericht.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
+                        time.sleep(1) # Tijd om het te lezen
+                        st.rerun()
+                        
+                    except Exception as e:
+                        # 3. Vervang het bericht door een rode foutmelding
+                        status_bericht.error("❌ Incorrect email or password. Please try again.")
                 else:
-                    st.warning("⚠️ Please fill in both fields.")
+                    status_bericht.warning("⚠️ Please fill in both fields.")
 
         with tab_register:
             st.write("")
