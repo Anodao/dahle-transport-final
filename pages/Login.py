@@ -4,27 +4,12 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 
-import streamlit as st
-from supabase import create_client
-
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
-
-if 'supabase_client' not in st.session_state:
-    try:
-        st.session_state.supabase_client = init_connection()
-    except Exception as e:
-        st.error("⚠️ Database connection failed.")
-        st.stop()
-
-supabase = st.session_state.supabase_client
-
 st.set_page_config(page_title="Dahle Transport - Customer Portal", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
+# 1. START COOKIE MANAGER
 cookie_manager = stx.CookieManager()
 
+# 2. SUPABASE CONNECTIE
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
@@ -45,57 +30,76 @@ if 'active_tab' not in st.session_state:
 if 'user' not in st.session_state:
     st.session_state.user = None
 
+# 3. CHECK COOKIES MET LAADCIRKEL
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
 if st.session_state.user is None and acc_token and ref_token:
-    try:
-        session = supabase.auth.set_session(acc_token, ref_token)
-        st.session_state.user = session.user
-    except Exception:
-        pass
+    with st.spinner("Laster inn konto... ⏳"):
+        try:
+            session = supabase.auth.set_session(acc_token, ref_token)
+            st.session_state.user = session.user
+            
+            prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
+            if prof_res.data:
+                st.session_state.company_name = prof_res.data[0]["company_name"]
+        except Exception:
+            pass
 
-st.markdown("""
+# 4. BEPAAL TEKST VOOR NAVBAR (MET ICOONTJE)
+if st.session_state.user is not None and 'company_name' in st.session_state:
+    icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
+    knop_tekst = f"{icoon}{st.session_state.company_name}"
+else:
+    knop_tekst = "KUNDEPORTAL"
+
+# 5. CSS & NAVBAR (Dynamisch)
+html_navbar = f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-    html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; }
-    [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
-    .stApp { background-color: #111111 !important; }
-    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #ffffff !important; }
-    div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
-    .block-container { padding-top: 130px !important; max-width: 900px; }
-    .navbar {
+    html, body, [class*="css"] {{ font-family: 'Montserrat', sans-serif; }}
+    [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] {{ display: none !important; }}
+    .stApp {{ background-color: #111111 !important; }}
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li {{ color: #ffffff !important; }}
+    div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] {{ color: #ffffff !important; }}
+    .block-container {{ padding-top: 130px !important; max-width: 900px; }}
+    .navbar {{
         position: fixed; top: 0; left: 0; width: 100%; height: 90px;
         background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
         display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
         padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
-    }
-    .nav-logo img { height: 48px; width: auto; transition: transform 0.2s; }
-    .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }
-    .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
-    .nav-links span:hover { color: #894b9d !important; }
-    .nav-cta { display: flex; justify-content: flex-end; gap: 15px; }
-    .cta-btn { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; white-space: nowrap;}
-    .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap;}
-    div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 12px !important; padding: 20px !important; }
-    div[data-baseweb="input"] > div, div[data-baseweb="textarea"] { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
-    div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
-    label[data-testid="stWidgetLabel"] p { color: #cccccc !important; font-weight: 600; font-size: 14px !important;}
-    div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; }
-    div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
-    div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; transition: all 0.3s ease !important; }
-    div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}
-    div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
-    div[data-testid="stExpander"] p { color: #ffffff !important; }
-    div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
+    }}
+    .nav-logo img {{ height: 48px; width: auto; transition: transform 0.2s; }}
+    .nav-links {{ display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }}
+    .nav-links a, .nav-links span {{ text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}}
+    .nav-links span:hover {{ color: #894b9d !important; }}
+    .nav-cta {{ display: flex; justify-content: flex-end; gap: 15px; }}
+    .cta-btn {{ background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; white-space: nowrap;}}
+    .cta-btn-outline {{ background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis;}}
+    div[data-testid="stVerticalBlockBorderWrapper"] {{ background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 12px !important; padding: 20px !important; }}
+    div[data-baseweb="input"] > div, div[data-baseweb="textarea"] {{ background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }}
+    div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {{ color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }}
+    label[data-testid="stWidgetLabel"] p {{ color: #cccccc !important; font-weight: 600; font-size: 14px !important;}}
+    div.stButton > button[kind="primary"] {{ background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; }}
+    div.stButton > button[kind="primary"]:hover {{ transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }}
+    div.stButton > button[kind="secondary"] {{ background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; transition: all 0.3s ease !important; }}
+    div.stButton > button[kind="secondary"]:hover {{ background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}}
+    div[data-testid="stExpander"] {{ background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }}
+    div[data-testid="stExpander"] p {{ color: #ffffff !important; }}
+    div[data-testid="stExpanderDetails"] {{ background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }}
     </style>
     <div class="navbar">
         <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
         <div class="nav-links"><a href="/"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
-        <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/" target="_self" class="cta-btn">TA KONTAKT</a></div>
+        <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a><a href="/" target="_self" class="cta-btn">TA KONTAKT</a></div>
     </div>
-""", unsafe_allow_html=True)
+"""
+st.markdown(html_navbar, unsafe_allow_html=True)
 
+
+# =========================================================
+# LOGIC: ALS DE GEBRUIKER NIET IS INGELOGD
+# =========================================================
 if st.session_state.user is None:
     st.markdown("<h2 style='text-align: center; color: #b070c6;'>Customer Portal</h2>", unsafe_allow_html=True)
     st.markdown("<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>Log in to manage your shipments and details.</p>", unsafe_allow_html=True)
@@ -117,14 +121,10 @@ if st.session_state.user is None:
                 if login_email and login_pass:
                     status_bericht.info("Bezig met inloggen... ⏳")
                     try:
-                        auth_response = supabase.auth.sign_in_with_password({
-                            "email": login_email,
-                            "password": login_pass
-                        })
+                        auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_pass})
                         st.session_state.user = auth_response.user
                         cookie_manager.set('dahle_acc', auth_response.session.access_token, key="set_a")
                         cookie_manager.set('dahle_ref', auth_response.session.refresh_token, key="set_r")
-                        
                         status_bericht.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
                         time.sleep(1.5) 
                         st.rerun()
@@ -149,10 +149,7 @@ if st.session_state.user is None:
                 if reg_email and reg_pass and reg_company and reg_fname and reg_lname:
                     with st.spinner("Account wordt aangemaakt... ⏳"):
                         try:
-                            auth_res = supabase.auth.sign_up({
-                                "email": reg_email,
-                                "password": reg_pass
-                            })
+                            auth_res = supabase.auth.sign_up({"email": reg_email, "password": reg_pass})
                             new_user_id = auth_res.user.id
                             full_name = f"{reg_fname} {reg_lname}"
                             profile_data = {
@@ -168,17 +165,22 @@ if st.session_state.user is None:
                 else:
                     st.warning("⚠️ Please fill in all mandatory fields (*).")
 
+# =========================================================
+# LOGIC: ALS DE GEBRUIKER SUCCESVOL IS INGELOGD
+# =========================================================
 else:
     user_id = st.session_state.user.id
     
     try:
         prof_res = supabase.table("profiles").select("*").eq("id", user_id).execute()
         profile = prof_res.data[0] if prof_res.data else {}
+        
+        # Zorg dat de naam direct beschikbaar is voor de dynamische navbar
+        st.session_state.company_name = profile.get("company_name", "Valued Customer")
     except Exception as e:
         profile = {}
 
     company_name = profile.get("company_name", "Valued Customer")
-    st.session_state.company_name = company_name
     contact_name = profile.get("contact_name", "")
     phone_nr = profile.get("phone", "")
     email_addr = st.session_state.user.email
@@ -211,6 +213,8 @@ else:
             cookie_manager.delete('dahle_ref', key="del_r")
             supabase.auth.sign_out()
             st.session_state.user = None
+            if 'company_name' in st.session_state:
+                del st.session_state['company_name']
             st.rerun()
             
     st.write("---")
@@ -321,6 +325,7 @@ else:
                     try:
                         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
                         st.success("✅ Profile updated successfully!")
+                        st.session_state.company_name = upd_company # Update ook direct het geheugen voor de navbar
                         time.sleep(1.5)
                         st.rerun() 
                     except Exception as e:
