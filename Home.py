@@ -2,16 +2,37 @@ import streamlit as st
 from supabase import create_client
 import extra_streamlit_components as stx
 
+# --- PAGE CONFIG ---
+st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
+
 # =========================================================
 # 1. DATABASE & COOKIE CHECKER (MET LAAD-CIRKEL)
 # =========================================================
+# Dit voorkomt de NameError!
+cookie_manager = stx.CookieManager()
+
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+if 'supabase_client' not in st.session_state:
+    try:
+        st.session_state.supabase_client = init_connection()
+    except:
+        pass
+
+supabase = st.session_state.supabase_client
+
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
 # Lees de cookies uit je browser
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
 # Als je nog niet in het geheugen zit, maar wel een cookie hebt: Inloggen!
 if st.session_state.user is None and acc_token and ref_token:
-    
     # HIER IS DE LAAD-CIRKEL TOEGEVOEGD:
     with st.spinner("Laster inn konto... ⏳"): 
         try:
@@ -29,28 +50,18 @@ if st.session_state.user is None and acc_token and ref_token:
 # 2. BEPAAL DE TEKST VOOR DE NAVBAR (MET ICOONTJE)
 # =========================================================
 if st.session_state.user is not None and 'company_name' in st.session_state:
-    
     # Dit is de wiskundige code (SVG) voor exact dat poppetje met het slotje!
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
     
     # Plak het icoon en de bedrijfsnaam aan elkaar
     knop_tekst = f"{icoon}{st.session_state.company_name}"
-    
 else:
     knop_tekst = "KUNDEPORTAL"
 
-# =========================================================
-# 2. BEPAAL DE TEKST VOOR DE NAVBAR
-# =========================================================
-if st.session_state.user is not None and 'company_name' in st.session_state:
-    knop_tekst = st.session_state.company_name
-else:
-    knop_tekst = "KUNDEPORTAL"
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
-# --- CSS STYLING & HTML ---
-# Alles staat strak tegen de kantlaan. Geen spaties vooraan toevoegen!
+# =========================================================
+# 3. CSS STYLING & HTML (Jouw eigen design)
+# =========================================================
 html_code = """<style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
@@ -75,7 +86,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
 .cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s;}
 .cta-btn-purple:hover { background-color: #723e83 !important; }
-.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
+.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 
 .hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
 .hero-left { flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
@@ -120,13 +131,8 @@ div[class^="viewerBadge"] { display: none !important; }
 <div class="hero-right"></div>
 </div>"""
 
-# 1. Bepaal wat er op de knop moet staan
-if st.session_state.get('user') is not None and 'company_name' in st.session_state:
-    knop_tekst = st.session_state.company_name
-else:
-    knop_tekst = "KUNDEPORTAL"
-
+# =========================================================
+# 4. TEKEN DE PAGINA MET DE JUISTE KNOP
+# =========================================================
 aangepaste_html = html_code.replace(">KUNDEPORTAL<", f">{knop_tekst}<")
 st.markdown(aangepaste_html, unsafe_allow_html=True)
-
-
