@@ -5,6 +5,7 @@ import pandas as pd
 import pydeck as pdk
 from datetime import datetime
 from supabase import create_client
+import extra_streamlit_components as stx
 
 # --- PAGE CONFIG ---
 st.set_page_config(
@@ -14,8 +15,59 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- CSS STYLING GLOBAL & NAVBAR HTML ---
-st.markdown("""
+# =========================================================
+# 1. DATABASE & COOKIE CHECKER (MET LAAD-CIRKEL)
+# =========================================================
+cookie_manager = stx.CookieManager()
+
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+if 'supabase_client' not in st.session_state:
+    try:
+        st.session_state.supabase_client = init_connection()
+    except Exception as e:
+        pass
+
+supabase = st.session_state.supabase_client
+
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
+# Lees de cookies uit je browser
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+# Als je nog niet in het geheugen zit, maar wel een cookie hebt: Inloggen!
+if st.session_state.user is None and acc_token and ref_token:
+    with st.spinner("Laster inn konto... ⏳"): 
+        time.sleep(0.5) 
+        try:
+            session = supabase.auth.set_session(acc_token, ref_token)
+            st.session_state.user = session.user
+            
+            # Bedrijfsnaam ophalen voor de navbar
+            prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
+            if prof_res.data:
+                st.session_state.company_name = prof_res.data[0]["company_name"]
+        except Exception:
+            pass
+
+# =========================================================
+# 2. BEPAAL DE TEKST VOOR DE NAVBAR (MET ICOONTJE)
+# =========================================================
+if st.session_state.user is not None and 'company_name' in st.session_state:
+    icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
+    knop_tekst = f"{icoon}{st.session_state.company_name}"
+else:
+    knop_tekst = "KUNDEPORTAL"
+
+# =========================================================
+# 3. CSS STYLING GLOBAL & NAVBAR HTML (Jou eigen design)
+# =========================================================
+html_code = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
@@ -36,7 +88,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
 .cta-btn { background-color: #894b9d; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
 .cta-btn:hover { background-color: #723e83; }
-.cta-btn-outline { background-color: transparent; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+.cta-btn-outline { background-color: transparent; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d; cursor: pointer; transition: all 0.2s; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis; }
 .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
 .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
 .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
@@ -62,28 +114,12 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
     <div class="nav-links"><a href="/?reset=true" target="_self"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
     <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/?reset=true" target="_self" class="cta-btn">TA KONTAKT</a></div>
 </div>
-""", unsafe_allow_html=True)
+"""
 
-# --- SUPABASE CONNECTIE ---
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
+# VERVANG EN TEKEN DE DYNAMISCHE NAVBAR
+aangepaste_html = html_code.replace(">KUNDEPORTAL<", f">{knop_tekst}<")
+st.markdown(aangepaste_html, unsafe_allow_html=True)
 
-if 'supabase_client' not in st.session_state:
-    try:
-        st.session_state.supabase_client = init_connection()
-    except Exception as e:
-        st.error("⚠️ Database connection failed.")
-
-supabase = st.session_state.supabase_client
-
-# --- CHECK LIVE LOGIN STATUS ---
-current_session = supabase.auth.get_session()
-if current_session:
-    st.session_state.user = current_session.user
-else:
-    st.session_state.user = None
 
 current_user_id = st.session_state.user.id if st.session_state.user else "guest"
 
