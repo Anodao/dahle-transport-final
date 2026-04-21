@@ -126,8 +126,7 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = "KUNDEPORTAL"
 
-# Zoek het woord KUNDEPORTAL en vervang het met de bedrijfsnaam (als je bent ingelogd)
 aangepaste_html = html_code.replace(">KUNDEPORTAL<", f">{knop_tekst}<")
-
-# Teken de pagina
 st.markdown(aangepaste_html, unsafe_allow_html=True)
+
+
