@@ -193,8 +193,6 @@ if "reset" in st.query_params:
     st.rerun()
 
 # --- ROUTING API FUNCTIES ---
-HQ_COORDS = (63.4305, 10.3951)
-
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
     if len(address_string) < 5: return None
@@ -220,7 +218,7 @@ def get_route_data(coord1, coord2):
     return None, None
 
 # =========================================================
-# PRIJS CALCULATIE LOGICA
+# PRIJS CALCULATIE LOGICA (HERZIEN: DIRECT VAN A NAAR B)
 # =========================================================
 def get_live_price():
     total_price = 0
@@ -269,11 +267,11 @@ def get_live_price():
         del_coords = get_coordinates(delivery_string)
         
         if pick_coords and del_coords:
-            dist_hq_pick, _ = get_route_data(HQ_COORDS, pick_coords)
+            # HIER IS DE FIX: BEREKEN ALLEEN DE AFSTAND TUSSEN OPHALEN EN AFLEVEREN
             dist_pick_del, _ = get_route_data(pick_coords, del_coords)
             
-            if dist_hq_pick is not None and dist_pick_del is not None:
-                total_km = dist_hq_pick + dist_pick_del
+            if dist_pick_del is not None:
+                total_km = dist_pick_del
                 price_per_km = 12 
                 transport_cost = total_km * price_per_km
                 total_price += transport_cost
