@@ -117,21 +117,24 @@ if st.session_state.user is None:
             
             status_bericht = st.empty()
             
-            if submitted:
+if submitted:
                 if login_email and login_pass:
-                    status_bericht.info("Bezig met inloggen... ⏳")
-                    try:
-                        auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_pass})
-                        st.session_state.user = auth_response.user
-                        cookie_manager.set('dahle_acc', auth_response.session.access_token, key="set_a")
-                        cookie_manager.set('dahle_ref', auth_response.session.refresh_token, key="set_r")
-                        status_bericht.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
-                        time.sleep(1.5) 
-                        st.rerun()
-                    except Exception as e:
-                        status_bericht.error("❌ Incorrect email or password.")
+                    
+                    # --- DE LAADCIRKEL IS HIER TERUG ---
+                    with st.spinner("Bezig met inloggen... ⏳"):
+                        try:
+                            auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_pass})
+                            st.session_state.user = auth_response.user
+                            cookie_manager.set('dahle_acc', auth_response.session.access_token, key="set_a")
+                            cookie_manager.set('dahle_ref', auth_response.session.refresh_token, key="set_r")
+                            
+                            st.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
+                            time.sleep(1.5) 
+                            st.rerun()
+                        except Exception as e:
+                            st.error("❌ Incorrect email or password.")
                 else:
-                    status_bericht.warning("⚠️ Please fill in both fields.")
+                    st.warning("⚠️ Please fill in both fields.")
 
         with tab_register:
             st.write("")
