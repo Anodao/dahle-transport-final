@@ -1,5 +1,52 @@
 import streamlit as st
+from supabase import create_client
+import extra_streamlit_components as stx
 
+# =========================================================
+# 1. DATABASE & COOKIE CHECKER (Laat Home.py je herinneren)
+# =========================================================
+cookie_manager = stx.CookieManager()
+
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+if 'supabase_client' not in st.session_state:
+    try:
+        st.session_state.supabase_client = init_connection()
+    except:
+        pass # Geen paniek als het op de homepagina even niet lukt
+
+supabase = st.session_state.supabase_client
+
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
+# Lees de cookies uit je browser
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+# Als je nog niet in het geheugen zit, maar wel een cookie hebt: Inloggen!
+if st.session_state.user is None and acc_token and ref_token:
+    try:
+        session = supabase.auth.set_session(acc_token, ref_token)
+        st.session_state.user = session.user
+        
+        # Omdat we op Home zijn, moeten we ook even je bedrijfsnaam uit Supabase trekken
+        prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
+        if prof_res.data:
+            st.session_state.company_name = prof_res.data[0]["company_name"]
+    except Exception:
+        pass
+
+# =========================================================
+# 2. BEPAAL DE TEKST VOOR DE NAVBAR
+# =========================================================
+if st.session_state.user is not None and 'company_name' in st.session_state:
+    knop_tekst = st.session_state.company_name
+else:
+    knop_tekst = "KUNDEPORTAL"
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
@@ -80,8 +127,8 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = "KUNDEPORTAL"
 
-# 2. Zoek het woord KUNDEPORTAL in jouw code en vervang het door de nieuwe tekst
+# Zoek het woord KUNDEPORTAL en vervang het met de bedrijfsnaam (als je bent ingelogd)
 aangepaste_html = html_code.replace(">KUNDEPORTAL<", f">{knop_tekst}<")
 
-# 3. Teken de pagina
+# Teken de pagina
 st.markdown(aangepaste_html, unsafe_allow_html=True)
