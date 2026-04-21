@@ -6,7 +6,7 @@ import extra_streamlit_components as stx
 
 st.set_page_config(page_title="Dahle Transport - Customer Portal", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
-# 1. START COOKIE MANAGER
+# 1. START COOKIE MANAGER (De nieuwe, stabiele versie!)
 cookie_manager = stx.CookieManager()
 
 # 2. SUPABASE CONNECTIE
@@ -36,6 +36,7 @@ ref_token = cookie_manager.get('dahle_ref')
 
 if st.session_state.user is None and acc_token and ref_token:
     with st.spinner("Laster inn konto... ⏳"):
+        time.sleep(0.5)
         try:
             session = supabase.auth.set_session(acc_token, ref_token)
             st.session_state.user = session.user
@@ -117,24 +118,21 @@ if st.session_state.user is None:
             
             status_bericht = st.empty()
             
-if submitted:
+            if submitted:
                 if login_email and login_pass:
-                    
-                    # --- DE LAADCIRKEL IS HIER TERUG ---
                     with st.spinner("Bezig met inloggen... ⏳"):
                         try:
                             auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_pass})
                             st.session_state.user = auth_response.user
                             cookie_manager.set('dahle_acc', auth_response.session.access_token, key="set_a")
                             cookie_manager.set('dahle_ref', auth_response.session.refresh_token, key="set_r")
-                            
-                            st.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
+                            status_bericht.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
                             time.sleep(1.5) 
                             st.rerun()
                         except Exception as e:
-                            st.error("❌ Incorrect email or password.")
+                            status_bericht.error("❌ Incorrect email or password.")
                 else:
-                    st.warning("⚠️ Please fill in both fields.")
+                    status_bericht.warning("⚠️ Please fill in both fields.")
 
         with tab_register:
             st.write("")
@@ -328,7 +326,7 @@ else:
                     try:
                         supabase.table("profiles").update(update_data).eq("id", user_id).execute()
                         st.success("✅ Profile updated successfully!")
-                        st.session_state.company_name = upd_company # Update ook direct het geheugen voor de navbar
+                        st.session_state.company_name = upd_company
                         time.sleep(1.5)
                         st.rerun() 
                     except Exception as e:
