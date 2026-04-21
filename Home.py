@@ -74,4 +74,14 @@ div[class^="viewerBadge"] { display: none !important; }
 <div class="hero-right"></div>
 </div>"""
 
-st.markdown(html_code, unsafe_allow_html=True)
+# 1. Bepaal wat er op de knop moet staan
+if st.session_state.get('user') is not None and 'company_name' in st.session_state:
+    knop_tekst = st.session_state.company_name
+else:
+    knop_tekst = "KUNDEPORTAL"
+
+# 2. Zoek het woord KUNDEPORTAL in jouw code en vervang het door de nieuwe tekst
+aangepaste_html = html_code.replace(">KUNDEPORTAL<", f">{knop_tekst}<")
+
+# 3. Teken de pagina
+st.markdown(aangepaste_html, unsafe_allow_html=True)
