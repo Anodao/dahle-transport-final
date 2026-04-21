@@ -178,6 +178,7 @@ else:
         profile = {}
 
     company_name = profile.get("company_name", "Valued Customer")
+    st.session_state.company_name = company_name
     contact_name = profile.get("contact_name", "")
     phone_nr = profile.get("phone", "")
     email_addr = st.session_state.user.email
