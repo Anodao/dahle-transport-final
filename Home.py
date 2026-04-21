@@ -27,14 +27,18 @@ supabase = st.session_state.supabase_client
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-# Lees de cookies uit je browser
+# 3. CHECK COOKIES (MET LAAD-CIRKEL)
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
-# Als je nog niet in het geheugen zit, maar wel een cookie hebt: Inloggen!
 if st.session_state.user is None and acc_token and ref_token:
+    
     # HIER IS DE LAAD-CIRKEL TOEGEVOEGD:
     with st.spinner("Laster inn konto... ⏳"): 
+        
+        import time
+        time.sleep(0.5) # Forceer de animatie om een halve seconde zichtbaar te zijn
+        
         try:
             session = supabase.auth.set_session(acc_token, ref_token)
             st.session_state.user = session.user
