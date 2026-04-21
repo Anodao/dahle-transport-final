@@ -3,42 +3,41 @@ from supabase import create_client
 import extra_streamlit_components as stx
 
 # =========================================================
-# 1. DATABASE & COOKIE CHECKER (Laat Home.py je herinneren)
+# 1. DATABASE & COOKIE CHECKER (MET LAAD-CIRKEL)
 # =========================================================
-cookie_manager = stx.CookieManager()
-
-def init_connection():
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
-    return create_client(url, key)
-
-if 'supabase_client' not in st.session_state:
-    try:
-        st.session_state.supabase_client = init_connection()
-    except:
-        pass # Geen paniek als het op de homepagina even niet lukt
-
-supabase = st.session_state.supabase_client
-
-if 'user' not in st.session_state:
-    st.session_state.user = None
-
 # Lees de cookies uit je browser
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
 # Als je nog niet in het geheugen zit, maar wel een cookie hebt: Inloggen!
 if st.session_state.user is None and acc_token and ref_token:
-    try:
-        session = supabase.auth.set_session(acc_token, ref_token)
-        st.session_state.user = session.user
-        
-        # Omdat we op Home zijn, moeten we ook even je bedrijfsnaam uit Supabase trekken
-        prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
-        if prof_res.data:
-            st.session_state.company_name = prof_res.data[0]["company_name"]
-    except Exception:
-        pass
+    
+    # HIER IS DE LAAD-CIRKEL TOEGEVOEGD:
+    with st.spinner("Laster inn konto... ⏳"): 
+        try:
+            session = supabase.auth.set_session(acc_token, ref_token)
+            st.session_state.user = session.user
+            
+            # Omdat we op Home zijn, trekken we ook even je bedrijfsnaam uit Supabase
+            prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
+            if prof_res.data:
+                st.session_state.company_name = prof_res.data[0]["company_name"]
+        except Exception:
+            pass
+
+# =========================================================
+# 2. BEPAAL DE TEKST VOOR DE NAVBAR (MET ICOONTJE)
+# =========================================================
+if st.session_state.user is not None and 'company_name' in st.session_state:
+    
+    # Dit is de wiskundige code (SVG) voor exact dat poppetje met het slotje!
+    icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
+    
+    # Plak het icoon en de bedrijfsnaam aan elkaar
+    knop_tekst = f"{icoon}{st.session_state.company_name}"
+    
+else:
+    knop_tekst = "KUNDEPORTAL"
 
 # =========================================================
 # 2. BEPAAL DE TEKST VOOR DE NAVBAR
