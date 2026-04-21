@@ -1,133 +1,332 @@
 import streamlit as st
+import time
+from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 
-# =========================================================
-# 1. DATABASE & COOKIE CHECKER (MET LAAD-CIRKEL)
-# =========================================================
-# Lees de cookies uit je browser
+st.set_page_config(page_title="Dahle Transport - Customer Portal", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
+
+# 1. START COOKIE MANAGER
+cookie_manager = stx.CookieManager()
+
+# 2. SUPABASE CONNECTIE
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+if 'supabase_client' not in st.session_state:
+    try:
+        st.session_state.supabase_client = init_connection()
+    except Exception as e:
+        st.error("⚠️ Database connection failed.")
+        st.stop()
+
+supabase = st.session_state.supabase_client
+
+if 'active_tab' not in st.session_state:
+    st.session_state.active_tab = "My Shipments"
+
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
+# 3. CHECK COOKIES MET LAADCIRKEL
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
-# Als je nog niet in het geheugen zit, maar wel een cookie hebt: Inloggen!
 if st.session_state.user is None and acc_token and ref_token:
-    
-    # HIER IS DE LAAD-CIRKEL TOEGEVOEGD:
-    with st.spinner("Laster inn konto... ⏳"): 
+    with st.spinner("Laster inn konto... ⏳"):
         try:
             session = supabase.auth.set_session(acc_token, ref_token)
             st.session_state.user = session.user
             
-            # Omdat we op Home zijn, trekken we ook even je bedrijfsnaam uit Supabase
             prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
             if prof_res.data:
                 st.session_state.company_name = prof_res.data[0]["company_name"]
         except Exception:
             pass
 
-# =========================================================
-# 2. BEPAAL DE TEKST VOOR DE NAVBAR (MET ICOONTJE)
-# =========================================================
+# 4. BEPAAL TEKST VOOR NAVBAR (MET ICOONTJE)
 if st.session_state.user is not None and 'company_name' in st.session_state:
-    
-    # Dit is de wiskundige code (SVG) voor exact dat poppetje met het slotje!
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
-    
-    # Plak het icoon en de bedrijfsnaam aan elkaar
     knop_tekst = f"{icoon}{st.session_state.company_name}"
+else:
+    knop_tekst = "KUNDEPORTAL"
+
+# 5. CSS & NAVBAR (Dynamisch)
+html_navbar = f"""
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+    html, body, [class*="css"] {{ font-family: 'Montserrat', sans-serif; }}
+    [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] {{ display: none !important; }}
+    .stApp {{ background-color: #111111 !important; }}
+    .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li {{ color: #ffffff !important; }}
+    div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] {{ color: #ffffff !important; }}
+    .block-container {{ padding-top: 130px !important; max-width: 900px; }}
+    .navbar {{
+        position: fixed; top: 0; left: 0; width: 100%; height: 90px;
+        background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; 
+        display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+        padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+    }}
+    .nav-logo img {{ height: 48px; width: auto; transition: transform 0.2s; }}
+    .nav-links {{ display: flex; gap: 28px; font-size: 15px; font-weight: 500; justify-content: center; }}
+    .nav-links a, .nav-links span {{ text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}}
+    .nav-links span:hover {{ color: #894b9d !important; }}
+    .nav-cta {{ display: flex; justify-content: flex-end; gap: 15px; }}
+    .cta-btn {{ background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; white-space: nowrap;}}
+    .cta-btn-outline {{ background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis;}}
+    div[data-testid="stVerticalBlockBorderWrapper"] {{ background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 12px !important; padding: 20px !important; }}
+    div[data-baseweb="input"] > div, div[data-baseweb="textarea"] {{ background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }}
+    div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea {{ color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }}
+    label[data-testid="stWidgetLabel"] p {{ color: #cccccc !important; font-weight: 600; font-size: 14px !important;}}
+    div.stButton > button[kind="primary"] {{ background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; }}
+    div.stButton > button[kind="primary"]:hover {{ transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }}
+    div.stButton > button[kind="secondary"] {{ background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; transition: all 0.3s ease !important; }}
+    div.stButton > button[kind="secondary"]:hover {{ background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}}
+    div[data-testid="stExpander"] {{ background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }}
+    div[data-testid="stExpander"] p {{ color: #ffffff !important; }}
+    div[data-testid="stExpanderDetails"] {{ background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }}
+    </style>
+    <div class="navbar">
+        <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+        <div class="nav-links"><a href="/"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
+        <div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a><a href="/" target="_self" class="cta-btn">TA KONTAKT</a></div>
+    </div>
+"""
+st.markdown(html_navbar, unsafe_allow_html=True)
+
+
+# =========================================================
+# LOGIC: ALS DE GEBRUIKER NIET IS INGELOGD
+# =========================================================
+if st.session_state.user is None:
+    st.markdown("<h2 style='text-align: center; color: #b070c6;'>Customer Portal</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>Log in to manage your shipments and details.</p>", unsafe_allow_html=True)
+
+    with st.container(border=True):
+        tab_login, tab_register = st.tabs(["🔒 Log In", "📝 Create Account"])
+
+        with tab_login:
+            st.write("")
+            with st.form("login_form", clear_on_submit=False):
+                login_email = st.text_input("Email Address", key="log_email")
+                login_pass = st.text_input("Password", type="password", key="log_pass")
+                st.write("")
+                submitted = st.form_submit_button("Log In", type="primary", use_container_width=True)
+            
+            status_bericht = st.empty()
+            
+            if submitted:
+                if login_email and login_pass:
+                    status_bericht.info("Bezig met inloggen... ⏳")
+                    try:
+                        auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_pass})
+                        st.session_state.user = auth_response.user
+                        cookie_manager.set('dahle_acc', auth_response.session.access_token, key="set_a")
+                        cookie_manager.set('dahle_ref', auth_response.session.refresh_token, key="set_r")
+                        status_bericht.success("✅ Succesvol ingelogd! Je wordt doorgestuurd...")
+                        time.sleep(1.5) 
+                        st.rerun()
+                    except Exception as e:
+                        status_bericht.error("❌ Incorrect email or password.")
+                else:
+                    status_bericht.warning("⚠️ Please fill in both fields.")
+
+        with tab_register:
+            st.write("")
+            reg_company = st.text_input("Company Name *", key="reg_comp")
+            c_fn, c_ln = st.columns(2)
+            with c_fn: reg_fname = st.text_input("First Name *", key="reg_fn")
+            with c_ln: reg_lname = st.text_input("Last Name *", key="reg_ln")
+            reg_phone = st.text_input("Phone Number", key="reg_phone")
+            st.write("---")
+            reg_email = st.text_input("Email Address (This will be your login) *", key="reg_email")
+            reg_pass = st.text_input("Choose a Password *", type="password", key="reg_pass")
+            
+            st.write("")
+            if st.button("Create Account", type="primary", use_container_width=True):
+                if reg_email and reg_pass and reg_company and reg_fname and reg_lname:
+                    with st.spinner("Account wordt aangemaakt... ⏳"):
+                        try:
+                            auth_res = supabase.auth.sign_up({"email": reg_email, "password": reg_pass})
+                            new_user_id = auth_res.user.id
+                            full_name = f"{reg_fname} {reg_lname}"
+                            profile_data = {
+                                "id": new_user_id,
+                                "company_name": reg_company,
+                                "contact_name": full_name,
+                                "phone": reg_phone
+                            }
+                            supabase.table("profiles").insert(profile_data).execute()
+                            st.success("✅ Account created successfully! You can now log in via the 'Log In' tab.")
+                        except Exception as e:
+                            st.error(f"❌ An error occurred or email already exists.")
+                else:
+                    st.warning("⚠️ Please fill in all mandatory fields (*).")
+
+# =========================================================
+# LOGIC: ALS DE GEBRUIKER SUCCESVOL IS INGELOGD
+# =========================================================
+else:
+    user_id = st.session_state.user.id
     
-else:
-    knop_tekst = "KUNDEPORTAL"
+    try:
+        prof_res = supabase.table("profiles").select("*").eq("id", user_id).execute()
+        profile = prof_res.data[0] if prof_res.data else {}
+        
+        # Zorg dat de naam direct beschikbaar is voor de dynamische navbar
+        st.session_state.company_name = profile.get("company_name", "Valued Customer")
+    except Exception as e:
+        profile = {}
 
-# =========================================================
-# 2. BEPAAL DE TEKST VOOR DE NAVBAR
-# =========================================================
-if st.session_state.user is not None and 'company_name' in st.session_state:
-    knop_tekst = st.session_state.company_name
-else:
-    knop_tekst = "KUNDEPORTAL"
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
+    company_name = profile.get("company_name", "Valued Customer")
+    contact_name = profile.get("contact_name", "")
+    phone_nr = profile.get("phone", "")
+    email_addr = st.session_state.user.email
+    
+    address = profile.get("address", "")
+    zip_code = profile.get("zip_code", "")
+    city = profile.get("city", "")
+    del_address = profile.get("del_address", "")
+    del_zip = profile.get("del_zip", "")
+    del_city = profile.get("del_city", "")
 
-# --- CSS STYLING & HTML ---
-# Alles staat strak tegen de kantlaan. Geen spaties vooraan toevoegen!
-html_code = """<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
-html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
-.stApp { background-color: #1e1e20 !important; }
-.block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
+    try:
+        orders_res = supabase.table("orders").select("*").eq("user_id", user_id).order("id", desc=True).execute()
+        user_orders = orders_res.data
+    except Exception as e:
+        user_orders = []
 
-/* VERBERG STREAMLIT BRANDING (Inclusief de kat en het bootje!) */
-[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
-[data-testid="stToolbar"] { display: none !important; }
-footer { display: none !important; }
-div[class^="viewerBadge"] { display: none !important; }
-#viewerBadge_container__1jcJt { display: none !important; }
+    total_orders = len(user_orders)
+    pending_orders = sum(1 for o in user_orders if o['status'] == 'New')
+    processed_orders = sum(1 for o in user_orders if o['status'] in ['Processed', 'Delivered'])
 
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
-.nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
-.nav-logo a:hover img { transform: scale(1.05); } 
-.nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center;}
-.nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
-.nav-links span:hover { color: #894b9d !important; }
-.nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
-.cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s;}
-.cta-btn-purple:hover { background-color: #723e83 !important; }
-.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; }
+    c_head1, c_head2 = st.columns([3, 1])
+    with c_head1:
+        st.markdown(f"<h2 style='color: #b070c6; margin-bottom: 0px;'>Welcome back, {company_name}!</h2>", unsafe_allow_html=True)
+        st.markdown(f"<p style='color: #888; font-size: 14px;'>Logged in as: {email_addr}</p>", unsafe_allow_html=True)
+    with c_head2:
+        st.write("")
+        if st.button("🚪 Log Out", type="secondary", use_container_width=True):
+            cookie_manager.delete('dahle_acc', key="del_a")
+            cookie_manager.delete('dahle_ref', key="del_r")
+            supabase.auth.sign_out()
+            st.session_state.user = None
+            if 'company_name' in st.session_state:
+                del st.session_state['company_name']
+            st.rerun()
+            
+    st.write("---")
+    
+    st.markdown("### 📦 Your Shipment History")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Shipments", total_orders)
+    m2.metric("Pending Approval", pending_orders)
+    m3.metric("Processed", processed_orders)
+    st.write("---")
 
-.hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
-.hero-left { flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
-.hero-title { font-family: 'Caveat', cursive; font-size: 80px; color: #ffffff; margin: 0 0 20px 0; letter-spacing: 2px; transform: rotate(-2deg); }
-.hero-subtitle { font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 40px; }
-.opening-box { background-color: #ffffff; border-radius: 8px; padding: 25px 35px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 40px; }
-.opening-box p { color: #111111 !important; margin: 5px 0; font-size: 15px; }
-.opening-box strong { color: #111111; font-weight: 700; }
-.opening-box i { color: #666; font-size: 13px; }
-.circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center; margin-top: 20px; cursor: pointer; color: white; text-decoration: none; transition: 0.3s; }
-.circle-btn:hover { background-color: #ffffff; color: #1a1c1e; }
-.hero-right { flex: 1.2; background-image: url('https://cloud-1de12d.becdn.net/media/iW=1200&iH=630/c9ca77aaff92037d097c5d1558e89fa1.jpg'); background-size: cover; background-position: center left; clip-path: ellipse(90% 100% at 100% 50%); }
+    col_menu1, col_menu2, col_menu3 = st.columns(3)
+    with col_menu1:
+        if st.button("📦 My Shipments", type="primary" if st.session_state.active_tab == "My Shipments" else "secondary", use_container_width=True):
+            st.session_state.active_tab = "My Shipments"
+            st.rerun()
+    with col_menu2:
+        if st.button("➕ New Order", type="secondary", use_container_width=True):
+            st.switch_page("pages/Order.py")
+    with col_menu3:
+        if st.button("⚙️ Profile Settings", type="primary" if st.session_state.active_tab == "Profile Settings" else "secondary", use_container_width=True):
+            st.session_state.active_tab = "Profile Settings"
+            st.rerun()
+    st.write("") 
 
-@media (max-width: 900px) { .hero-container { flex-direction: column; } .hero-right { min-height: 400px; clip-path: ellipse(100% 90% at 50% 100%); } .hero-left { padding: 10% 5%; align-items: center; text-align: center; } .hero-title { font-size: 60px; } }
-</style>
+    if st.session_state.active_tab == "My Shipments":
+        if not user_orders:
+            st.info("📊 You haven't placed any orders with this account yet. Go to 'New Order' to get started!")
+        else:
+            for o in user_orders:
+                status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
+                with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} (Status: {o['status']})"):
+                    st.markdown("<br>", unsafe_allow_html=True)
+                    c_det1, c_det2 = st.columns(2)
+                    with c_det1:
+                        st.markdown("#### 📤 Pickup Location")
+                        st.write(f"**Adres:** {o.get('pickup_address', '-')}")
+                        st.write(f"**Postcode:** {o.get('pickup_zip', '-')}")
+                        st.write(f"**Stad:** {o.get('pickup_city', '-')}")
+                        st.write("")
+                        st.markdown("#### 📥 Delivery Destination")
+                        st.write(f"**Adres:** {o.get('delivery_address', '-')}")
+                        st.write(f"**Postcode:** {o.get('delivery_zip', '-')}")
+                        st.write(f"**Stad:** {o.get('delivery_city', '-')}")
+                    with c_det2:
+                        st.markdown("#### 🚛 Services Requested")
+                        st.write(f"{o.get('types', '-')}")
+                        st.write("")
+                        st.markdown("#### 📝 Additional Info")
+                        st.write(f"{o.get('info', '-')}")
+                    
+                    if o['status'] == 'New':
+                        st.write("---")
+                        c_space1, c_cancel, c_space2 = st.columns([1, 2, 1])
+                        with c_cancel:
+                            if st.button("❌ Cancel This Order", key=f"cancel_{o['id']}", type="secondary", use_container_width=True):
+                                try:
+                                    supabase.table("orders").update({"status": "Cancelled"}).eq("id", o['id']).execute()
+                                    st.success("✅ Your order has been cancelled successfully.")
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error("⚠️ Failed to cancel order.")
+                        
+                    st.markdown("<br>", unsafe_allow_html=True)
 
-<div class="navbar">
-<div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
-<div class="nav-links"><a href="/" target="_self"><span>Hjem</span></a><span>Om oss</span><span>Tjenester</span><span>Galleri</span><span>Kontakt</span></div>
-<div class="nav-cta"><a href="/Login" target="_self" class="cta-btn-outline">KUNDEPORTAL</a><a href="/" target="_self" class="cta-btn-purple">TA KONTAKT</a></div>
-</div>
-
-<div class="hero-container">
-<div class="hero-left">
-<h1 class="hero-title">D ÅRNE SÆ!</h1>
-<p class="hero-subtitle">Rask og sikker transport, uansett distanse.</p>
-<div class="opening-box">
-<p><strong>Åpningstider:</strong></p>
-<p>Mandag-fredag: 07:00-16:00</p>
-<p><i>Åpningstidene kan avvike ved spesielle høytider.</i></p>
-</div>
-
-<div style="display: flex; gap: 15px;">
-<a href="/Order" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">BESTILL</a>
-<a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">TA KONTAKT</a>
-</div>
-
-<a href="#more" class="circle-btn">
-<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-</a>
-</div>
-<div class="hero-right"></div>
-</div>"""
-
-# 1. Bepaal wat er op de knop moet staan
-if st.session_state.get('user') is not None and 'company_name' in st.session_state:
-    knop_tekst = st.session_state.company_name
-else:
-    knop_tekst = "KUNDEPORTAL"
-
-# Zoek het woord KUNDEPORTAL en vervang het met de bedrijfsnaam (als je bent ingelogd)
-aangepaste_html = html_code.replace(">KUNDEPORTAL<", f">{knop_tekst}<")
-
-# Teken de pagina
-st.markdown(aangepaste_html, unsafe_allow_html=True)
+    elif st.session_state.active_tab == "Profile Settings":
+        st.markdown("### ⚙️ Manage Your Profile")
+        st.markdown("<p style='color:#aaaaaa;'>Update your company and contact information here.</p>", unsafe_allow_html=True)
+        
+        with st.container(border=True):
+            st.markdown("#### General Info")
+            upd_company = st.text_input("Company Name", value=company_name, key="upd_comp")
+            upd_contact = st.text_input("Contact Person", value=contact_name, key="upd_cont")
+            upd_phone = st.text_input("Phone Number", value=phone_nr, key="upd_phone")
+            st.text_input("Email Address (Login ID)", value=email_addr, disabled=True, key="upd_email")
+            
+            st.write("---")
+            st.markdown("#### Default Pickup Location 📤")
+            st.markdown("<p style='color:#888; font-size:13px;'>We use this to speed up your orders.</p>", unsafe_allow_html=True)
+            upd_address = st.text_input("Street Address", value=address, key="upd_addr")
+            col_zip, col_city = st.columns(2)
+            with col_zip: upd_zip = st.text_input("Zip Code", value=zip_code, key="upd_zip")
+            with col_city: upd_city = st.text_input("City", value=city, key="upd_city")
+            
+            st.write("---")
+            st.markdown("#### Default Delivery Destination 📥")
+            st.markdown("<p style='color:#888; font-size:13px;'>We use this to speed up your orders.</p>", unsafe_allow_html=True)
+            upd_del_address = st.text_input("Street Address", value=del_address, key="upd_del_addr")
+            col_d_zip, col_d_city = st.columns(2)
+            with col_d_zip: upd_del_zip = st.text_input("Zip Code", value=del_zip, key="upd_del_zip")
+            with col_d_city: upd_del_city = st.text_input("City", value=del_city, key="upd_del_city")
+            
+            st.write("")
+            if st.button("💾 Save Changes", type="primary"):
+                update_data = {
+                    "company_name": upd_company,
+                    "contact_name": upd_contact,
+                    "phone": upd_phone,
+                    "address": upd_address,
+                    "zip_code": upd_zip,
+                    "city": upd_city,
+                    "del_address": upd_del_address,
+                    "del_zip": upd_del_zip,
+                    "del_city": upd_del_city
+                }
+                with st.spinner("Profiel wordt bijgewerkt... ⏳"):
+                    try:
+                        supabase.table("profiles").update(update_data).eq("id", user_id).execute()
+                        st.success("✅ Profile updated successfully!")
+                        st.session_state.company_name = upd_company # Update ook direct het geheugen voor de navbar
+                        time.sleep(1.5)
+                        st.rerun() 
+                    except Exception as e:
+                        st.error(f"⚠️ Could not update profile: {e}")
