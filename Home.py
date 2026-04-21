@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client
 import extra_streamlit_components as stx
+import time
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
@@ -8,7 +9,6 @@ st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout
 # =========================================================
 # 1. DATABASE & COOKIE CHECKER (MET LAAD-CIRKEL)
 # =========================================================
-# Dit voorkomt de NameError!
 cookie_manager = stx.CookieManager()
 
 def init_connection():
@@ -27,18 +27,15 @@ supabase = st.session_state.supabase_client
 if 'user' not in st.session_state:
     st.session_state.user = None
 
-# 3. CHECK COOKIES (MET LAAD-CIRKEL)
+# Lees de cookies uit je browser
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
+# Als je nog niet in het geheugen zit, maar wel een cookie hebt: Inloggen!
 if st.session_state.user is None and acc_token and ref_token:
-    
     # HIER IS DE LAAD-CIRKEL TOEGEVOEGD:
     with st.spinner("Laster inn konto... ⏳"): 
-        
-        import time
-        time.sleep(0.5) # Forceer de animatie om een halve seconde zichtbaar te zijn
-        
+        time.sleep(0.5) # Zorgt ervoor dat je de animatie even ziet
         try:
             session = supabase.auth.set_session(acc_token, ref_token)
             st.session_state.user = session.user
