@@ -8,7 +8,7 @@ import extra_streamlit_components as stx
 st.set_page_config(page_title="Dahle Transport - Customer Portal", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (Met Zijbalk & Dropdown fixes!)
+# 0. DIRECTE CSS INJECTIE (Met het glazen schild gefixt!)
 # =========================================================
 st.markdown("""
 <style>
@@ -19,15 +19,16 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #ffffff !important; }
 div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 
-/* FIX 1: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR (Maak header doorzichtig en leg erbovenop) */
-header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; }
+/* FIX: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR + ONZICHTBAAR SCHILD DOORLAATBAAR MAKEN */
+header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; pointer-events: none !important; }
+[data-testid="collapsedControl"] { pointer-events: auto !important; background-color: #ffffff !important; border-radius: 50% !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
 /* NAVBAR CSS */
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-.nav-logo { margin-left: 40px; } /* Ruimte gemaakt voor het Streamlit pijltje */
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); pointer-events: auto !important; }
+.nav-logo { margin-left: 40px; }
 .nav-logo img { height: 48px; width: auto; transition: transform 0.2s; }
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; }
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
@@ -37,7 +38,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis;}
 
-/* FIX 2: DROPDOWN MENU (Padding-bottom toegevoegd als 'onzichtbare brug') */
+/* DROPDOWN MENU CSS */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -79,7 +80,7 @@ if "lang" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
-lang = st.session_state.language
+lang = st.session_state.language 
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
 current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
@@ -203,7 +204,7 @@ if 'user' not in st.session_state:
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
-if st.session_state.user is None and acc_token and ref_token:
+if st.session_state.get('user') is None and acc_token and ref_token:
     with st.spinner(t['loading_acc']):
         time.sleep(0.5)
         try:
@@ -219,7 +220,7 @@ if st.session_state.user is None and acc_token and ref_token:
 # =========================================================
 # 4. BEPAAL TEKST VOOR NAVBAR
 # =========================================================
-if st.session_state.user is not None and 'company_name' in st.session_state:
+if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
     knop_tekst = f"{icoon}{st.session_state.company_name}"
 else:
@@ -256,7 +257,7 @@ st.markdown(html_navbar, unsafe_allow_html=True)
 # =========================================================
 # LOGIC: ALS DE GEBRUIKER NIET IS INGELOGD
 # =========================================================
-if st.session_state.user is None:
+if st.session_state.get('user') is None:
     st.markdown(f"<h2 style='text-align: center; color: #b070c6;'>{t['portal_title']}</h2>", unsafe_allow_html=True)
     st.markdown(f"<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>{t['portal_sub']}</p>", unsafe_allow_html=True)
 
