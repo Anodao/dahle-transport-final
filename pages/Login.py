@@ -4,11 +4,11 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 
-# --- PAGE CONFIG ---
+# --- PAGE CONFIG (Zijbalk standaard ingeklapt) ---
 st.set_page_config(page_title="Dahle Transport - Customer Portal", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (Voorkomt de Flits/FOUC)
+# 0. DIRECTE CSS INJECTIE (Met Zijbalk & Dropdown fixes!)
 # =========================================================
 st.markdown("""
 <style>
@@ -19,13 +19,15 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #ffffff !important; }
 div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 
-[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
+/* FIX 1: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR (Maak header doorzichtig en leg erbovenop) */
+header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
-#viewerBadge_container__1jcJt { display: none !important; }
 
+/* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+.nav-logo { margin-left: 40px; } /* Ruimte gemaakt voor het Streamlit pijltje */
 .nav-logo img { height: 48px; width: auto; transition: transform 0.2s; }
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; }
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
@@ -35,11 +37,11 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis;}
 
-/* DROPDOWN MENU CSS */
-.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
+/* FIX 2: DROPDOWN MENU (Padding-bottom toegevoegd als 'onzichtbare brug') */
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 40px; right: 0; overflow: hidden; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; overflow: hidden; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
@@ -77,13 +79,9 @@ if "lang" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
-lang_displays = {
-    "no": "🇳🇴 Norsk",
-    "en": "🇬🇧 English",
-    "sv": "🇸🇪 Svenska",
-    "da": "🇩🇰 Dansk"
-}
-current_lang_display = lang_displays.get(st.session_state.language, "🇳🇴 Norsk")
+lang = st.session_state.language
+lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
+current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
 
 # =========================================================
@@ -161,7 +159,7 @@ translations = {
         "lbl_email": "E-mailadresse", "lbl_pass": "Adgangskode", "btn_login": "Log ind",
         "msg_logging_in": "Logger ind... ⏳", "msg_login_succ": "✅ Succesfuldt logget ind! Videresender...", "msg_login_fail": "❌ Forkert e-mail eller adgangskode.", "msg_fill_both": "⚠️ Udfyld venligst begge felter.",
         "lbl_comp": "Firmanavn *", "lbl_fn": "Fornavn *", "lbl_ln": "Efternavn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-mail (Dette bliver dit login) *", "lbl_pass_reg": "Vælg adgangskode *", "btn_reg": "Opret konto",
-        "msg_creating": "Opretter konto... ⏳", "msg_reg_succ": "✅ Konto oprettet! Du kan nu logge ind via fanen 'Log ind'.", "msg_reg_fail": "❌ Der opstod en fejl, eller e-mailen findes allerede.", "msg_fill_req": "⚠️ Udfyld venligst alle obligatoriska felter (*).",
+        "msg_creating": "Opretter konto... ⏳", "msg_reg_succ": "✅ Konto oprettet! Du kan nu logge ind via fanen 'Log ind'.", "msg_reg_fail": "❌ Der opstod en fejl, eller e-mailen findes allerede.", "msg_fill_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).",
         "welcome": "Velkommen tilbage", "logged_in_as": "Logget ind som", "btn_logout": "🚪 Log af",
         "hist_title": "📦 Din forsendelseshistorik", "tot_ship": "Samlede forsendelser", "pend_appr": "Afventer godkendelse", "processed": "Behandlet",
         "tab_myship": "📦 Mine forsendelser", "tab_neworder": "➕ Ny bestilling", "tab_prof": "⚙️ Profilindstillinger",
@@ -176,7 +174,7 @@ translations = {
     }
 }
 
-t = translations[st.session_state.language]
+t = translations[lang]
 
 
 # =========================================================
@@ -227,12 +225,11 @@ if st.session_state.user is not None and 'company_name' in st.session_state:
 else:
     knop_tekst = t['nav_portal']
 
-# Let op: Geen spaties aan de linkerkant!
 html_navbar = f"""
 <div class="navbar">
-<div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+<div class="nav-logo"><a href="/?lang={lang}" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
 <div class="nav-links">
-<a href="/" target="_self"><span>{t['nav_home']}</span></a>
+<a href="/?lang={lang}" target="_self"><span>{t['nav_home']}</span></a>
 <span>{t['nav_about']}</span>
 <span>{t['nav_services']}</span>
 <span>{t['nav_gallery']}</span>
@@ -248,8 +245,8 @@ html_navbar = f"""
 <a href="?lang=da" target="_self">🇩🇰 Dansk</a>
 </div>
 </div>
-<a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
-<a href="/" target="_self" class="cta-btn">{t['nav_contact_btn']}</a>
+<a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a>
+<a href="/?lang={lang}" target="_self" class="cta-btn">{t['nav_contact_btn']}</a>
 </div>
 </div>
 """
