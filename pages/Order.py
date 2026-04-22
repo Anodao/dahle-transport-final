@@ -18,9 +18,20 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
 
-/* FIX: ZIJBALK PIJLTJE ZICHTBAAR MAKEN & SCHILD DOORLAATBAAR MAKEN */
+/* FIX: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR & KLIKBAAR BOVENOP DE NAVBAR */
 header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; pointer-events: none !important; }
-header[data-testid="stHeader"] button { pointer-events: auto !important; background-color: #ffffff !important; border-radius: 50% !important; box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important; transform: translate(15px, 15px) !important; }
+[data-testid="collapsedControl"] { 
+    display: flex !important; 
+    visibility: visible !important;
+    pointer-events: auto !important; 
+    background-color: #ffffff !important; 
+    border-radius: 50% !important; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; 
+    position: fixed !important;
+    top: 20px !important;
+    left: 20px !important;
+    z-index: 10000 !important;
+}
 footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
@@ -28,7 +39,7 @@ div[class^="viewerBadge"] { display: none !important; }
 
 /* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); pointer-events: auto !important; }
-.nav-logo { margin-left: 50px; display: flex; justify-content: flex-start; }
+.nav-logo { margin-left: 50px; display: flex; justify-content: flex-start; } /* Ruimte gemaakt voor het pijltje */
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
@@ -297,7 +308,6 @@ html_navbar = f"""
 </div>
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
-
 
 # =========================================================
 # ROUTING & PRIJS LOGICA
