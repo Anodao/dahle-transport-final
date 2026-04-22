@@ -9,21 +9,29 @@ st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout
 cookie_manager = stx.CookieManager()
 
 # =========================================================
-# 1. DE "TELEPORTATIE" TAAL-KNOP (100% Native Streamlit)
+# 1. TAAL LOGICA (Met 4 talen!)
 # =========================================================
 saved_lang = cookie_manager.get('dahle_lang')
 if 'language' not in st.session_state:
     st.session_state.language = saved_lang if saved_lang else "no"
 
-start_index = 0 if st.session_state.language == "no" else 1
-
-gekozen_taal = st.radio("Taal", ["🇳🇴", "🇬🇧"], index=start_index, horizontal=True, label_visibility="collapsed")
-
-nieuwe_taal = "no" if "🇳🇴" in gekozen_taal else "en"
-if nieuwe_taal != st.session_state.language:
-    st.session_state.language = nieuwe_taal
-    cookie_manager.set("dahle_lang", nieuwe_taal, key="set_lang_safe")
+# Update de taal als er op een link in de dropdown is geklikt
+if "lang" in st.query_params:
+    gekozen_taal = st.query_params["lang"]
+    if gekozen_taal in ["no", "en", "sv", "da"]:
+        st.session_state.language = gekozen_taal
+        cookie_manager.set("dahle_lang", gekozen_taal, key="set_lang_safe")
+    st.query_params.clear()
     st.rerun()
+
+# Bepaal hoe de actieve taal op de knop wordt getoond
+lang_displays = {
+    "no": "🇳🇴 Norsk",
+    "en": "🇬🇧 English",
+    "sv": "🇸🇪 Svenska",
+    "da": "🇩🇰 Dansk"
+}
+current_lang_display = lang_displays.get(st.session_state.language, "🇳🇴 Norsk")
 
 # =========================================================
 # 2. DATABASE & AUTHENTICATIE
@@ -61,7 +69,7 @@ if st.session_state.user is None and acc_token and ref_token:
             pass
 
 # =========================================================
-# 3. HET WOORDENBOEK (TRANSLATIONS)
+# 3. HET WOORDENBOEK (4 Talen)
 # =========================================================
 translations = {
     "no": {
@@ -93,10 +101,40 @@ translations = {
         "open_days": "Monday-Friday: 07:00-16:00",
         "open_note": "Opening hours may vary during public holidays.",
         "btn_order": "ORDER NOW"
+    },
+    "sv": {
+        "nav_home": "Hem",
+        "nav_about": "Om oss",
+        "nav_services": "Tjänster",
+        "nav_gallery": "Galleri",
+        "nav_contact": "Kontakt",
+        "nav_portal": "KUNDPORTAL",
+        "nav_contact_btn": "KONTAKTA OSS",
+        "hero_title": "VI LÖSER DET!",
+        "hero_subtitle": "Snabb och säker transport, oavsett avstånd.",
+        "open_title": "Öppettider:",
+        "open_days": "Måndag-fredag: 07:00-16:00",
+        "open_note": "Öppettiderna kan variera under helgdagar.",
+        "btn_order": "BESTÄLL"
+    },
+    "da": {
+        "nav_home": "Hjem",
+        "nav_about": "Om os",
+        "nav_services": "Tjenester",
+        "nav_gallery": "Galleri",
+        "nav_contact": "Kontakt",
+        "nav_portal": "KUNDEPORTAL",
+        "nav_contact_btn": "KONTAKT OS",
+        "hero_title": "VI KLARER DEN!",
+        "hero_subtitle": "Hurtig og sikker transport, uanset afstand.",
+        "open_title": "Åbningstider:",
+        "open_days": "Mandag-fredag: 07:00-16:00",
+        "open_note": "Åbningstiderne kan afvige på helligdage.",
+        "btn_order": "BESTIL"
     }
 }
 
-t = translations[st.session_state.language]
+t = translations.get(st.session_state.language, translations["no"])
 
 # =========================================================
 # 4. BEPAAL TEKST VOOR NAVBAR
@@ -108,7 +146,7 @@ else:
     knop_tekst = t['nav_portal']
 
 # =========================================================
-# 5. DYNAMISCHE HTML & CSS (Zonder spaties = geen craches meer)
+# 5. DYNAMISCHE HTML & CSS (Met Dropdown Menu!)
 # =========================================================
 html_code = f"""
 <style>
@@ -124,22 +162,6 @@ footer {{ display: none !important; }}
 div[class^="viewerBadge"] {{ display: none !important; }}
 #viewerBadge_container__1jcJt {{ display: none !important; }}
 
-/* === DE GEÜPDATETE TELEPORTATIE CSS === */
-div[data-testid="stRadio"]:first-of-type {{
-position: fixed !important;
-top: 24px !important;
-right: 430px !important;
-z-index: 1000 !important;
-background-color: #f8f9fa !important;
-padding: 0px 10px !important;
-border-radius: 20px !important;
-border: 1px solid #eaeaea !important;
-box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
-}}
-div[data-testid="stRadio"]:first-of-type div[role="radio"] div:first-child {{ display: none !important; }}
-div[data-testid="stRadio"]:first-of-type p {{ font-size: 24px !important; margin: 0 !important; padding: 0 5px !important; cursor: pointer !important; transition: transform 0.2s !important; }}
-div[data-testid="stRadio"]:first-of-type p:hover {{ transform: scale(1.1) !important; }}
-
 .navbar {{ position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
 .nav-logo a {{ display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }}
 .nav-logo img {{ height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }}
@@ -151,6 +173,15 @@ div[data-testid="stRadio"]:first-of-type p:hover {{ transform: scale(1.1) !impor
 .cta-btn-purple {{ background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}}
 .cta-btn-purple:hover {{ background-color: #723e83 !important; }}
 .cta-btn-outline {{ background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}}
+
+/* DROPDOWN MENU CSS */
+.lang-dropdown {{ position: relative; display: inline-block; margin-right: 10px; }}
+.lang-dropbtn {{ background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }}
+.lang-dropbtn:hover {{ background-color: #eaeaea; }}
+.lang-dropdown-content {{ display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 40px; right: 0; overflow: hidden; }}
+.lang-dropdown-content a {{ color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }}
+.lang-dropdown-content a:hover {{ background-color: #f4e9f7; color: #894b9d !important; }}
+.lang-dropdown:hover .lang-dropdown-content {{ display: block; }}
 
 .hero-container {{ display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }}
 .hero-left {{ flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }}
@@ -177,6 +208,15 @@ div[data-testid="stRadio"]:first-of-type p:hover {{ transform: scale(1.1) !impor
 <span>{t['nav_contact']}</span>
 </div>
 <div class="nav-cta">
+<div class="lang-dropdown">
+<button class="lang-dropbtn">{current_lang_display} ⌄</button>
+<div class="lang-dropdown-content">
+<a href="?lang=en" target="_self">🇬🇧 English</a>
+<a href="?lang=no" target="_self">🇳🇴 Norsk</a>
+<a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
+<a href="?lang=da" target="_self">🇩🇰 Dansk</a>
+</div>
+</div>
 <a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
 <a href="/" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
 </div>
