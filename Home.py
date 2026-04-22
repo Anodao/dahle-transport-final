@@ -3,11 +3,28 @@ from supabase import create_client
 import extra_streamlit_components as stx
 import time
 
-# --- PAGE CONFIG (Standaard ingeklapt) ---
+# --- PAGE CONFIG (Zijbalk standaard ingeklapt) ---
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (MET DE ZIJBALK PIJLTJES FIX!)
+# 0. DEMO ZIJBALK NAVIGATIE (Dwingt Streamlit het pijltje te tonen!)
+# =========================================================
+with st.sidebar:
+    st.markdown("### 🧭 Demo Navigasjon")
+    st.markdown("Bruk denne menyen for å hoppe raskt mellom sidene under demoen.")
+    try: st.page_link("Home.py", label="Home (Forside)", icon="🏠")
+    except: pass
+    try: st.page_link("pages/Login.py", label="Kundeportal (Login)", icon="🔐")
+    except: pass
+    try: st.page_link("pages/Order.py", label="Ny bestilling (Order)", icon="📦")
+    except: pass
+    try: st.page_link("pages/Planner.py", label="Internt System", icon="📅")
+    except: pass
+    try: st.page_link("pages/Dashboard.py", label="CO2 Dashboard", icon="🌱")
+    except: pass
+
+# =========================================================
+# 1. DIRECTE CSS INJECTIE (Pijltje gefixt!)
 # =========================================================
 st.markdown("""
 <style>
@@ -17,27 +34,15 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* FIX: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR & KLIKBAAR BOVENOP DE NAVBAR */
-header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; pointer-events: none !important; }
-[data-testid="collapsedControl"] { 
-    display: flex !important; 
-    visibility: visible !important;
-    pointer-events: auto !important; 
-    background-color: #ffffff !important; 
-    border-radius: 50% !important; 
-    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; 
-    position: fixed !important;
-    top: 20px !important;
-    left: 20px !important;
-    z-index: 10000 !important;
-}
+/* FIX: STREAMLIT HEADER DOORZICHTIG MAKEN, MAAR PIJLTJE WERKT */
+header[data-testid="stHeader"] { background-color: transparent !important; z-index: 9999 !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
 /* NAVBAR CSS */
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); pointer-events: auto !important; }
-.nav-logo { margin-left: 50px; display: flex; justify-content: flex-start; } /* Ruimte gemaakt voor het pijltje */
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 990; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.nav-logo { margin-left: 60px; display: flex; justify-content: flex-start; } /* Ruimte gemaakt voor het zijbalk-pijltje */
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
@@ -75,7 +80,7 @@ div[class^="viewerBadge"] { display: none !important; }
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 1. INIT COOKIE MANAGER & TAAL LOGICA
+# 2. INIT COOKIE MANAGER & TAAL LOGICA
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -96,7 +101,7 @@ lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸�
 current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
 # =========================================================
-# 2. DATABASE & AUTHENTICATIE
+# 3. DATABASE & AUTHENTICATIE
 # =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
@@ -127,7 +132,7 @@ if st.session_state.get('user') is None and acc_token and ref_token:
         except Exception: pass
 
 # =========================================================
-# 3. HET WOORDENBOEK
+# 4. HET WOORDENBOEK
 # =========================================================
 translations = {
     "no": { "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "hero_title": "D ÅRNE SÆ!", "hero_subtitle": "Rask og sikker transport, uansett distanse.", "open_title": "Åpningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åpningstidene kan avvike ved spesielle høytider.", "btn_order": "BESTILL" },
@@ -135,7 +140,6 @@ translations = {
     "sv": { "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL" },
     "da": { "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL" }
 }
-
 t = translations.get(lang, translations["no"])
 
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
