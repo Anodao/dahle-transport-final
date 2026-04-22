@@ -6,73 +6,27 @@ import time
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
-# =========================================================
-# 0. DIRECTE CSS INJECTIE (Voorkomt de Flits/FOUC)
-# =========================================================
-st.markdown("""
-<style>
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
-html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
-.stApp { background-color: #1e1e20 !important; }
-.block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
-
-/* VERBERG STREAMLIT BRANDING */
-[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
-[data-testid="stToolbar"] { display: none !important; }
-footer { display: none !important; }
-div[class^="viewerBadge"] { display: none !important; }
-#viewerBadge_container__1jcJt { display: none !important; }
-
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
-.nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
-.nav-logo a:hover img { transform: scale(1.05); } 
-.nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
-.nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
-.nav-links span:hover { color: #894b9d !important; }
-.nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
-.cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
-.cta-btn-purple:hover { background-color: #723e83 !important; }
-.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
-
-.lang-btn { text-decoration: none; margin-left: 5px; opacity: 0.5; transition: 0.2s; cursor: pointer; display: flex; align-items: center;}
-.lang-btn img { width: 22px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
-.lang-btn:hover { opacity: 1; transform: scale(1.1);}
-.lang-active { opacity: 1; border-bottom: 2px solid #894b9d; padding-bottom: 4px; margin-bottom: -6px;}
-
-.hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
-.hero-left { flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
-.hero-title { font-family: 'Caveat', cursive; font-size: 80px; color: #ffffff; margin: 0 0 20px 0; letter-spacing: 2px; transform: rotate(-2deg); }
-.hero-subtitle { font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 40px; }
-.opening-box { background-color: #ffffff; border-radius: 8px; padding: 25px 35px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 40px; }
-.opening-box p { color: #111111 !important; margin: 5px 0; font-size: 15px; }
-.opening-box strong { color: #111111; font-weight: 700; }
-.opening-box i { color: #666; font-size: 13px; }
-.circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center; margin-top: 20px; cursor: pointer; color: white; text-decoration: none; transition: 0.3s; }
-.circle-btn:hover { background-color: #ffffff; color: #1a1c1e; }
-.hero-right { flex: 1.2; background-image: url('https://cloud-1de12d.becdn.net/media/iW=1200&iH=630/c9ca77aaff92037d097c5d1558e89fa1.jpg'); background-size: cover; background-position: center left; clip-path: ellipse(90% 100% at 100% 50%); }
-
-@media (max-width: 900px) { .hero-container { flex-direction: column; } .hero-right { min-height: 400px; clip-path: ellipse(100% 90% at 50% 100%); } .hero-left { padding: 10% 5%; align-items: center; text-align: center; } .hero-title { font-size: 60px; } }
-</style>
-""", unsafe_allow_html=True)
-
-# =========================================================
-# 1. INIT COOKIE MANAGER & TAAL LOGICA
-# =========================================================
 cookie_manager = stx.CookieManager()
 
-# Lees de taal uit de cookie, standaard is Noors ('no')
+# =========================================================
+# 1. DE "TELEPORTATIE" TAAL-KNOP (100% Native Streamlit)
+# =========================================================
+# Lees de taal uit de cookie
 saved_lang = cookie_manager.get('dahle_lang')
 if 'language' not in st.session_state:
     st.session_state.language = saved_lang if saved_lang else "no"
 
-# Update de taal als de bezoeker op een vlaggetje klikt
-if "lang" in st.query_params:
-    gekozen_taal = st.query_params["lang"]
-    st.session_state.language = gekozen_taal
-    cookie_manager.set("dahle_lang", gekozen_taal, key="set_lang")
-    st.query_params.clear()
+# Bepaal welke vlag actief moet zijn
+start_index = 0 if st.session_state.language == "no" else 1
+
+# Dit is een ECHTE Streamlit knop (die we straks met CSS in de navbar teleporteren)
+gekozen_taal = st.radio("Taal", ["🇳🇴", "🇬🇧"], index=start_index, horizontal=True, label_visibility="collapsed")
+
+# Als de gebruiker op de andere vlag klikt, sla op en herlaad!
+nieuwe_taal = "no" if "🇳🇴" in gekozen_taal else "en"
+if nieuwe_taal != st.session_state.language:
+    st.session_state.language = nieuwe_taal
+    cookie_manager.set("dahle_lang", nieuwe_taal, key="set_lang_safe")
     st.rerun()
 
 # =========================================================
@@ -97,7 +51,6 @@ if 'user' not in st.session_state:
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
-# Login & Haal gegevens op
 if st.session_state.user is None and acc_token and ref_token:
     loading_text = "Laster inn konto... ⏳" if st.session_state.language == "no" else "Loading account... ⏳"
     with st.spinner(loading_text): 
@@ -159,12 +112,63 @@ else:
     knop_tekst = t['nav_portal']
 
 # =========================================================
-# 5. DYNAMISCHE HTML (Met onbreekbare afbeeldingsvlaggetjes!)
+# 5. DYNAMISCHE HTML & CSS (Inclusief Teleportatie)
 # =========================================================
-active_no = "lang-active" if st.session_state.language == "no" else ""
-active_en = "lang-active" if st.session_state.language == "en" else ""
-
 html_code = f"""
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap');
+html, body, [class*="css"] {{ font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }}
+.stApp {{ background-color: #1e1e20 !important; }}
+.block-container {{ padding: 0 !important; max-width: 100% !important; margin-top: 90px; }}
+
+/* VERBERG STREAMLIT BRANDING */
+[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] {{ display: none !important; }}
+[data-testid="stToolbar"] {{ display: none !important; }}
+footer {{ display: none !important; }}
+div[class^="viewerBadge"] {{ display: none !important; }}
+#viewerBadge_container__1jcJt {{ display: none !important; }}
+
+/* HIER GEBEURT DE TELEPORTATIE VAN DE VLAGGETJES! */
+div[data-testid="stRadio"]:first-of-type {{
+    position: fixed !important;
+    top: 25px !important;
+    right: 340px !important;
+    z-index: 1000 !important;
+    background-color: #f8f9fa !important;
+    padding: 2px 10px 4px 10px !important;
+    border-radius: 20px !important;
+    border: 1px solid #eaeaea !important;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+}}
+
+.navbar {{ position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
+.nav-logo a {{ display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }}
+.nav-logo img {{ height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }}
+.nav-logo a:hover img {{ transform: scale(1.05); }} 
+.nav-links {{ display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}}
+.nav-links a, .nav-links span {{ text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}}
+.nav-links span:hover {{ color: #894b9d !important; }}
+.nav-cta {{ display: flex; justify-content: flex-end; gap: 15px; align-items: center; }}
+.cta-btn-purple {{ background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}}
+.cta-btn-purple:hover {{ background-color: #723e83 !important; }}
+.cta-btn-outline {{ background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}}
+
+.hero-container {{ display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }}
+.hero-left {{ flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }}
+.hero-title {{ font-family: 'Caveat', cursive; font-size: 80px; color: #ffffff; margin: 0 0 20px 0; letter-spacing: 2px; transform: rotate(-2deg); }}
+.hero-subtitle {{ font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 40px; }}
+.opening-box {{ background-color: #ffffff; border-radius: 8px; padding: 25px 35px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 40px; }}
+.opening-box p {{ color: #111111 !important; margin: 5px 0; font-size: 15px; }}
+.opening-box strong {{ color: #111111; font-weight: 700; }}
+.opening-box i {{ color: #666; font-size: 13px; }}
+.circle-btn {{ width: 50px; height: 50px; border-radius: 50%; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center; margin-top: 20px; cursor: pointer; color: white; text-decoration: none; transition: 0.3s; }}
+.circle-btn:hover {{ background-color: #ffffff; color: #1a1c1e; }}
+.hero-right {{ flex: 1.2; background-image: url('https://cloud-1de12d.becdn.net/media/iW=1200&iH=630/c9ca77aaff92037d097c5d1558e89fa1.jpg'); background-size: cover; background-position: center left; clip-path: ellipse(90% 100% at 100% 50%); }}
+
+@media (max-width: 900px) {{ .hero-container {{ flex-direction: column; }} .hero-right {{ min-height: 400px; clip-path: ellipse(100% 90% at 50% 100%); }} .hero-left {{ padding: 10% 5%; align-items: center; text-align: center; }} .hero-title {{ font-size: 60px; }} }}
+</style>
+
 <div class="navbar">
     <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
     
@@ -177,14 +181,6 @@ html_code = f"""
     </div>
     
     <div class="nav-cta">
-        <div style="margin-right: 15px; display: flex; gap: 12px; align-items: center;">
-            <a href="?lang=no" target="_self" class="lang-btn {active_no}" title="Norsk">
-                <img src="https://flagcdn.com/w40/no.png" alt="Norsk">
-            </a>
-            <a href="?lang=en" target="_self" class="lang-btn {active_en}" title="English">
-                <img src="https://flagcdn.com/w40/gb.png" alt="English">
-            </a>
-        </div>
         <a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
         <a href="/" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
     </div>
