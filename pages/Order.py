@@ -11,22 +11,21 @@ import extra_streamlit_components as stx
 st.set_page_config(page_title="Dahle Transport - Order", page_icon="🚚", layout="wide", initial_sidebar_state="auto")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (Zijbalk is weer zichtbaar gemaakt!)
+# 0. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
-[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
+
+/* HIER ZIT DE FIX VOOR DE ZIJBALK: We verbergen alleen nog de header, NIET meer de sidebar! */
+header[data-testid="stHeader"] { display: none !important; }
 footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 .block-container { padding-top: 110px; }
 
-/* VERBERG STREAMLIT HEADER MAAR BEHOUD DE ZIJBALK (AANGEPAST!) */
-header[data-testid="stHeader"] { display: none !important; }
-
-/* NAVBAR & DROPDOWN */
+/* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
 .nav-logo { display: flex; justify-content: flex-start; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
@@ -42,15 +41,16 @@ header[data-testid="stHeader"] { display: none !important; }
 .cta-btn-outline { background-color: transparent; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
 
-.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
+/* FIX VOOR HET IRRITANTE DROPDOWN MENU (onzichtbare padding toegevoegd zodat hij niet direct sluit) */
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 20px; margin-bottom: -20px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 40px; right: 0; overflow: hidden; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; margin-top: 5px; overflow: hidden; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
 
-/* STAPPEN FORMULIER */
+/* STAPPEN FORMULIER CSS */
 .step-wrapper { display: flex; justify-content: center; align-items: flex-start; margin-bottom: 30px; margin-top: 10px; gap: 15px; }
 .step-item { display: flex; flex-direction: column; align-items: center; width: 80px; }
 .step-circle { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #555; display: flex; justify-content: center; align-items: center; font-weight: 700; font-size: 16px; color: #aaa; background-color: #262626; margin-bottom: 10px; z-index: 2; transition: 0.3s; }
@@ -91,8 +91,9 @@ if "lang" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
+lang = st.session_state.language # Snelle variabele voor de HTML linkjes
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
-current_lang_display = lang_displays.get(st.session_state.language, "🇳🇴 Norsk")
+current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
 
 # =========================================================
@@ -170,7 +171,7 @@ translations = {
         "st1": "Forsendelse", "st2": "Detaljer", "st3": "Gennemgå",
         "t_match": "Vælg det du normalt sender, for at finde den rette tjeneste.", "t_sub": "Vælg mindst én mulighed for at fortsætte",
         "b1_t": "Pakker & Dokumenter", "b1_s": "Typisk op til 31.5kg", "b1_l1": "Lette til mellemtunge forsendelser", "b1_l2": "B2B/B2C", "b_com": "Almindelige forsendelser:",
-        "b2_t": "Gods & Fragt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tungere forsendelser (pallar/containere)", "b2_l2": "B2B",
+        "b2_t": "Gods & Fragt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tungere forsendelser (paller/containere)", "b2_l2": "B2B",
         "b3_t": "Post & Markedsføring", "b3_s": "Typisk op til 2kg", "b3_l1": "Lette varer", "b3_l2": "International erhvervspost",
         "err_sel": "❌ Vælg venligst mindst én mulighed.", "time_est": "⏱ Tager typisk under 5 minutter.", "btn_next": "Næste trin",
         "w_tot": "Totalvægt (kg)", "w_over": "Overdimensioneret / Usædvanlig form", "l_type": "**Lasttype ***", "l_err": " 🚨 :red[(Vælg mindst én)]", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", "w_est": "Estimeret totalvægt (kg)",
@@ -183,16 +184,16 @@ translations = {
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "📝 Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "🏢 Firma & Kontakt",
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
-        "rev_r": "📍 Rute", "rev_s": "📦 Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "✅ BEKRÆFT & SEND",
+        "rev_r": "📍 Rute", "rev_s": "📦 Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "✅ BEKRÄFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "🎉 Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_base": "Grundgebyr", "c_hw": "Håndtering & Vægt", "c_tr": "Transport", "c_ww": "International Luftfragt", "c_src": "Søger adresse...", "c_aw": "Afventer rute...", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
     }
 }
 
-t = translations.get(st.session_state.language, translations["no"])
+t = translations[lang]
 
 # =========================================================
-# 3. DATABASE & AUTHENTICATIE FIX
+# 3. DATABASE & AUTHENTICATIE 
 # =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
@@ -222,7 +223,6 @@ if st.session_state.user is None and acc_token and ref_token:
 
 current_user_id = st.session_state.user.id if st.session_state.user else "guest"
 
-# De Geheime Kluis
 if st.session_state.get('last_seen_user_id') != current_user_id:
     safe_profile = {}
     if current_user_id != "guest":
@@ -232,22 +232,11 @@ if st.session_state.get('last_seen_user_id') != current_user_id:
                 raw_prof = prof_res.data[0]
                 name_parts = str(raw_prof.get('contact_name', '')).split(' ', 1)
                 st.session_state.company_name = raw_prof.get("company_name", "")
-                
                 safe_profile = {
-                    'comp_name': str(raw_prof.get('company_name') or ''),
-                    'cont_fn': name_parts[0] if name_parts else '',
-                    'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
-                    'cont_email': st.session_state.user.email,
-                    'cont_phone': str(raw_prof.get('phone') or ''),
-                    'comp_addr': str(raw_prof.get('address') or ''),
-                    'comp_pc': str(raw_prof.get('zip_code') or ''),
-                    'comp_city': str(raw_prof.get('city') or ''),
-                    'p_addr': str(raw_prof.get('address') or ''),
-                    'p_zip': str(raw_prof.get('zip_code') or ''),
-                    'p_city': str(raw_prof.get('city') or ''),
-                    'd_addr': str(raw_prof.get('del_address') or ''),
-                    'd_zip': str(raw_prof.get('del_zip') or ''),
-                    'd_city': str(raw_prof.get('del_city') or '')
+                    'comp_name': str(raw_prof.get('company_name') or ''), 'cont_fn': name_parts[0] if name_parts else '', 'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
+                    'cont_email': st.session_state.user.email, 'cont_phone': str(raw_prof.get('phone') or ''), 'comp_addr': str(raw_prof.get('address') or ''), 'comp_pc': str(raw_prof.get('zip_code') or ''),
+                    'comp_city': str(raw_prof.get('city') or ''), 'p_addr': str(raw_prof.get('address') or ''), 'p_zip': str(raw_prof.get('zip_code') or ''), 'p_city': str(raw_prof.get('city') or ''),
+                    'd_addr': str(raw_prof.get('del_address') or ''), 'd_zip': str(raw_prof.get('del_zip') or ''), 'd_city': str(raw_prof.get('del_city') or '')
                 }
         except: pass
     st.session_state['user_db_profile'] = safe_profile
@@ -285,7 +274,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 4. NAVBAR TEKENEN
+# 4. NAVBAR TEKENEN (Nu mét 'lang' onthoud-functie in de linkjes!)
 # =========================================================
 if st.session_state.user is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -295,9 +284,9 @@ else:
 
 html_navbar = f"""
 <div class="navbar">
-<div class="nav-logo"><a href="/?reset=true" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+<div class="nav-logo"><a href="/?lang={lang}&reset=true" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
 <div class="nav-links">
-<a href="/?reset=true" target="_self"><span>{t['nav_home']}</span></a>
+<a href="/?lang={lang}&reset=true" target="_self"><span>{t['nav_home']}</span></a>
 <span>{t['nav_about']}</span>
 <span>{t['nav_services']}</span>
 <span>{t['nav_gallery']}</span>
@@ -313,8 +302,8 @@ html_navbar = f"""
 <a href="?lang=da" target="_self">🇩🇰 Dansk</a>
 </div>
 </div>
-<a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
-<a href="/?reset=true" target="_self" class="cta-btn">{t['nav_contact_btn']}</a>
+<a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a>
+<a href="/?lang={lang}&reset=true" target="_self" class="cta-btn">{t['nav_contact_btn']}</a>
 </div>
 </div>
 """
