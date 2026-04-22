@@ -108,7 +108,7 @@ else:
     knop_tekst = t['nav_portal']
 
 # =========================================================
-# 5. DYNAMISCHE HTML & CSS (Perfect Uitgelijnd)
+# 5. DYNAMISCHE HTML & CSS (Zonder spaties = geen craches meer)
 # =========================================================
 html_code = f"""
 <style>
@@ -126,32 +126,19 @@ div[class^="viewerBadge"] {{ display: none !important; }}
 
 /* === DE GEÜPDATETE TELEPORTATIE CSS === */
 div[data-testid="stRadio"]:first-of-type {{
-    position: fixed !important;
-    top: 24px !important;
-    right: 430px !important; /* Verder naar links geschoven, veilig voor lange namen! */
-    z-index: 1000 !important;
-    background-color: #f8f9fa !important;
-    padding: 0px 10px !important;
-    border-radius: 20px !important;
-    border: 1px solid #eaeaea !important;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
+position: fixed !important;
+top: 24px !important;
+right: 430px !important;
+z-index: 1000 !important;
+background-color: #f8f9fa !important;
+padding: 0px 10px !important;
+border-radius: 20px !important;
+border: 1px solid #eaeaea !important;
+box-shadow: 0 2px 5px rgba(0,0,0,0.05) !important;
 }}
-/* Verberg de lelijke radio-bolletjes */
-div[data-testid="stRadio"]:first-of-type div[role="radio"] div:first-child {{
-    display: none !important;
-}}
-/* Maak de vlaggetjes groot en klikbaar */
-div[data-testid="stRadio"]:first-of-type p {{
-    font-size: 24px !important;
-    margin: 0 !important;
-    padding: 0 5px !important;
-    cursor: pointer !important;
-    transition: transform 0.2s !important;
-}}
-div[data-testid="stRadio"]:first-of-type p:hover {{
-    transform: scale(1.1) !important;
-}}
-/* ======================================= */
+div[data-testid="stRadio"]:first-of-type div[role="radio"] div:first-child {{ display: none !important; }}
+div[data-testid="stRadio"]:first-of-type p {{ font-size: 24px !important; margin: 0 !important; padding: 0 5px !important; cursor: pointer !important; transition: transform 0.2s !important; }}
+div[data-testid="stRadio"]:first-of-type p:hover {{ transform: scale(1.1) !important; }}
 
 .navbar {{ position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
 .nav-logo a {{ display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }}
@@ -181,43 +168,38 @@ div[data-testid="stRadio"]:first-of-type p:hover {{
 </style>
 
 <div class="navbar">
-    <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
-    
-    <div class="nav-links">
-        <a href="/" target="_self"><span>{t['nav_home']}</span></a>
-        <span>{t['nav_about']}</span>
-        <span>{t['nav_services']}</span>
-        <span>{t['nav_gallery']}</span>
-        <span>{t['nav_contact']}</span>
-    </div>
-    
-    <div class="nav-cta">
-        <a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
-        <a href="/" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
-    </div>
+<div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+<div class="nav-links">
+<a href="/" target="_self"><span>{t['nav_home']}</span></a>
+<span>{t['nav_about']}</span>
+<span>{t['nav_services']}</span>
+<span>{t['nav_gallery']}</span>
+<span>{t['nav_contact']}</span>
+</div>
+<div class="nav-cta">
+<a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
+<a href="/" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
+</div>
 </div>
 
 <div class="hero-container">
-    <div class="hero-left">
-        <h1 class="hero-title">{t['hero_title']}</h1>
-        <p class="hero-subtitle">{t['hero_subtitle']}</p>
-        
-        <div class="opening-box">
-            <p><strong>{t['open_title']}</strong></p>
-            <p>{t['open_days']}</p>
-            <p><i>{t['open_note']}</i></p>
-        </div>
-
-        <div style="display: flex; gap: 15px;">
-            <a href="/Order" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_order']}</a>
-            <a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['nav_contact_btn']}</a>
-        </div>
-
-        <a href="#more" class="circle-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-        </a>
-    </div>
-    <div class="hero-right"></div>
+<div class="hero-left">
+<h1 class="hero-title">{t['hero_title']}</h1>
+<p class="hero-subtitle">{t['hero_subtitle']}</p>
+<div class="opening-box">
+<p><strong>{t['open_title']}</strong></p>
+<p>{t['open_days']}</p>
+<p><i>{t['open_note']}</i></p>
+</div>
+<div style="display: flex; gap: 15px;">
+<a href="/Order" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_order']}</a>
+<a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['nav_contact_btn']}</a>
+</div>
+<a href="#more" class="circle-btn">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+</a>
+</div>
+<div class="hero-right"></div>
 </div>
 """
 
