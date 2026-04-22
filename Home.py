@@ -137,3 +137,8 @@ div[class^="viewerBadge"] { display: none !important; }
 # =========================================================
 aangepaste_html = html_code.replace(">KUNDEPORTAL<", f">{knop_tekst}<")
 st.markdown(aangepaste_html, unsafe_allow_html=True)
+
+<div style="margin-right: 15px; display: flex; gap: 8px;">
+    <a href="/?lang=no" class="lang-btn {active_no}" title="Norsk">🇳🇴</a>
+    <a href="/?lang=en" class="lang-btn {active_en}" title="English">🇬🇧</a>
+</div>
