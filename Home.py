@@ -3,11 +3,11 @@ from supabase import create_client
 import extra_streamlit_components as stx
 import time
 
-# --- PAGE CONFIG ---
+# --- PAGE CONFIG (Standaard ingeklapt) ---
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE 
+# 0. DIRECTE CSS INJECTIE (MET DE ZIJBALK PIJLTJES FIX!)
 # =========================================================
 st.markdown("""
 <style>
@@ -17,16 +17,27 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* FIX: ZIJBALK PIJLTJE ZICHTBAAR MAKEN & SCHILD DOORLAATBAAR MAKEN */
+/* FIX: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR & KLIKBAAR BOVENOP DE NAVBAR */
 header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; pointer-events: none !important; }
-header[data-testid="stHeader"] button { pointer-events: auto !important; background-color: #ffffff !important; border-radius: 50% !important; box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important; transform: translate(15px, 15px) !important; }
+[data-testid="collapsedControl"] { 
+    display: flex !important; 
+    visibility: visible !important;
+    pointer-events: auto !important; 
+    background-color: #ffffff !important; 
+    border-radius: 50% !important; 
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2) !important; 
+    position: fixed !important;
+    top: 20px !important;
+    left: 20px !important;
+    z-index: 10000 !important;
+}
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
 /* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); pointer-events: auto !important; }
-.nav-logo { margin-left: 50px; display: flex; justify-content: flex-start; } /* Ruimte gemaakt voor pijltje */
+.nav-logo { margin-left: 50px; display: flex; justify-content: flex-start; } /* Ruimte gemaakt voor het pijltje */
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
