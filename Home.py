@@ -3,11 +3,11 @@ from supabase import create_client
 import extra_streamlit_components as stx
 import time
 
-# --- PAGE CONFIG (Zijbalk is nu standaard ingeklapt) ---
+# --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (Met fix voor de Zijbalk-knop!)
+# 0. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
@@ -17,15 +17,15 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* VERBERG HEADER MAAR HAAL HET PIJLTJE NAAR VOREN */
-header[data-testid="stHeader"] { display: none !important; }
-[data-testid="collapsedControl"] { z-index: 1000 !important; top: 25px !important; left: 10px !important; background-color: #ffffff !important; border-radius: 50% !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
+/* FIX 1: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR */
+header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
+/* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.nav-logo { margin-left: 30px; } /* Ruimte gemaakt voor het Streamlit pijltje */
+.nav-logo { margin-left: 40px; display: flex; justify-content: flex-start; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
@@ -37,10 +37,11 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 
-.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 20px; margin-bottom: -20px; }
+/* FIX 2: DROPDOWN MENU */
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; margin-top: 5px; overflow: hidden; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; overflow: hidden; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
@@ -56,6 +57,8 @@ div[class^="viewerBadge"] { display: none !important; }
 .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center; margin-top: 20px; cursor: pointer; color: white; text-decoration: none; transition: 0.3s; }
 .circle-btn:hover { background-color: #ffffff; color: #1a1c1e; }
 .hero-right { flex: 1.2; background-image: url('https://cloud-1de12d.becdn.net/media/iW=1200&iH=630/c9ca77aaff92037d097c5d1558e89fa1.jpg'); background-size: cover; background-position: center left; clip-path: ellipse(90% 100% at 100% 50%); }
+
+@media (max-width: 900px) { .hero-container { flex-direction: column; } .hero-right { min-height: 400px; clip-path: ellipse(100% 90% at 50% 100%); } .hero-left { padding: 10% 5%; align-items: center; text-align: center; } .hero-title { font-size: 60px; } }
 </style>
 """, unsafe_allow_html=True)
 
@@ -100,7 +103,7 @@ if 'user' not in st.session_state:
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
-if st.session_state.user is None and acc_token and ref_token:
+if st.session_state.get('user') is None and acc_token and ref_token:
     loading_text = "Laster inn konto... ⏳" if lang == "no" else "Loading account... ⏳"
     with st.spinner(loading_text): 
         time.sleep(0.5) 
@@ -123,14 +126,14 @@ translations = {
 
 t = translations.get(lang, translations["no"])
 
-if st.session_state.user is not None and 'company_name' in st.session_state:
+if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
     knop_tekst = f"{icoon}{st.session_state.company_name}"
 else:
     knop_tekst = t['nav_portal']
 
 # =========================================================
-# 5. DYNAMISCHE HTML (Met de taal ?lang= parameter in ELKE link!)
+# 5. DYNAMISCHE HTML 
 # =========================================================
 html_code = f"""
 <div class="navbar">
