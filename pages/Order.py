@@ -146,7 +146,7 @@ translations = {
         "t_match": "Välj vad du brukar skicka för att hitta rätt tjänst.", "t_sub": "Välj minst ett alternativ för att fortsätta",
         "b1_t": "Paket & Dokument", "b1_s": "Vanligtvis upp till 31.5kg", "b1_l1": "Lätta till medeltunga försändelser", "b1_l2": "B2B/B2C", "b_com": "Vanliga försändelser:",
         "b2_t": "Gods & Frakt", "b2_s": "Vanligtvis över 31.5kg+", "b2_l1": "Tyngre försändelser (pallar/containrar)", "b2_l2": "B2B",
-        "b3_t": "Post & Marknadsföring", "b3_s": "Vanligtvis upp till 2kg", "b3_l1": "Lätta varor", "b3_l2": "Internationell företagspost",
+        "b3_t": "Post & Marknadsföring", "b3_s": "Vanligtvis upp till 2kg", "b3_l1": "Lätta varer", "b3_l2": "Internationell företagspost",
         "err_sel": "❌ Vänligen välj minst ett alternativ.", "time_est": "⏱ Tar vanligtvis under 5 minuter.", "btn_next": "Nästa steg",
         "w_tot": "Totalvikt (kg)", "w_over": "Överdimensionerad / Ovanlig form", "l_type": "**Lasttyp ***", "l_err": " 🚨 :red[(Välj minst en)]", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", "w_est": "Uppskattad totalvikt (kg)",
         "c_det": "🏢 Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
@@ -189,7 +189,7 @@ translations = {
 t = translations.get(st.session_state.language, translations["no"])
 
 # =========================================================
-# 3. DATABASE & AUTHENTICATIE
+# 3. DATABASE & AUTHENTICATIE FIX (Het ontbrekende 'brein')
 # =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
@@ -202,6 +202,24 @@ if 'supabase_client' not in st.session_state:
 
 supabase = st.session_state.supabase_client
 
+# DIT WAS VERDWENEN: Geef session_state.user een standaardwaarde!
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+# Log de gebruiker in via cookies als ze die hebben
+if st.session_state.user is None and acc_token and ref_token:
+    with st.spinner("Loading account... ⏳"):
+        time.sleep(0.5)
+        try:
+            session = supabase.auth.set_session(acc_token, ref_token)
+            st.session_state.user = session.user
+        except Exception:
+            pass
+
+# Nu crasht deze lijn niet meer!
 current_user_id = st.session_state.user.id if st.session_state.user else "guest"
 
 # De Geheime Kluis
@@ -213,6 +231,9 @@ if st.session_state.get('last_seen_user_id') != current_user_id:
             if prof_res.data:
                 raw_prof = prof_res.data[0]
                 name_parts = str(raw_prof.get('contact_name', '')).split(' ', 1)
+                
+                # Zorg dat bedrijfsnaam beschikbaar is voor navbar
+                st.session_state.company_name = raw_prof.get("company_name", "")
                 
                 safe_profile = {
                     'comp_name': str(raw_prof.get('company_name') or ''),
@@ -266,7 +287,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 4. NAVBAR TEKENEN
+# 4. NAVBAR TEKENEN (Strak tegen linkerkantlijn)
 # =========================================================
 if st.session_state.user is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
