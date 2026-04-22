@@ -11,18 +11,14 @@ cookie_manager = stx.CookieManager()
 # =========================================================
 # 1. DE "TELEPORTATIE" TAAL-KNOP (100% Native Streamlit)
 # =========================================================
-# Lees de taal uit de cookie
 saved_lang = cookie_manager.get('dahle_lang')
 if 'language' not in st.session_state:
     st.session_state.language = saved_lang if saved_lang else "no"
 
-# Bepaal welke vlag actief moet zijn
 start_index = 0 if st.session_state.language == "no" else 1
 
-# Dit is een ECHTE Streamlit knop (die we straks met CSS in de navbar teleporteren)
 gekozen_taal = st.radio("Taal", ["🇳🇴", "🇬🇧"], index=start_index, horizontal=True, label_visibility="collapsed")
 
-# Als de gebruiker op de andere vlag klikt, sla op en herlaad!
 nieuwe_taal = "no" if "🇳🇴" in gekozen_taal else "en"
 if nieuwe_taal != st.session_state.language:
     st.session_state.language = nieuwe_taal
@@ -112,7 +108,7 @@ else:
     knop_tekst = t['nav_portal']
 
 # =========================================================
-# 5. DYNAMISCHE HTML & CSS (Inclusief Teleportatie)
+# 5. DYNAMISCHE HTML & CSS (Alles strak links uitgelijnd!)
 # =========================================================
 html_code = f"""
 <style>
@@ -122,14 +118,13 @@ html, body, [class*="css"] {{ font-family: 'Montserrat', sans-serif; margin: 0; 
 .stApp {{ background-color: #1e1e20 !important; }}
 .block-container {{ padding: 0 !important; max-width: 100% !important; margin-top: 90px; }}
 
-/* VERBERG STREAMLIT BRANDING */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] {{ display: none !important; }}
 [data-testid="stToolbar"] {{ display: none !important; }}
 footer {{ display: none !important; }}
 div[class^="viewerBadge"] {{ display: none !important; }}
 #viewerBadge_container__1jcJt {{ display: none !important; }}
 
-/* HIER GEBEURT DE TELEPORTATIE VAN DE VLAGGETJES! */
+/* DE TELEPORTATIE VAN DE VLAGGETJES */
 div[data-testid="stRadio"]:first-of-type {{
     position: fixed !important;
     top: 25px !important;
@@ -170,43 +165,38 @@ div[data-testid="stRadio"]:first-of-type {{
 </style>
 
 <div class="navbar">
-    <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
-    
-    <div class="nav-links">
-        <a href="/" target="_self"><span>{t['nav_home']}</span></a>
-        <span>{t['nav_about']}</span>
-        <span>{t['nav_services']}</span>
-        <span>{t['nav_gallery']}</span>
-        <span>{t['nav_contact']}</span>
-    </div>
-    
-    <div class="nav-cta">
-        <a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
-        <a href="/" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
-    </div>
+<div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+<div class="nav-links">
+<a href="/" target="_self"><span>{t['nav_home']}</span></a>
+<span>{t['nav_about']}</span>
+<span>{t['nav_services']}</span>
+<span>{t['nav_gallery']}</span>
+<span>{t['nav_contact']}</span>
+</div>
+<div class="nav-cta">
+<a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
+<a href="/" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
+</div>
 </div>
 
 <div class="hero-container">
-    <div class="hero-left">
-        <h1 class="hero-title">{t['hero_title']}</h1>
-        <p class="hero-subtitle">{t['hero_subtitle']}</p>
-        
-        <div class="opening-box">
-            <p><strong>{t['open_title']}</strong></p>
-            <p>{t['open_days']}</p>
-            <p><i>{t['open_note']}</i></p>
-        </div>
-
-        <div style="display: flex; gap: 15px;">
-            <a href="/Order" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_order']}</a>
-            <a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['nav_contact_btn']}</a>
-        </div>
-
-        <a href="#more" class="circle-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-        </a>
-    </div>
-    <div class="hero-right"></div>
+<div class="hero-left">
+<h1 class="hero-title">{t['hero_title']}</h1>
+<p class="hero-subtitle">{t['hero_subtitle']}</p>
+<div class="opening-box">
+<p><strong>{t['open_title']}</strong></p>
+<p>{t['open_days']}</p>
+<p><i>{t['open_note']}</i></p>
+</div>
+<div style="display: flex; gap: 15px;">
+<a href="/Order" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_order']}</a>
+<a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['nav_contact_btn']}</a>
+</div>
+<a href="#more" class="circle-btn">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+</a>
+</div>
+<div class="hero-right"></div>
 </div>
 """
 
