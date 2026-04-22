@@ -36,9 +36,10 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 
-.lang-btn { font-size: 18px; text-decoration: none; margin-left: 5px; opacity: 0.6; transition: 0.2s; cursor: pointer;}
+.lang-btn { text-decoration: none; margin-left: 5px; opacity: 0.5; transition: 0.2s; cursor: pointer; display: flex; align-items: center;}
+.lang-btn img { width: 22px; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.2); }
 .lang-btn:hover { opacity: 1; transform: scale(1.1);}
-.lang-active { opacity: 1; border-bottom: 2px solid #894b9d; padding-bottom: 2px;}
+.lang-active { opacity: 1; border-bottom: 2px solid #894b9d; padding-bottom: 4px; margin-bottom: -6px;}
 
 .hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
 .hero-left { flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
@@ -61,10 +62,12 @@ div[class^="viewerBadge"] { display: none !important; }
 # =========================================================
 cookie_manager = stx.CookieManager()
 
+# Lees de taal uit de cookie, standaard is Noors ('no')
 saved_lang = cookie_manager.get('dahle_lang')
 if 'language' not in st.session_state:
     st.session_state.language = saved_lang if saved_lang else "no"
 
+# Update de taal als de bezoeker op een vlaggetje klikt
 if "lang" in st.query_params:
     gekozen_taal = st.query_params["lang"]
     st.session_state.language = gekozen_taal
@@ -94,6 +97,7 @@ if 'user' not in st.session_state:
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
+# Login & Haal gegevens op
 if st.session_state.user is None and acc_token and ref_token:
     loading_text = "Laster inn konto... ⏳" if st.session_state.language == "no" else "Loading account... ⏳"
     with st.spinner(loading_text): 
@@ -155,7 +159,7 @@ else:
     knop_tekst = t['nav_portal']
 
 # =========================================================
-# 5. DYNAMISCHE HTML (Met veilige HTML Entities voor de vlaggen)
+# 5. DYNAMISCHE HTML (Met onbreekbare afbeeldingsvlaggetjes!)
 # =========================================================
 active_no = "lang-active" if st.session_state.language == "no" else ""
 active_en = "lang-active" if st.session_state.language == "en" else ""
@@ -173,9 +177,13 @@ html_code = f"""
     </div>
     
     <div class="nav-cta">
-        <div style="margin-right: 15px; display: flex; gap: 8px;">
-            <a href="/?lang=no" class="lang-btn {active_no}" title="Norsk">&#127475;&#127476;</a>
-            <a href="/?lang=en" class="lang-btn {active_en}" title="English">&#127468;&#127463;</a>
+        <div style="margin-right: 15px; display: flex; gap: 12px; align-items: center;">
+            <a href="/?lang=no" class="lang-btn {active_no}" title="Norsk">
+                <img src="https://flagcdn.com/w40/no.png" alt="Norsk">
+            </a>
+            <a href="/?lang=en" class="lang-btn {active_en}" title="English">
+                <img src="https://flagcdn.com/w40/gb.png" alt="English">
+            </a>
         </div>
         <a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
         <a href="/" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
