@@ -161,7 +161,7 @@ translations = {
         "lbl_email": "E-mailadresse", "lbl_pass": "Adgangskode", "btn_login": "Log ind",
         "msg_logging_in": "Logger ind... ⏳", "msg_login_succ": "✅ Succesfuldt logget ind! Videresender...", "msg_login_fail": "❌ Forkert e-mail eller adgangskode.", "msg_fill_both": "⚠️ Udfyld venligst begge felter.",
         "lbl_comp": "Firmanavn *", "lbl_fn": "Fornavn *", "lbl_ln": "Efternavn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-mail (Dette bliver dit login) *", "lbl_pass_reg": "Vælg adgangskode *", "btn_reg": "Opret konto",
-        "msg_creating": "Opretter konto... ⏳", "msg_reg_succ": "✅ Konto oprettet! Du kan nu logge ind via fanen 'Log ind'.", "msg_reg_fail": "❌ Der opstod en fejl, eller e-mailen findes allerede.", "msg_fill_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).",
+        "msg_creating": "Opretter konto... ⏳", "msg_reg_succ": "✅ Konto oprettet! Du kan nu logge ind via fanen 'Log ind'.", "msg_reg_fail": "❌ Der opstod en fejl, eller e-mailen findes allerede.", "msg_fill_req": "⚠️ Udfyld venligst alle obligatoriska felter (*).",
         "welcome": "Velkommen tilbage", "logged_in_as": "Logget ind som", "btn_logout": "🚪 Log af",
         "hist_title": "📦 Din forsendelseshistorik", "tot_ship": "Samlede forsendelser", "pend_appr": "Afventer godkendelse", "processed": "Behandlet",
         "tab_myship": "📦 Mine forsendelser", "tab_neworder": "➕ Ny bestilling", "tab_prof": "⚙️ Profilindstillinger",
@@ -227,31 +227,30 @@ if st.session_state.user is not None and 'company_name' in st.session_state:
 else:
     knop_tekst = t['nav_portal']
 
+# Let op: Geen spaties aan de linkerkant!
 html_navbar = f"""
 <div class="navbar">
-    <div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
-    
-    <div class="nav-links">
-        <a href="/" target="_self"><span>{t['nav_home']}</span></a>
-        <span>{t['nav_about']}</span>
-        <span>{t['nav_services']}</span>
-        <span>{t['nav_gallery']}</span>
-        <span>{t['nav_contact']}</span>
-    </div>
-    
-    <div class="nav-cta">
-        <div class="lang-dropdown">
-            <button class="lang-dropbtn">{current_lang_display} ⌄</button>
-            <div class="lang-dropdown-content">
-                <a href="?lang=en" target="_self">🇬🇧 English</a>
-                <a href="?lang=no" target="_self">🇳🇴 Norsk</a>
-                <a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
-                <a href="?lang=da" target="_self">🇩🇰 Dansk</a>
-            </div>
-        </div>
-        <a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
-        <a href="/" target="_self" class="cta-btn">{t['nav_contact_btn']}</a>
-    </div>
+<div class="nav-logo"><a href="/" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+<div class="nav-links">
+<a href="/" target="_self"><span>{t['nav_home']}</span></a>
+<span>{t['nav_about']}</span>
+<span>{t['nav_services']}</span>
+<span>{t['nav_gallery']}</span>
+<span>{t['nav_contact']}</span>
+</div>
+<div class="nav-cta">
+<div class="lang-dropdown">
+<button class="lang-dropbtn">{current_lang_display} ⌄</button>
+<div class="lang-dropdown-content">
+<a href="?lang=en" target="_self">🇬🇧 English</a>
+<a href="?lang=no" target="_self">🇳🇴 Norsk</a>
+<a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
+<a href="?lang=da" target="_self">🇩🇰 Dansk</a>
+</div>
+</div>
+<a href="/Login" target="_self" class="cta-btn-outline">{knop_tekst}</a>
+<a href="/" target="_self" class="cta-btn">{t['nav_contact_btn']}</a>
+</div>
 </div>
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
