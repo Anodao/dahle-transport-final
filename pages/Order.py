@@ -18,16 +18,17 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
 
-/* FIX 1: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR */
-header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; }
+/* FIX: ZIJBALK PIJLTJE ZICHTBAAR MAKEN & SCHILD DOORLAATBAAR MAKEN */
+header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; pointer-events: none !important; }
+header[data-testid="stHeader"] button { pointer-events: auto !important; background-color: #ffffff !important; border-radius: 50% !important; box-shadow: 0 2px 8px rgba(0,0,0,0.15) !important; transform: translate(15px, 15px) !important; }
 footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 .block-container { padding-top: 110px; }
 
 /* NAVBAR CSS */
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-.nav-logo { margin-left: 40px; display: flex; justify-content: flex-start; }
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); pointer-events: auto !important; }
+.nav-logo { margin-left: 50px; display: flex; justify-content: flex-start; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
@@ -41,7 +42,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-outline { background-color: transparent; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
 .cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
 
-/* FIX 2: DROPDOWN MENU */
+/* DROPDOWN MENU */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -73,9 +74,6 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# 1. INIT COOKIE MANAGER & TAAL LOGICA
-# =========================================================
 cookie_manager = stx.CookieManager()
 
 saved_lang = cookie_manager.get('dahle_lang')
@@ -94,9 +92,6 @@ lang = st.session_state.language
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
 current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
-# =========================================================
-# 2. HET ORDER WOORDENBOEK
-# =========================================================
 translations = {
     "no": {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
@@ -189,9 +184,6 @@ translations = {
 }
 t = translations[lang]
 
-# =========================================================
-# 3. DATABASE & AUTHENTICATIE 
-# =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
@@ -218,7 +210,6 @@ if st.session_state.get('user') is None and acc_token and ref_token:
         except Exception:
             pass
 
-# FIX VOOR ATTRIBUTE ERROR:
 current_user_id = st.session_state.user.id if st.session_state.get('user') else "guest"
 
 if st.session_state.get('last_seen_user_id') != current_user_id:
@@ -306,6 +297,7 @@ html_navbar = f"""
 </div>
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
+
 
 # =========================================================
 # ROUTING & PRIJS LOGICA
