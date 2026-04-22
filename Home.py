@@ -178,10 +178,10 @@ html_code = f"""
     
     <div class="nav-cta">
         <div style="margin-right: 15px; display: flex; gap: 12px; align-items: center;">
-            <a href="/?lang=no" class="lang-btn {active_no}" title="Norsk">
+            <a href="?lang=no" target="_self" class="lang-btn {active_no}" title="Norsk">
                 <img src="https://flagcdn.com/w40/no.png" alt="Norsk">
             </a>
-            <a href="/?lang=en" class="lang-btn {active_en}" title="English">
+            <a href="?lang=en" target="_self" class="lang-btn {active_en}" title="English">
                 <img src="https://flagcdn.com/w40/gb.png" alt="English">
             </a>
         </div>
