@@ -7,11 +7,11 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 
-# --- PAGE CONFIG ---
-st.set_page_config(page_title="Dahle Transport - Order", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
+# --- PAGE CONFIG (Nu met 'auto' zijbalk!) ---
+st.set_page_config(page_title="Dahle Transport - Order", page_icon="🚚", layout="wide", initial_sidebar_state="auto")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (Voorkomt de Flits/FOUC)
+# 0. DIRECTE CSS INJECTIE (Zijbalk is weer zichtbaar gemaakt!)
 # =========================================================
 st.markdown("""
 <style>
@@ -22,6 +22,9 @@ footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 .block-container { padding-top: 110px; }
+
+/* VERBERG STREAMLIT HEADER MAAR BEHOUD DE ZIJBALK (AANGEPAST!) */
+header[data-testid="stHeader"] { display: none !important; }
 
 /* NAVBAR & DROPDOWN */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
@@ -167,7 +170,7 @@ translations = {
         "st1": "Forsendelse", "st2": "Detaljer", "st3": "Gennemgå",
         "t_match": "Vælg det du normalt sender, for at finde den rette tjeneste.", "t_sub": "Vælg mindst én mulighed for at fortsætte",
         "b1_t": "Pakker & Dokumenter", "b1_s": "Typisk op til 31.5kg", "b1_l1": "Lette til mellemtunge forsendelser", "b1_l2": "B2B/B2C", "b_com": "Almindelige forsendelser:",
-        "b2_t": "Gods & Fragt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tungere forsendelser (paller/containere)", "b2_l2": "B2B",
+        "b2_t": "Gods & Fragt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tungere forsendelser (pallar/containere)", "b2_l2": "B2B",
         "b3_t": "Post & Markedsføring", "b3_s": "Typisk op til 2kg", "b3_l1": "Lette varer", "b3_l2": "International erhvervspost",
         "err_sel": "❌ Vælg venligst mindst én mulighed.", "time_est": "⏱ Tager typisk under 5 minutter.", "btn_next": "Næste trin",
         "w_tot": "Totalvægt (kg)", "w_over": "Overdimensioneret / Usædvanlig form", "l_type": "**Lasttype ***", "l_err": " 🚨 :red[(Vælg mindst én)]", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", "w_est": "Estimeret totalvægt (kg)",
@@ -189,7 +192,7 @@ translations = {
 t = translations.get(st.session_state.language, translations["no"])
 
 # =========================================================
-# 3. DATABASE & AUTHENTICATIE FIX (Het ontbrekende 'brein')
+# 3. DATABASE & AUTHENTICATIE FIX
 # =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
@@ -202,14 +205,12 @@ if 'supabase_client' not in st.session_state:
 
 supabase = st.session_state.supabase_client
 
-# DIT WAS VERDWENEN: Geef session_state.user een standaardwaarde!
 if 'user' not in st.session_state:
     st.session_state.user = None
 
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
-# Log de gebruiker in via cookies als ze die hebben
 if st.session_state.user is None and acc_token and ref_token:
     with st.spinner("Loading account... ⏳"):
         time.sleep(0.5)
@@ -219,7 +220,6 @@ if st.session_state.user is None and acc_token and ref_token:
         except Exception:
             pass
 
-# Nu crasht deze lijn niet meer!
 current_user_id = st.session_state.user.id if st.session_state.user else "guest"
 
 # De Geheime Kluis
@@ -231,8 +231,6 @@ if st.session_state.get('last_seen_user_id') != current_user_id:
             if prof_res.data:
                 raw_prof = prof_res.data[0]
                 name_parts = str(raw_prof.get('contact_name', '')).split(' ', 1)
-                
-                # Zorg dat bedrijfsnaam beschikbaar is voor navbar
                 st.session_state.company_name = raw_prof.get("company_name", "")
                 
                 safe_profile = {
@@ -287,7 +285,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 4. NAVBAR TEKENEN (Strak tegen linkerkantlijn)
+# 4. NAVBAR TEKENEN
 # =========================================================
 if st.session_state.user is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
