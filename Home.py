@@ -7,7 +7,7 @@ import time
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE 
+# 0. DIRECTE CSS INJECTIE (MET HET ONZICHTBARE SCHILD GEFIXT!)
 # =========================================================
 st.markdown("""
 <style>
@@ -17,14 +17,15 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* FIX 1: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR */
-header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; }
+/* FIX: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR + ONZICHTBAAR SCHILD DOORLAATBAAR MAKEN */
+header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; pointer-events: none !important; }
+[data-testid="collapsedControl"] { pointer-events: auto !important; background-color: #ffffff !important; border-radius: 50% !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
 /* NAVBAR CSS */
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); pointer-events: auto !important; }
 .nav-logo { margin-left: 40px; display: flex; justify-content: flex-start; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
@@ -37,7 +38,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 
-/* FIX 2: DROPDOWN MENU */
+/* DROPDOWN MENU */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -133,7 +134,7 @@ else:
     knop_tekst = t['nav_portal']
 
 # =========================================================
-# 5. DYNAMISCHE HTML 
+# 5. DYNAMISCHE HTML
 # =========================================================
 html_code = f"""
 <div class="navbar">
