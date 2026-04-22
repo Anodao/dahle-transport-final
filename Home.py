@@ -7,11 +7,10 @@ import time
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DEMO ZIJBALK NAVIGATIE (Dwingt Streamlit het pijltje te tonen!)
+# 0. DEMO ZIJBALK (Zodat je snel kunt switchen!)
 # =========================================================
 with st.sidebar:
-    st.markdown("### 🧭 Demo Navigasjon")
-    st.markdown("Bruk denne menyen for å hoppe raskt mellom sidene under demoen.")
+    st.markdown("### 🧭 Demo Menu")
     try: st.page_link("Home.py", label="Home (Forside)", icon="🏠")
     except: pass
     try: st.page_link("pages/Login.py", label="Kundeportal (Login)", icon="🔐")
@@ -24,7 +23,7 @@ with st.sidebar:
     except: pass
 
 # =========================================================
-# 1. DIRECTE CSS INJECTIE (Pijltje gefixt!)
+# 1. DIRECTE CSS INJECTIE (Met de Geniale Fixes!)
 # =========================================================
 st.markdown("""
 <style>
@@ -34,34 +33,51 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* FIX: STREAMLIT HEADER DOORZICHTIG MAKEN, MAAR PIJLTJE WERKT */
-header[data-testid="stHeader"] { background-color: transparent !important; z-index: 9999 !important; }
+/* FIX 1: CORNER ISOLATION (Streamlit balk verkleind tot een hoekje van 70x90) */
+header[data-testid="stHeader"] { 
+    background-color: #ffffff !important; 
+    width: 70px !important; 
+    right: auto !important;
+    height: 90px !important; 
+    border-bottom: 1px solid #eaeaea !important; 
+    z-index: 9999 !important; 
+    box-shadow: none !important;
+}
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
-/* NAVBAR CSS */
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 990; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
-.nav-logo { margin-left: 60px; display: flex; justify-content: flex-start; } /* Ruimte gemaakt voor het zijbalk-pijltje */
+/* NAVBAR CSS (Begint pas ná 70px, zodat ze elkaar nooit overlappen!) */
+.navbar { 
+    position: fixed; top: 0; left: 70px; width: calc(100vw - 70px); height: 90px; 
+    background-color: #ffffff !important; z-index: 9998 !important; border-bottom: 1px solid #eaeaea; 
+    display: flex; justify-content: space-between; align-items: center; padding: 0 40px 0 10px; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
+}
+.nav-logo { flex: 0 1 auto; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
-.nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
+
+.nav-links { flex: 1 1 auto; display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center; }
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
-.nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
+
+.nav-cta { flex: 0 1 auto; display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
 .cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 
-/* DROPDOWN MENU */
-.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
+/* FIX 2: DE ONZICHTBARE BRUG VOOR DE DROPDOWN */
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; overflow: hidden; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; margin-top: 5px; overflow: hidden; }
+/* Hier is de onzichtbare brug: */
+.lang-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 15px; background: transparent; }
+.lang-dropdown:hover .lang-dropdown-content { display: block; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
-.lang-dropdown:hover .lang-dropdown-content { display: block; }
 
 .hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
 .hero-left { flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
@@ -140,6 +156,7 @@ translations = {
     "sv": { "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL" },
     "da": { "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL" }
 }
+
 t = translations.get(lang, translations["no"])
 
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
