@@ -124,7 +124,7 @@ translations = {
 t = translations.get(lang, translations["no"])
 
 # =========================================================
-# 4. DATABASE, AUTHENTICATIE & ROL-CHECK
+# 4. DATABASE, AUTHENTICATIE & ROL-CHECK (Met Debug!)
 # =========================================================
 @st.cache_resource
 def init_connection():
@@ -151,34 +151,48 @@ if st.session_state.get('user') is None and acc_token and ref_token:
         pass
 
 # Haal profiel EN de rol op
+db_error_message = None
 if st.session_state.get('user'):
     try:
-        # LET OP: Zorg dat je 'role' ophaalt uit de database!
         prof_res = supabase.table("profiles").select("company_name, role").eq("id", st.session_state.user.id).execute()
         if prof_res.data:
             st.session_state.company_name = prof_res.data[0].get("company_name", "")
-            # Sla de rol op (als hij leeg is, maak hem standaard 'customer')
-            st.session_state.role = str(prof_res.data[0].get("role", "customer")).lower()
+            # Haal spaties weg en maak kleine letters voor de zekerheid
+            raw_role = str(prof_res.data[0].get("role", "customer")).strip().lower()
+            st.session_state.role = raw_role
     except Exception as e: 
         st.session_state.role = "customer"
+        db_error_message = str(e)
 
-is_employee = st.session_state.get('role') == 'admin'
+# Accepteer zowel 'admin' als 'employee'
+is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
 # 4.5 DE DIGITALE UITSMIJTER (THE BOUNCER)
 # =========================================================
-# Dit stopt de pagina als je geen admin bent!
 if not is_employee:
     html_navbar_empty = f"""
     <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
     """
     st.markdown(html_navbar_empty, unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align: center; margin-top: 100px;'><h2 style='color:#ff4b4b;'>🔒 Access Denied</h2><p style='color:#aaa;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
+    
+    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>🔒 Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
+    
+    # DEBUG PANEEL VOOR JOU:
+    st.markdown("<br><hr>", unsafe_allow_html=True)
+    st.warning("⚠️ **DEBUG INFORMATIE:**")
+    st.write(f"- Jouw opgeslagen rol in Streamlit is nu: **'{st.session_state.get('role')}'**")
+    st.write("- Om toegang te krijgen, moet er in Supabase in de tabel `profiles` onder de kolom `role` exact **admin** staan.")
+    if db_error_message:
+        st.error(f"Foutmelding van Supabase tijdens het ophalen van je profiel: {db_error_message}")
+        st.write("*(Dit betekent meestal dat de kolom 'role' nog niet bestaat, of dat beveiligingsregels (RLS) het blokkeren).*")
+    
     c1, c2, c3 = st.columns([1,1,1])
     with c2:
+        st.write("")
         if st.button("← Back to Home", use_container_width=True):
             st.switch_page("Home.py")
-    st.stop() # HIermee bevriezen we de pagina. Data hieronder lekt NOOIT uit!
+    st.stop()
 
 
 # =========================================================
@@ -270,7 +284,7 @@ def get_live_fuel_prices():
     return {"diesel": 20.50, "gas": 21.50} 
 
 # ==========================================
-# 7. DASHBOARD LOGICA (Jouw Code!)
+# 7. DASHBOARD LOGICA 
 # ==========================================
 today = datetime.now().date()
 start_of_week = today - timedelta(days=today.weekday())
