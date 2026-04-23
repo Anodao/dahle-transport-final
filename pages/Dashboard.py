@@ -66,9 +66,16 @@ div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c3
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & TAAL LOGICA
+# 2. INIT COOKIE MANAGER & WACHTRUIMTE (DE FIX!)
 # =========================================================
 cookie_manager = stx.CookieManager()
+
+# FIX: Omdat we HTML links gebruiken, moet de pagina even wachten 
+# om je cookies (en dus je inloggegevens) op te halen.
+if 'cookie_retry' not in st.session_state:
+    st.session_state.cookie_retry = True
+    st.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials... ⏳</h3>", unsafe_allow_html=True)
+    st.stop() # Dit laat de component inladen en herstart het script automatisch MET cookies!
 
 if 'language' not in st.session_state:
     st.session_state.language = "no"
@@ -124,7 +131,7 @@ translations = {
 t = translations.get(lang, translations["no"])
 
 # =========================================================
-# 4. DATABASE, AUTHENTICATIE & ROL-CHECK (Met Debug!)
+# 4. DATABASE, AUTHENTICATIE & ROL-CHECK
 # =========================================================
 @st.cache_resource
 def init_connection():
@@ -150,22 +157,19 @@ if st.session_state.get('user') is None and acc_token and ref_token:
     except Exception:
         pass
 
-# Haal profiel EN de rol op
 db_error_message = None
 if st.session_state.get('user'):
     try:
         prof_res = supabase.table("profiles").select("company_name, role").eq("id", st.session_state.user.id).execute()
         if prof_res.data:
             st.session_state.company_name = prof_res.data[0].get("company_name", "")
-            # Haal spaties weg en maak kleine letters voor de zekerheid
             raw_role = str(prof_res.data[0].get("role", "customer")).strip().lower()
             st.session_state.role = raw_role
     except Exception as e: 
         st.session_state.role = "customer"
         db_error_message = str(e)
 
-# Accepteer zowel 'admin' als 'employee'
-is_employee = st.session_state.get('role') in ['admin', 'employee']
+is_employee = st.session_state.get('role') == 'admin'
 
 # =========================================================
 # 4.5 DE DIGITALE UITSMIJTER (THE BOUNCER)
@@ -175,17 +179,13 @@ if not is_employee:
     <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
     """
     st.markdown(html_navbar_empty, unsafe_allow_html=True)
-    
     st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>🔒 Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
     
-    # DEBUG PANEEL VOOR JOU:
     st.markdown("<br><hr>", unsafe_allow_html=True)
     st.warning("⚠️ **DEBUG INFORMATIE:**")
     st.write(f"- Jouw opgeslagen rol in Streamlit is nu: **'{st.session_state.get('role')}'**")
     st.write("- Om toegang te krijgen, moet er in Supabase in de tabel `profiles` onder de kolom `role` exact **admin** staan.")
-    if db_error_message:
-        st.error(f"Foutmelding van Supabase tijdens het ophalen van je profiel: {db_error_message}")
-        st.write("*(Dit betekent meestal dat de kolom 'role' nog niet bestaat, of dat beveiligingsregels (RLS) het blokkeren).*")
+    if db_error_message: st.error(f"Foutmelding van Supabase: {db_error_message}")
     
     c1, c2, c3 = st.columns([1,1,1])
     with c2:
@@ -194,9 +194,8 @@ if not is_employee:
             st.switch_page("Home.py")
     st.stop()
 
-
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Afgeschermd menu)
+# 5. NAVBAR SAMENSTELLEN 
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -284,7 +283,7 @@ def get_live_fuel_prices():
     return {"diesel": 20.50, "gas": 21.50} 
 
 # ==========================================
-# 7. DASHBOARD LOGICA 
+# 7. DASHBOARD LOGICA
 # ==========================================
 today = datetime.now().date()
 start_of_week = today - timedelta(days=today.weekday())
