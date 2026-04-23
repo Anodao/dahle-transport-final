@@ -18,7 +18,7 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* VERBERG STREAMLIT BRANDING */
+/* VERBERG STREAMLIT BRANDING VOLLEDIG */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
@@ -36,11 +36,13 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
 
-/* HET NIEUWE TEKST-DROPDOWN MENU NAAST 'CONTACT' */
+/* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
 .nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
-.nav-text-dropdown-content { display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
+.nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
+.nav-text-dropdown:hover::after { display: block; }
+.nav-text-dropdown-content { display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
 .nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; }
 .nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
@@ -53,10 +55,12 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-outline:hover { background-color: #f4e9f7 !important; }
 
 /* TAAL DROPDOWN */
-.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; margin-top: 5px; overflow: hidden; }
+.lang-dropdown::after { content: ''; position: absolute; top: 100%; right: 0; width: 140px; height: 30px; background: transparent; display: none; z-index: 999; }
+.lang-dropdown:hover::after { display: block; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: calc(100% + 10px); right: 0; margin-top: 0; overflow: hidden; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
@@ -74,14 +78,20 @@ div[class^="viewerBadge"] { display: none !important; }
 .circle-btn:hover { background-color: #ffffff; color: #1a1c1e; }
 .hero-right { flex: 1.2; background-image: url('https://cloud-1de12d.becdn.net/media/iW=1200&iH=630/c9ca77aaff92037d097c5d1558e89fa1.jpg'); background-size: cover; background-position: center left; clip-path: ellipse(90% 100% at 100% 50%); }
 
-@media (max-width: 900px) { .hero-container { flex-direction: column; } .hero-right { min-height: 400px; } .hero-left { padding: 10% 5%; align-items: center; text-align: center; } .hero-title { font-size: 60px; } }
+@media (max-width: 900px) { .hero-container { flex-direction: column; } .hero-right { min-height: 400px; clip-path: ellipse(100% 90% at 50% 100%); } .hero-left { padding: 10% 5%; align-items: center; text-align: center; } .hero-title { font-size: 60px; } }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. TAAL LOGICA
+# 2. INIT COOKIE MANAGER & TAAL LOGICA
 # =========================================================
 cookie_manager = stx.CookieManager()
+
+# Stille refresh om inlog-status over te nemen van andere pagina's
+if 'cookie_retry' not in st.session_state:
+    st.session_state.cookie_retry = True
+    time.sleep(0.3)
+    st.rerun()
 
 if 'language' not in st.session_state:
     st.session_state.language = "no"
@@ -90,6 +100,7 @@ if "lang" in st.query_params:
     url_lang = st.query_params["lang"]
     if url_lang in ["no", "en", "sv", "da"]:
         st.session_state.language = url_lang
+        cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
 
 lang = st.session_state.language
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
@@ -101,71 +112,92 @@ current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 translations = {
     "no": { 
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
+        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "hero_title": "D ÅRNE SÆ!", "hero_subtitle": "Rask og sikker transport, uansett distanse.", 
         "open_title": "Åpningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åpningstidene kan avvike ved spesielle høytider.", "btn_order": "BESTILL" 
     },
     "en": { 
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
-        "menu_title": "Pages ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Internal Planner",
+        "menu_title": "Pages ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "menu_plan": "Internal Planner",
         "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "hero_title": "WE'VE GOT IT!", "hero_subtitle": "Fast and secure transport, regardless of distance.", 
         "open_title": "Opening Hours:", "open_days": "Monday-Friday: 07:00-16:00", "open_note": "Opening hours may vary during public holidays.", "btn_order": "ORDER NOW" 
     },
     "sv": { 
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sidor ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
+        "menu_title": "Sidor ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "menu_plan": "Intern Planner",
         "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", 
         "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL" 
     },
     "da": { 
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
+        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", 
         "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL" 
     }
 }
-t = translations[lang]
+t = translations.get(lang, translations["no"])
 
 # =========================================================
-# 4. DATABASE & AUTHENTICATIE
+# 4. DATABASE, AUTHENTICATIE & ROL-CHECK
 # =========================================================
+@st.cache_resource
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
     return create_client(url, key)
 
-if 'supabase_client' not in st.session_state:
-    try: st.session_state.supabase_client = init_connection()
-    except: pass
-
-supabase = st.session_state.supabase_client
+supabase = init_connection()
 
 if 'user' not in st.session_state:
     st.session_state.user = None
+
+if 'role' not in st.session_state:
+    st.session_state.role = "guest"
 
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
 if st.session_state.get('user') is None and acc_token and ref_token:
-    loading_text = "Laster inn konto... ⏳" if lang == "no" else "Loading account... ⏳"
-    with st.spinner(loading_text): 
-        time.sleep(0.5) 
-        try:
-            session = supabase.auth.set_session(acc_token, ref_token)
-            st.session_state.user = session.user
-            prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
-            if prof_res.data: st.session_state.company_name = prof_res.data[0]["company_name"]
-        except Exception: pass
+    try:
+        session = supabase.auth.set_session(acc_token, ref_token)
+        st.session_state.user = session.user
+    except Exception:
+        pass
 
+if st.session_state.get('user'):
+    try:
+        # Haal de rol correct op uit de 'roles' kolom
+        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
+        if prof_res.data:
+            st.session_state.company_name = prof_res.data[0].get("company_name", "")
+            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
+    except Exception:
+        st.session_state.role = "customer"
+
+is_employee = st.session_state.get('role') in ['admin', 'employee']
+
+# =========================================================
+# 5. NAVBAR SAMENSTELLEN (Dynamisch)
+# =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
     knop_tekst = f"{icoon}{st.session_state.company_name}"
 else:
     knop_tekst = t['nav_portal']
 
-# =========================================================
-# 5. NAVBAR SAMENSTELLEN (Geen spaties aan linkerkantlijn!)
-# =========================================================
+# Basis linkjes voor IEDEREEN
+dropdown_links = f"""
+<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
+<a href="/Order?lang={lang}" target="_self">📦 {t['menu_order']}</a>
+"""
+
+# Linkjes die ALLEEN zichtbaar zijn voor admins
+if is_employee:
+    dropdown_links += f"""
+<a href="/Dashboard?lang={lang}" target="_self">📈 {t['menu_dash']}</a>
+<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
+"""
+
 html_navbar = f"""
 <div class="navbar">
 <div class="nav-logo">
@@ -182,8 +214,7 @@ html_navbar = f"""
 <div class="nav-text-dropdown">
 <button class="nav-text-dropbtn">{t['menu_title']}</button>
 <div class="nav-text-dropdown-content">
-<a href="/Dashboard?lang={lang}" target="_self">🌱 {t['menu_dash']}</a>
-<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
+{dropdown_links}
 </div>
 </div>
 </div>
