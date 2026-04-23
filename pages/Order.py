@@ -11,7 +11,7 @@ import extra_streamlit_components as stx
 st.set_page_config(page_title="Dahle Transport - Order", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE 
+# 1. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
@@ -25,27 +25,43 @@ footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 .block-container { padding-top: 110px; }
 
-/* NAVBAR CSS (Nu met margin-left: 20px voor het logo!) */
+/* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
 .nav-logo { display: flex; justify-content: flex-start; margin-left: 20px; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
-.nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 500; color: #000000; justify-content: center;}
-.nav-links a { text-decoration: none; color: inherit; }
-.nav-links span { cursor: pointer; transition: color 0.2s; }
-.nav-links span:hover { color: #894b9d; }
-.nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
-.cta-btn { background-color: #894b9d; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); cursor: pointer; transition: background-color 0.2s; white-space: nowrap; }
-.cta-btn:hover { background-color: #723e83; }
-.cta-btn-outline { background-color: transparent; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; letter-spacing: 0.5px; border: 2px solid #894b9d; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
-.cta-btn-outline:hover { background-color: #894b9d; color: white !important; }
 
-/* DROPDOWN MENU */
-.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
+/* DE LINK TEKSTEN IN HET MIDDEN */
+.nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
+.nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
+.nav-links span:hover { color: #894b9d !important; }
+
+/* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
+.nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
+.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+.nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
+.nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
+.nav-text-dropdown:hover::after { display: block; }
+.nav-text-dropdown-content { display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
+.nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; }
+.nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
+.nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
+
+/* DE KNOPPEN RECHTS */
+.nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
+.cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
+.cta-btn-purple:hover { background-color: #723e83 !important; }
+.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.cta-btn-outline:hover { background-color: #f4e9f7 !important; }
+
+/* TAAL DROPDOWN */
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; overflow: hidden; }
+.lang-dropdown::after { content: ''; position: absolute; top: 100%; right: 0; width: 140px; height: 30px; background: transparent; display: none; z-index: 999; }
+.lang-dropdown:hover::after { display: block; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: calc(100% + 10px); right: 0; margin-top: 0; overflow: hidden; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
@@ -73,35 +89,32 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </style>
 """, unsafe_allow_html=True)
 
-
 # =========================================================
-# 1. INIT COOKIE MANAGER & TAAL LOGICA
+# 2. INIT COOKIE MANAGER & TAAL LOGICA
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-saved_lang = cookie_manager.get('dahle_lang')
 if 'language' not in st.session_state:
-    st.session_state.language = saved_lang if saved_lang else "no"
+    st.session_state.language = "no"
 
 if "lang" in st.query_params:
-    gekozen_taal = st.query_params["lang"]
-    if gekozen_taal in ["no", "en", "sv", "da"]:
-        st.session_state.language = gekozen_taal
-        cookie_manager.set("dahle_lang", gekozen_taal, key="set_lang_safe")
-    st.query_params.clear()
-    st.rerun()
+    url_lang = st.query_params["lang"]
+    if url_lang in ["no", "en", "sv", "da"]:
+        st.session_state.language = url_lang
+        cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
 
 lang = st.session_state.language 
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
 current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
-
 # =========================================================
-# 2. HET ORDER WOORDENBOEK
+# 3. HET ORDER WOORDENBOEK
 # =========================================================
 translations = {
     "no": {
-        "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
+        "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
+        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_plan": "Intern Planner",
+        "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
         "st1": "Forsendelse", "st2": "Detaljer", "st3": "Se over",
         "t_match": "Velg det du vanligvis sender for å finne riktig tjeneste.", "t_sub": "Velg minst ett alternativ for å fortsette",
         "b1_t": "Pakker & Dokumenter", "b1_s": "Typisk opptil 31.5kg", "b1_l1": "Lette til middels tunge sendinger", "b1_l2": "B2B/B2C", "b_com": "Vanlige sendinger:",
@@ -123,7 +136,9 @@ translations = {
         "calc_t": "Estimert Kostnad", "c_base": "Grunngebyr", "c_hw": "Håndtering & Vekt", "c_tr": "Transport", "c_ww": "Internasjonal Flyfrakt", "c_src": "Søker adresse...", "c_aw": "Venter på rute...", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)"
     },
     "en": {
-        "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US",
+        "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
+        "menu_title": "Pages ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Customer Portal", "menu_plan": "Internal Planner",
+        "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US",
         "st1": "Shipment", "st2": "Details", "st3": "Review",
         "t_match": "To find your service match, select all that you ship.", "t_sub": "Select at least one option to continue",
         "b1_t": "Parcels & Documents", "b1_s": "Typically up to 31.5kg", "b1_l1": "Light to medium weight shipments", "b1_l2": "B2B/B2C", "b_com": "Commonly shipped:",
@@ -145,7 +160,9 @@ translations = {
         "calc_t": "Estimated Cost", "c_base": "Base Fee", "c_hw": "Handling & Weight", "c_tr": "Transport", "c_ww": "Worldwide Air Freight", "c_src": "Searching address...", "c_aw": "Awaiting route...", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)"
     },
     "sv": {
-        "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
+        "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
+        "menu_title": "Sidor ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundportal", "menu_plan": "Intern Planner",
+        "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
         "st1": "Försändelse", "st2": "Detaljer", "st3": "Granska",
         "t_match": "Välj vad du brukar skicka för att hitta rätt tjänst.", "t_sub": "Välj minst ett alternativ för att fortsätta",
         "b1_t": "Paket & Dokument", "b1_s": "Vanligtvis upp till 31.5kg", "b1_l1": "Lätta till medeltunga försändelser", "b1_l2": "B2B/B2C", "b_com": "Vanliga försändelser:",
@@ -167,7 +184,9 @@ translations = {
         "calc_t": "Uppskattad Kostnad", "c_base": "Grundavgift", "c_hw": "Hantering & Vikt", "c_tr": "Transport", "c_ww": "Internationell Flygfrakt", "c_src": "Söker adress...", "c_aw": "Väntar på rutt...", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)"
     },
     "da": {
-        "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
+        "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
+        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_plan": "Intern Planner",
+        "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
         "st1": "Forsendelse", "st2": "Detaljer", "st3": "Gennemgå",
         "t_match": "Vælg det du normalt sender, for at finde den rette tjeneste.", "t_sub": "Vælg mindst én mulighed for at fortsætte",
         "b1_t": "Pakker & Dokumenter", "b1_s": "Typisk op til 31.5kg", "b1_l1": "Lette til mellemtunge forsendelser", "b1_l2": "B2B/B2C", "b_com": "Almindelige forsendelser:",
@@ -192,7 +211,7 @@ translations = {
 t = translations[lang]
 
 # =========================================================
-# 3. DATABASE & AUTHENTICATIE 
+# 4. DATABASE & AUTHENTICATIE
 # =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
@@ -273,7 +292,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 4. NAVBAR TEKENEN
+# 5. NAVBAR SAMENSTELLEN (Zonder 'Order' in de menu dropdown)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -283,13 +302,25 @@ else:
 
 html_navbar = f"""
 <div class="navbar">
-<div class="nav-logo"><a href="/?lang={lang}&reset=true" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
+<div class="nav-logo">
+<a href="/?lang={lang}&reset=true" target="_self">
+<img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp">
+</a>
+</div>
 <div class="nav-links">
 <a href="/?lang={lang}&reset=true" target="_self"><span>{t['nav_home']}</span></a>
 <span>{t['nav_about']}</span>
 <span>{t['nav_services']}</span>
 <span>{t['nav_gallery']}</span>
 <span>{t['nav_contact']}</span>
+<div class="nav-text-dropdown">
+<button class="nav-text-dropbtn">{t['menu_title']}</button>
+<div class="nav-text-dropdown-content">
+<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
+<a href="/Dashboard?lang={lang}" target="_self">📈 {t['menu_dash']}</a>
+<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
+</div>
+</div>
 </div>
 <div class="nav-cta">
 <div class="lang-dropdown">
@@ -302,7 +333,7 @@ html_navbar = f"""
 </div>
 </div>
 <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a>
-<a href="/?lang={lang}&reset=true" target="_self" class="cta-btn">{t['nav_contact_btn']}</a>
+<a href="/?lang={lang}&reset=true" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
 </div>
 </div>
 """
