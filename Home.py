@@ -3,7 +3,7 @@ from supabase import create_client
 import extra_streamlit_components as stx
 import time
 
-# --- PAGE CONFIG (Zijbalk standaard ingeklapt) ---
+# --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
@@ -23,7 +23,7 @@ with st.sidebar:
     except: pass
 
 # =========================================================
-# 1. DIRECTE CSS INJECTIE (Met de Geniale Fixes!)
+# 1. DIRECTE CSS INJECTIE (MET DE SLEDGEHAMMER FIX!)
 # =========================================================
 st.markdown("""
 <style>
@@ -33,51 +33,55 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* FIX 1: CORNER ISOLATION (Streamlit balk verkleind tot een hoekje van 70x90) */
+/* ========================================================= */
+/* DE SLEDGEHAMMER ZIJBALK FIX */
+/* ========================================================= */
 header[data-testid="stHeader"] { 
-    background-color: #ffffff !important; 
-    width: 70px !important; 
-    right: auto !important;
-    height: 90px !important; 
-    border-bottom: 1px solid #eaeaea !important; 
-    z-index: 9999 !important; 
+    background-color: transparent !important; 
+    background: transparent !important;
+    border: none !important;
     box-shadow: none !important;
+    pointer-events: none !important; /* Maakt de balk onklikbaar zodat je navbar werkt */
+    z-index: 99999 !important; /* Legt de balk boven ALLES */
 }
+
+header[data-testid="stHeader"] button { 
+    pointer-events: auto !important; /* Maakt ALLEEN het pijltje klikbaar */
+    background-color: #ffffff !important; 
+    color: #894b9d !important;
+    border-radius: 8px !important; 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important; 
+    margin-top: 15px !important;
+    margin-left: 15px !important;
+}
+
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
+/* ========================================================= */
 
-/* NAVBAR CSS (Begint pas ná 70px, zodat ze elkaar nooit overlappen!) */
-.navbar { 
-    position: fixed; top: 0; left: 70px; width: calc(100vw - 70px); height: 90px; 
-    background-color: #ffffff !important; z-index: 9998 !important; border-bottom: 1px solid #eaeaea; 
-    display: flex; justify-content: space-between; align-items: center; padding: 0 40px 0 10px; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-}
-.nav-logo { flex: 0 1 auto; }
+/* NAVBAR CSS */
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+.nav-logo { margin-left: 60px; display: flex; justify-content: flex-start; } /* Ruimte voor het pijltje */
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
-
-.nav-links { flex: 1 1 auto; display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center; }
+.nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
-
-.nav-cta { flex: 0 1 auto; display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
+.nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
 .cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 
-/* FIX 2: DE ONZICHTBARE BRUG VOOR DE DROPDOWN */
-.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
+/* DROPDOWN MENU */
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
 .lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; margin-top: 5px; overflow: hidden; }
-/* Hier is de onzichtbare brug: */
-.lang-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 15px; background: transparent; }
-.lang-dropdown:hover .lang-dropdown-content { display: block; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
+.lang-dropdown:hover .lang-dropdown-content { display: block; }
 
 .hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
 .hero-left { flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
@@ -189,7 +193,7 @@ html_code = f"""
 </div>
 </div>
 <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a>
-<a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
+<a href="/Order?lang={lang}" target="_self" class="cta-btn-purple">{t['btn_order']}</a>
 </div>
 </div>
 
