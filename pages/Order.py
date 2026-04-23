@@ -89,6 +89,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </style>
 """, unsafe_allow_html=True)
 
+
 # =========================================================
 # 2. INIT COOKIE MANAGER & TAAL LOGICA
 # =========================================================
@@ -106,6 +107,7 @@ if "lang" in st.query_params:
 lang = st.session_state.language 
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
 current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
+
 
 # =========================================================
 # 3. HET ORDER WOORDENBOEK
@@ -208,10 +210,10 @@ translations = {
         "calc_t": "Estimeret Pris", "c_base": "Grundgebyr", "c_hw": "Håndtering & Vægt", "c_tr": "Transport", "c_ww": "International Luftfragt", "c_src": "Søger adresse...", "c_aw": "Afventer rute...", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
     }
 }
-t = translations[lang]
+t = translations.get(lang, translations["no"])
 
 # =========================================================
-# 4. DATABASE & AUTHENTICATIE
+# 4. DATABASE & AUTHENTICATIE & ROL-CHECK
 # =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
@@ -227,6 +229,9 @@ supabase = st.session_state.supabase_client
 if 'user' not in st.session_state:
     st.session_state.user = None
 
+if 'role' not in st.session_state:
+    st.session_state.role = "guest"
+
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
@@ -239,17 +244,28 @@ if st.session_state.get('user') is None and acc_token and ref_token:
         except Exception:
             pass
 
-current_user_id = st.session_state.user.id if st.session_state.get('user') else "guest"
+# Haal de rol op als de gebruiker is ingelogd
+if st.session_state.get('user'):
+    try:
+        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
+        if prof_res.data:
+            st.session_state.company_name = prof_res.data[0].get("company_name", "")
+            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
+    except Exception:
+        st.session_state.role = "customer"
 
+is_employee = st.session_state.get('role') in ['admin', 'employee']
+
+# Voor het bewaren van het user profile in de sessie state (nodig voor de Order velden)
+current_user_id = st.session_state.user.id if st.session_state.get('user') else "guest"
 if st.session_state.get('last_seen_user_id') != current_user_id:
     safe_profile = {}
     if current_user_id != "guest":
         try:
-            prof_res = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
-            if prof_res.data:
-                raw_prof = prof_res.data[0]
+            prof_full = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
+            if prof_full.data:
+                raw_prof = prof_full.data[0]
                 name_parts = str(raw_prof.get('contact_name', '')).split(' ', 1)
-                st.session_state.company_name = raw_prof.get("company_name", "")
                 safe_profile = {
                     'comp_name': str(raw_prof.get('company_name') or ''), 'cont_fn': name_parts[0] if name_parts else '', 'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
                     'cont_email': st.session_state.user.email, 'cont_phone': str(raw_prof.get('phone') or ''), 'comp_addr': str(raw_prof.get('address') or ''), 'comp_pc': str(raw_prof.get('zip_code') or ''),
@@ -292,13 +308,21 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Zonder 'Order' in de menu dropdown)
+# 5. NAVBAR SAMENSTELLEN (Veilig en Dynamisch)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
     knop_tekst = f"{icoon}{st.session_state.company_name}"
 else:
     knop_tekst = t['nav_portal']
+
+# Menu logic: we zijn op de Order pagina, dus 'Ny bestilling' hoeft er niet in
+dropdown_links = f"""<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>"""
+if is_employee:
+    dropdown_links += f"""
+<a href="/Dashboard?lang={lang}" target="_self">📈 {t['menu_dash']}</a>
+<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
+"""
 
 html_navbar = f"""
 <div class="navbar">
@@ -316,9 +340,7 @@ html_navbar = f"""
 <div class="nav-text-dropdown">
 <button class="nav-text-dropbtn">{t['menu_title']}</button>
 <div class="nav-text-dropdown-content">
-<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
-<a href="/Dashboard?lang={lang}" target="_self">📈 {t['menu_dash']}</a>
-<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
+{dropdown_links}
 </div>
 </div>
 </div>
