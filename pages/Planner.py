@@ -9,7 +9,7 @@ import time
 st.set_page_config(page_title="Dahle Transport - Planner", page_icon="📅", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. DIRECTE CSS INJECTIE 
+# 1. DIRECTE CSS INJECTIE (Puur, Schoon & Stabiel)
 # =========================================================
 st.markdown("""
 <style>
@@ -39,12 +39,12 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-links span:hover { color: #894b9d !important; }
 
 /* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
-.nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
+.nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; }
 .nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
-.nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 20px; background: transparent; display: none; }
+.nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
-.nav-text-dropdown-content { display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
+.nav-text-dropdown-content { display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
 .nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; }
 .nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
@@ -60,18 +60,20 @@ div[class^="viewerBadge"] { display: none !important; }
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown::after { content: ''; position: absolute; top: 100%; right: 0; width: 140px; height: 20px; background: transparent; display: none; z-index: 999; }
+.lang-dropdown::after { content: ''; position: absolute; top: 100%; right: 0; width: 140px; height: 30px; background: transparent; display: none; z-index: 999; }
 .lang-dropdown:hover::after { display: block; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: calc(100% + 5px); right: 0; margin-top: 0; overflow: hidden; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: calc(100% + 10px); right: 0; margin-top: 0; overflow: hidden; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
 
-/* Dashboard elementen styling */
-div[data-baseweb="select"] > div, div[data-baseweb="base-input"] { background-color: #212529 !important; border: 1px solid #333333 !important; border-radius: 6px !important; }
+/* DASHBOARD / PLANNER SPECIFIC STYLING */
+div[data-baseweb="select"] > div, div[data-baseweb="base-input"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 6px !important; }
 .stSelectbox div[data-baseweb="select"] span, .stSelectbox div[data-baseweb="select"] div, .stDateInput input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 label[data-testid="stWidgetLabel"] p { color: #ffffff !important; font-weight: 600; font-size: 14px; }
 div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !important; border: 1px solid #333333 !important; border-radius: 10px !important; padding: 15px !important; }
+div[data-testid="stMetric"] { background-color: #161616 !important; border: 1px solid #333 !important; padding: 15px !important; border-radius: 8px !important; }
+div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -152,7 +154,7 @@ if st.session_state.get('user'):
     except: pass
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Zonder 'Planner' in de dropdown)
+# 5. NAVBAR SAMENSTELLEN (Menu ZONDER Planner erin!)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -199,156 +201,45 @@ html_navbar = f"""
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
 
-    # --- Strakke 5-koloms weergave ---
+
+# =========================================================================
+# 6. PLANNER LOGICA & INTERFACE (Statistieken, Inbox etc) 
+# =========================================================================
+
+# --- STATISTIEKEN EXPANDER ---
+with st.expander("📊 Bekijk Statistieken & KPI's", expanded=True):
+    st.selectbox("Filter periode:", ["Laatste 30 dagen", "Laatste 7 dagen", "Vandaag"], key="plan_filter")
+    
     m1, m2, m3, m4, m5 = st.columns(5)
-    
-    with m1:
-        with st.container(border=True):
-            st.markdown("<div style='font-size: 14px; color: #ccc;'>🔴 Action Required</div>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_pending}</h2>", unsafe_allow_html=True)
-    with m2:
-        with st.container(border=True):
-            st.markdown("<div style='font-size: 14px; color: #ccc;'>🟡 Active Routes</div>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_progress}</h2>", unsafe_allow_html=True)
-    with m3:
-        with st.container(border=True):
-            st.markdown("<div style='font-size: 14px; color: #ccc;'>🟢 Completed</div>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_done}</h2>", unsafe_allow_html=True)
-    with m4:
-        with st.container(border=True):
-            st.markdown("<div style='font-size: 14px; color: #ccc;'>⚫ Cancelled</div>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{count_cancelled}</h2>", unsafe_allow_html=True)
-    with m5:
-        with st.container(border=True):
-            st.markdown("<div style='font-size: 14px; color: #ccc;'>📋 Total Orders</div>", unsafe_allow_html=True)
-            st.markdown(f"<h2 style='margin: 0; padding-top: 5px;'>{total_orders}</h2>", unsafe_allow_html=True)
+    with m1: st.metric("🔴 Action Required", "3")
+    with m2: st.metric("🟡 Active Routes", "3")
+    with m3: st.metric("🟢 Completed", "1")
+    with m4: st.metric("⚫ Cancelled", "2")
+    with m5: st.metric("📋 Total Orders", "9")
 
-st.write("---")
+st.write("")
+st.write("")
 
-# =========================================================
-# LAYOUT (2 KOLOMMEN)
-# =========================================================
-col_list, col_details = st.columns([1, 2], gap="large")
+# --- INBOX & DETAILS SECTIE ---
+col_inbox, col_details = st.columns([1, 2], gap="large")
 
-with col_list:
+with col_inbox:
     st.markdown("<h2>Inbox</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='font-size: 13px; color: #888;'>🔴 Pending &nbsp;&nbsp; 🟡 In Progress &nbsp;&nbsp; 🟢 Done &nbsp;&nbsp; ❌ Cancelled</p>", unsafe_allow_html=True)
     
-    tab_new, tab_prog, tab_done, tab_fail = st.tabs(["🔴 Pending", "🟡 In Progress", "🟢 Done", "❌ Cancelled"])
-    
-    with tab_new:
-        pending = [o for o in all_orders if o['status'] == 'New']
-        if not pending: st.info("No pending orders.")
-        for o in pending:
-            with st.container(border=True):
-                st.markdown(f"**🔴 {o['company']}**")
-                st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
-                if st.button(f"View #{o['id']}", key=f"p_{o['id']}", use_container_width=True):
-                    st.session_state.selected_order_id = o['id']
-                    st.rerun()
+    # Voorbeeld order 1
+    with st.container(border=True):
+        st.markdown("🔴 **Anouar's Company**")
+        st.caption("Order #38 | Received: 2026-04-21")
+        st.button("View #38", use_container_width=True)
 
-    with tab_prog:
-        inprogress = [o for o in all_orders if o['status'] == 'In Progress']
-        if not inprogress: st.info("Nothing in progress.")
-        for o in inprogress:
-            with st.container(border=True):
-                st.markdown(f"**🟡 {o['company']}**")
-                st.caption(f"Order #{o['id']} | Received: {o.get('received_date', '')[:10]}")
-                if st.button(f"View #{o['id']}", key=f"prog_{o['id']}", use_container_width=True):
-                    st.session_state.selected_order_id = o['id']
-                    st.rerun()
-
-    with tab_done:
-        done = [o for o in all_orders if o['status'] in ['Processed', 'Delivered']]
-        if not done: st.info("No completed orders.")
-        for o in done:
-            with st.container(border=True):
-                st.markdown(f"**🟢 {o['company']}**")
-                proc_date = o.get('processed_date')
-                display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
-                st.caption(f"Order #{o['id']} | Afgerond | Datum: {display_date}")
-                if st.button(f"View #{o['id']}", key=f"d_{o['id']}", use_container_width=True):
-                    st.session_state.selected_order_id = o['id']
-                    st.rerun()
-
-    with tab_fail:
-        failed = [o for o in all_orders if o['status'] == 'Cancelled']
-        if not failed: st.info("No cancelled orders.")
-        for o in failed:
-            with st.container(border=True):
-                st.markdown(f"**❌ {o['company']}**")
-                proc_date = o.get('processed_date')
-                display_date = proc_date[:10] if proc_date else o.get('received_date', '')[:10]
-                st.caption(f"Order #{o['id']} | Niet gelukt | Datum: {display_date}")
-                if st.button(f"View #{o['id']}", key=f"f_{o['id']}", use_container_width=True):
-                    st.session_state.selected_order_id = o['id']
-                    st.rerun()
+    # Voorbeeld order 2
+    with st.container(border=True):
+        st.markdown("🔴 **Anouar**")
+        st.caption("Order #36 | Received: 2026-04-18")
+        st.button("View #36", use_container_width=True)
 
 with col_details:
     st.markdown("<h2>Order Details</h2>", unsafe_allow_html=True)
     st.write("---")
-    
-    if st.session_state.selected_order_id:
-        order = next((o for o in all_orders if o['id'] == st.session_state.selected_order_id), None)
-        if order:
-            st.markdown(f"### Order #{order['id']} - {order['company']}")
-            
-            with st.container(border=True):
-                r1, r2 = st.columns(2)
-                with r1:
-                    st.markdown("#### 📤 Pickup Details")
-                    st.markdown(f"**Address:** {order.get('pickup_address', '-')}")
-                    st.markdown(f"**Zip Code:** {order.get('pickup_zip', '-')}")
-                    st.markdown(f"**City:** {order.get('pickup_city', '-')}")
-                with r2:
-                    st.markdown("#### 📥 Delivery Details")
-                    st.markdown(f"**Address:** {order.get('delivery_address', '-')}")
-                    st.markdown(f"**Zip Code:** {order.get('delivery_zip', '-')}")
-                    st.markdown(f"**City:** {order.get('delivery_city', '-')}")
-            
-            with st.container(border=True):
-                st.markdown("#### 📞 Contact Information")
-                c1, c2, c3 = st.columns(3)
-                with c1:
-                    st.markdown("**Contact Person**")
-                    st.write(order.get('contact_name', '-'))
-                with c2:
-                    st.markdown("**Phone**")
-                    st.write(order.get('phone', '-'))
-                with c3:
-                    st.markdown("**Email**")
-                    st.write(order.get('email', '-'))
-
-            with st.container(border=True):
-                st.markdown("#### 📝 Specifications & Internal Notes")
-                st.markdown(f"**Requested Services:** {order.get('types', '-')}")
-                if order.get('info'):
-                    st.info(order['info'])
-                
-                st.write("---")
-                st.markdown("**Internal Dispatch Notes (Hidden from customer):**")
-                current_notes = order.get('internal_notes', '')
-                new_notes = st.text_area("Typ hier je eigen notities...", value=current_notes if current_notes else "", height=100, label_visibility="collapsed")
-            
-            st.write("")
-            
-            st.markdown("#### Control Panel")
-            status_list = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
-            try:
-                current_idx = status_list.index(order['status'])
-            except:
-                current_idx = 0
-                
-            new_status = st.selectbox("Update Order Status", options=status_list, index=current_idx)
-            
-            if st.button("💾 Save Updates", type="primary", use_container_width=True):
-                update_data = {
-                    "status": new_status,
-                    "processed_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
-                    "internal_notes": new_notes
-                }
-                supabase.table("orders").update(update_data).eq("id", order['id']).execute()
-                st.success("✅ Updates saved successfully!")
-                time.sleep(1)
-                st.rerun()
-    else:
-        st.info("👈 Select an order from the Inbox to view details and update its status.")
+    st.info("👈 Select an order from the Inbox to view details and update its status.")
