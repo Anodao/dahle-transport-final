@@ -11,40 +11,23 @@ import extra_streamlit_components as stx
 st.set_page_config(page_title="Dahle Transport - Order", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DEMO ZIJBALK NAVIGATIE
-# =========================================================
-with st.sidebar:
-    st.markdown("### 🧭 Demo Navigasjon")
-    st.markdown("Bruk denne menyen for å hoppe raskt mellom sidene under demoen.")
-    try: st.page_link("Home.py", label="Home (Forside)", icon="🏠")
-    except: pass
-    try: st.page_link("pages/Login.py", label="Kundeportal (Login)", icon="🔐")
-    except: pass
-    try: st.page_link("pages/Order.py", label="Ny bestilling (Order)", icon="📦")
-    except: pass
-    try: st.page_link("pages/Planner.py", label="Internt System", icon="📅")
-    except: pass
-    try: st.page_link("pages/Dashboard.py", label="CO2 Dashboard", icon="🌱")
-    except: pass
-
-# =========================================================
-# 1. DIRECTE CSS INJECTIE 
+# 0. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
 
-/* FIX: STREAMLIT HEADER DOORZICHTIG MAKEN, MAAR PIJLTJE WERKT */
-header[data-testid="stHeader"] { background-color: transparent !important; z-index: 9999 !important; }
+/* VERBERG STREAMLIT BRANDING VOLLEDIG */
+[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 .block-container { padding-top: 110px; }
 
 /* NAVBAR CSS */
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 990; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
-.nav-logo { margin-left: 60px; display: flex; justify-content: flex-start; } /* Ruimte gemaakt voor het pijltje */
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+.nav-logo { display: flex; justify-content: flex-start; margin-left: 0 !important; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
@@ -90,9 +73,6 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 </style>
 """, unsafe_allow_html=True)
 
-# =========================================================
-# 2. INIT COOKIE MANAGER & TAAL LOGICA
-# =========================================================
 cookie_manager = stx.CookieManager()
 
 saved_lang = cookie_manager.get('dahle_lang')
@@ -111,9 +91,6 @@ lang = st.session_state.language
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
 current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
-# =========================================================
-# 3. HET ORDER WOORDENBOEK
-# =========================================================
 translations = {
     "no": {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
@@ -206,9 +183,6 @@ translations = {
 }
 t = translations[lang]
 
-# =========================================================
-# 4. DATABASE & AUTHENTICATIE 
-# =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
