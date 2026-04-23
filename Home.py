@@ -18,7 +18,7 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stApp { background-color: #1e1e20 !important; }
 .block-container { padding: 0 !important; max-width: 100% !important; margin-top: 90px; }
 
-/* VERBERG STREAMLIT BRANDING VOLLEDIG */
+/* VERBERG STREAMLIT BRANDING */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
@@ -31,31 +31,35 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
 
+/* DE LINK TEKSTEN IN HET MIDDEN */
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
 
+/* HET NIEUWE TEKST-DROPDOWN MENU NAAST 'CONTACT' */
+.nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
+.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+.nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
+.nav-text-dropdown-content { display: none; position: absolute; top: 40px; left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
+.nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; }
+.nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
+.nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
+
+/* DE KNOPPEN RECHTS */
 .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
 .cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
 .cta-btn-purple:hover { background-color: #723e83 !important; }
+.cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
+.cta-btn-outline:hover { background-color: #f4e9f7 !important; }
 
-/* DROPDOWN STYLING (Voor Taal en Navigatie) */
-.custom-dropdown { position: relative; display: inline-block; }
-.custom-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
-.custom-dropbtn:hover { background-color: #eaeaea; }
-
-/* De 'Outline' variant för de menu knop */
-.btn-outline { background-color: transparent !important; border: 2px solid #894b9d !important; color: #894b9d !important; }
-
-.custom-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 40px; right: 0; overflow: hidden; }
-
-/* Onzichtbare brug om menu open te houden */
-.custom-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 15px; background: transparent; }
-
-.custom-dropdown:hover .custom-dropdown-content { display: block; }
-
-.custom-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
-.custom-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
+/* TAAL DROPDOWN */
+.lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
+.lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
+.lang-dropbtn:hover { background-color: #eaeaea; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 100%; right: 0; margin-top: 5px; overflow: hidden; }
+.lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
+.lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
+.lang-dropdown:hover .lang-dropdown-content { display: block; }
 
 /* HERO SECTION */
 .hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
@@ -64,16 +68,21 @@ div[class^="viewerBadge"] { display: none !important; }
 .hero-subtitle { font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 40px; }
 .opening-box { background-color: #ffffff; border-radius: 8px; padding: 25px 35px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); margin-bottom: 40px; }
 .opening-box p { color: #111111 !important; margin: 5px 0; font-size: 15px; }
+.opening-box strong { color: #111111; font-weight: 700; }
+.opening-box i { color: #666; font-size: 13px; }
 .circle-btn { width: 50px; height: 50px; border-radius: 50%; border: 2px solid #ffffff; display: flex; align-items: center; justify-content: center; margin-top: 20px; cursor: pointer; color: white; text-decoration: none; transition: 0.3s; }
+.circle-btn:hover { background-color: #ffffff; color: #1a1c1e; }
 .hero-right { flex: 1.2; background-image: url('https://cloud-1de12d.becdn.net/media/iW=1200&iH=630/c9ca77aaff92037d097c5d1558e89fa1.jpg'); background-size: cover; background-position: center left; clip-path: ellipse(90% 100% at 100% 50%); }
 
-@media (max-width: 900px) { .hero-container { flex-direction: column; } .hero-right { min-height: 400px; } .hero-left { padding: 10% 5%; align-items: center; text-align: center; } }
+@media (max-width: 900px) { .hero-container { flex-direction: column; } .hero-right { min-height: 400px; } .hero-left { padding: 10% 5%; align-items: center; text-align: center; } .hero-title { font-size: 60px; } }
 </style>
 """, unsafe_allow_html=True)
 
 # =========================================================
 # 2. TAAL LOGICA
 # =========================================================
+cookie_manager = stx.CookieManager()
+
 if 'language' not in st.session_state:
     st.session_state.language = "no"
 
@@ -92,33 +101,70 @@ current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 translations = {
     "no": { 
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Navigasjon ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
-        "nav_contact_btn": "TA KONTAKT", "hero_title": "D ÅRNE SÆ!", "hero_subtitle": "Rask og sikker transport, uansett distanse.", 
+        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
+        "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "hero_title": "D ÅRNE SÆ!", "hero_subtitle": "Rask og sikker transport, uansett distanse.", 
         "open_title": "Åpningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åpningstidene kan avvike ved spesielle høytider.", "btn_order": "BESTILL" 
     },
     "en": { 
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
-        "menu_title": "Navigation ⌄", "menu_login": "Customer Portal", "menu_order": "New Order", "menu_dash": "CO2 Dashboard", "menu_plan": "Internal Planner",
-        "nav_contact_btn": "CONTACT US", "hero_title": "WE'VE GOT IT!", "hero_subtitle": "Fast and secure transport, regardless of distance.", 
+        "menu_title": "Pages ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Internal Planner",
+        "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "hero_title": "WE'VE GOT IT!", "hero_subtitle": "Fast and secure transport, regardless of distance.", 
         "open_title": "Opening Hours:", "open_days": "Monday-Friday: 07:00-16:00", "open_note": "Opening hours may vary during public holidays.", "btn_order": "ORDER NOW" 
     },
     "sv": { 
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Navigering ⌄", "menu_login": "Kundportal", "menu_order": "Ny beställning", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
-        "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", 
+        "menu_title": "Sidor ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
+        "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", 
         "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL" 
     },
     "da": { 
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Navigering ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
-        "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", 
+        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_plan": "Intern Planner",
+        "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", 
         "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL" 
     }
 }
 t = translations[lang]
 
 # =========================================================
-# 4. NAVBAR SAMENSTELLEN (Geen spaties aan linkerkantlijn!)
+# 4. DATABASE & AUTHENTICATIE
+# =========================================================
+def init_connection():
+    url = st.secrets["supabase"]["url"]
+    key = st.secrets["supabase"]["key"]
+    return create_client(url, key)
+
+if 'supabase_client' not in st.session_state:
+    try: st.session_state.supabase_client = init_connection()
+    except: pass
+
+supabase = st.session_state.supabase_client
+
+if 'user' not in st.session_state:
+    st.session_state.user = None
+
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+if st.session_state.get('user') is None and acc_token and ref_token:
+    loading_text = "Laster inn konto... ⏳" if lang == "no" else "Loading account... ⏳"
+    with st.spinner(loading_text): 
+        time.sleep(0.5) 
+        try:
+            session = supabase.auth.set_session(acc_token, ref_token)
+            st.session_state.user = session.user
+            prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
+            if prof_res.data: st.session_state.company_name = prof_res.data[0]["company_name"]
+        except Exception: pass
+
+if st.session_state.get('user') is not None and 'company_name' in st.session_state:
+    icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
+    knop_tekst = f"{icoon}{st.session_state.company_name}"
+else:
+    knop_tekst = t['nav_portal']
+
+# =========================================================
+# 5. NAVBAR SAMENSTELLEN (Geen spaties aan linkerkantlijn!)
 # =========================================================
 html_navbar = f"""
 <div class="navbar">
@@ -133,26 +179,25 @@ html_navbar = f"""
 <span>{t['nav_services']}</span>
 <span>{t['nav_gallery']}</span>
 <span>{t['nav_contact']}</span>
+<div class="nav-text-dropdown">
+<button class="nav-text-dropbtn">{t['menu_title']}</button>
+<div class="nav-text-dropdown-content">
+<a href="/Dashboard?lang={lang}" target="_self">🌱 {t['menu_dash']}</a>
+<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
+</div>
+</div>
 </div>
 <div class="nav-cta">
-<div class="custom-dropdown">
-<button class="custom-dropbtn">{current_lang_display} ⌄</button>
-<div class="custom-dropdown-content">
+<div class="lang-dropdown">
+<button class="lang-dropbtn">{current_lang_display} ⌄</button>
+<div class="lang-dropdown-content">
 <a href="?lang=en" target="_self">🇬🇧 English</a>
 <a href="?lang=no" target="_self">🇳🇴 Norsk</a>
 <a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
 <a href="?lang=da" target="_self">🇩🇰 Dansk</a>
 </div>
 </div>
-<div class="custom-dropdown">
-<button class="custom-dropbtn btn-outline">{t['menu_title']}</button>
-<div class="custom-dropdown-content">
-<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
-<a href="/Order?lang={lang}" target="_self">📦 {t['menu_order']}</a>
-<a href="/Dashboard?lang={lang}" target="_self">🌱 {t['menu_dash']}</a>
-<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
-</div>
-</div>
+<a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a>
 <a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
 </div>
 </div>
@@ -160,7 +205,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# 5. HERO SECTION (Geen spaties aan linkerkantlijn!)
+# 6. HERO SECTION
 # =========================================================
 st.markdown(f"""
 <div class="hero-container">
