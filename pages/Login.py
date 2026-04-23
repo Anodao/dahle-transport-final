@@ -8,7 +8,23 @@ import extra_streamlit_components as stx
 st.set_page_config(page_title="Dahle Transport - Customer Portal", page_icon="🔐", layout="centered", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (Met het glazen schild gefixt!)
+# 0. DEMO ZIJBALK NAVIGATIE
+# =========================================================
+with st.sidebar:
+    st.markdown("### 🧭 Demo Navigasjon")
+    try: st.page_link("Home.py", label="Home (Forside)", icon="🏠")
+    except: pass
+    try: st.page_link("pages/Login.py", label="Kundeportal (Login)", icon="🔐")
+    except: pass
+    try: st.page_link("pages/Order.py", label="Ny bestilling (Order)", icon="📦")
+    except: pass
+    try: st.page_link("pages/Planner.py", label="Internt System", icon="📅")
+    except: pass
+    try: st.page_link("pages/Dashboard.py", label="CO2 Dashboard", icon="🌱")
+    except: pass
+
+# =========================================================
+# 1. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
@@ -19,16 +35,20 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown li { color: #ffffff !important; }
 div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 
-/* FIX: ZIJBALK PIJLTJE ALTIJD ZICHTBAAR + ONZICHTBAAR SCHILD DOORLAATBAAR MAKEN */
-header[data-testid="stHeader"] { background-color: transparent !important; z-index: 1001 !important; pointer-events: none !important; }
-[data-testid="collapsedControl"] { pointer-events: auto !important; background-color: #ffffff !important; border-radius: 50% !important; box-shadow: 0 2px 5px rgba(0,0,0,0.1) !important; }
+/* FIX 1: DE PIEPKLEINE 70px HEADER (Zodat het pijltje altijd werkt!) */
+header[data-testid="stHeader"] { 
+    width: 70px !important; 
+    background-color: transparent !important; 
+    box-shadow: none !important; 
+    z-index: 99999 !important; 
+}
 [data-testid="stToolbar"] { display: none !important; }
 footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
 /* NAVBAR CSS */
-.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); pointer-events: auto !important; }
-.nav-logo { margin-left: 40px; }
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+.nav-logo { margin-left: 60px; display: flex; justify-content: flex-start; } /* Ruimte gelaten voor het Streamlit pijltje */
 .nav-logo img { height: 48px; width: auto; transition: transform 0.2s; }
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; }
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
@@ -38,7 +58,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; white-space: nowrap; max-width: 250px; overflow: hidden; text-overflow: ellipsis;}
 
-/* DROPDOWN MENU CSS */
+/* FIX 2: DROPDOWN MENU (Met onzichtbare brug) */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; padding-bottom: 15px; margin-bottom: -15px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -64,29 +84,24 @@ div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; bor
 
 
 # =========================================================
-# 1. INIT COOKIE MANAGER & TAAL LOGICA
+# 2. VEILIGE TAAL LOGICA (Zonder trage cookies!)
 # =========================================================
-cookie_manager = stx.CookieManager()
-
-saved_lang = cookie_manager.get('dahle_lang')
 if 'language' not in st.session_state:
-    st.session_state.language = saved_lang if saved_lang else "no"
+    st.session_state.language = "no"
 
 if "lang" in st.query_params:
-    gekozen_taal = st.query_params["lang"]
-    if gekozen_taal in ["no", "en", "sv", "da"]:
-        st.session_state.language = gekozen_taal
-        cookie_manager.set("dahle_lang", gekozen_taal, key="set_lang_safe")
-    st.query_params.clear()
-    st.rerun()
+    url_lang = st.query_params["lang"]
+    if url_lang in ["no", "en", "sv", "da"]:
+        st.session_state.language = url_lang
 
-lang = st.session_state.language 
+lang = st.session_state.language
+
 lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
 current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
 
 
 # =========================================================
-# 2. HET GROTE WOORDENBOEK (LOGIN & DASHBOARD)
+# 3. HET GROTE WOORDENBOEK
 # =========================================================
 translations = {
     "no": {
@@ -140,7 +155,7 @@ translations = {
         "msg_logging_in": "Loggar in... ⏳", "msg_login_succ": "✅ Inloggningen lyckades! Omdirigerar...", "msg_login_fail": "❌ Fel e-post eller lösenord.", "msg_fill_both": "⚠️ Vänligen fyll i båda fälten.",
         "lbl_comp": "Företagsnamn *", "lbl_fn": "Förnamn *", "lbl_ln": "Efternamn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-post (Detta blir din inloggning) *", "lbl_pass_reg": "Välj lösenord *", "btn_reg": "Skapa konto",
         "msg_creating": "Skapar konto... ⏳", "msg_reg_succ": "✅ Kontot har skapats! Du kan nu logga in via fliken 'Logga in'.", "msg_reg_fail": "❌ Ett fel uppstod, eller e-posten finns redan.", "msg_fill_req": "⚠️ Vänligen fyll i alla obligatoriska fält (*).",
-        "welcome": "Välkommen tillbaka", "logged_in_as": "Inloggad som", "btn_logout": "🚪 Logga ut",
+        "welcome": "Välkommen tillbaka", "logged_in_as": "Inlogga som", "btn_logout": "🚪 Logga ut",
         "hist_title": "📦 Din frakthistorik", "tot_ship": "Totala försändelser", "pend_appr": "Väntar på godkännande", "processed": "Behandlade",
         "tab_myship": "📦 Mina försändelser", "tab_neworder": "➕ Ny beställning", "tab_prof": "⚙️ Profilinställningar",
         "no_orders": "📊 Du har inte gjort några beställningar än. Gå till 'Ny beställning' för att komma igång!",
@@ -174,29 +189,23 @@ translations = {
         "street": "Gadeadresse", "btn_save": "💾 Gem ændringer", "msg_saving": "Opdaterer profil... ⏳", "msg_save_succ": "✅ Profil opdateret!", "msg_save_fail": "⚠️ Kunne ikke opdatere profil:"
     }
 }
-
 t = translations[lang]
 
+# =========================================================
+# 4. DATABASE & AUTHENTICATIE (Enkel cookies voor inlog!)
+# =========================================================
+cookie_manager = stx.CookieManager()
 
-# =========================================================
-# 3. DATABASE & CONNECTIE
-# =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
     return create_client(url, key)
 
 if 'supabase_client' not in st.session_state:
-    try:
-        st.session_state.supabase_client = init_connection()
-    except Exception as e:
-        st.error("⚠️ Database connection failed.")
-        st.stop()
+    try: st.session_state.supabase_client = init_connection()
+    except Exception as e: pass
 
 supabase = st.session_state.supabase_client
-
-if 'active_tab' not in st.session_state:
-    st.session_state.active_tab = "My Shipments"
 
 if 'user' not in st.session_state:
     st.session_state.user = None
@@ -210,15 +219,37 @@ if st.session_state.get('user') is None and acc_token and ref_token:
         try:
             session = supabase.auth.set_session(acc_token, ref_token)
             st.session_state.user = session.user
-            prof_res = supabase.table("profiles").select("company_name").eq("id", session.user.id).execute()
-            if prof_res.data:
-                st.session_state.company_name = prof_res.data[0]["company_name"]
         except Exception:
             pass
 
+current_user_id = st.session_state.user.id if st.session_state.get('user') else "guest"
+
+if st.session_state.get('last_seen_user_id') != current_user_id:
+    safe_profile = {}
+    if current_user_id != "guest":
+        try:
+            prof_res = supabase.table("profiles").select("*").eq("id", current_user_id).execute()
+            if prof_res.data:
+                raw_prof = prof_res.data[0]
+                name_parts = str(raw_prof.get('contact_name', '')).split(' ', 1)
+                st.session_state.company_name = raw_prof.get("company_name", "")
+                safe_profile = {
+                    'comp_name': str(raw_prof.get('company_name') or ''), 'cont_fn': name_parts[0] if name_parts else '', 'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
+                    'cont_email': st.session_state.user.email, 'cont_phone': str(raw_prof.get('phone') or ''), 'comp_addr': str(raw_prof.get('address') or ''), 'comp_pc': str(raw_prof.get('zip_code') or ''),
+                    'comp_city': str(raw_prof.get('city') or ''), 'p_addr': str(raw_prof.get('address') or ''), 'p_zip': str(raw_prof.get('zip_code') or ''), 'p_city': str(raw_prof.get('city') or ''),
+                    'd_addr': str(raw_prof.get('del_address') or ''), 'd_zip': str(raw_prof.get('del_zip') or ''), 'd_city': str(raw_prof.get('del_city') or '')
+                }
+        except: pass
+    st.session_state['user_db_profile'] = safe_profile
+    st.session_state['last_seen_user_id'] = current_user_id
+
+prof = st.session_state.get('user_db_profile', {})
+
+if 'active_tab' not in st.session_state:
+    st.session_state.active_tab = "My Shipments"
 
 # =========================================================
-# 4. BEPAAL TEKST VOOR NAVBAR
+# 5. NAVBAR TEKENEN (Met de taal veilig in de URL!)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
