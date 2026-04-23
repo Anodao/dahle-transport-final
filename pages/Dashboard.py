@@ -66,16 +66,14 @@ div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c3
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & WACHTRUIMTE (DE FIX!)
+# 2. INIT COOKIE MANAGER & WACHTRUIMTE
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-# FIX: Omdat we HTML links gebruiken, moet de pagina even wachten 
-# om je cookies (en dus je inloggegevens) op te halen.
 if 'cookie_retry' not in st.session_state:
     st.session_state.cookie_retry = True
     st.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials... ⏳</h3>", unsafe_allow_html=True)
-    st.stop() # Dit laat de component inladen en herstart het script automatisch MET cookies!
+    st.stop()
 
 if 'language' not in st.session_state:
     st.session_state.language = "no"
@@ -131,7 +129,7 @@ translations = {
 t = translations.get(lang, translations["no"])
 
 # =========================================================
-# 4. DATABASE, AUTHENTICATIE & ROL-CHECK
+# 4. DATABASE, AUTHENTICATIE & ROL-CHECK (DE FIX!)
 # =========================================================
 @st.cache_resource
 def init_connection():
@@ -157,19 +155,22 @@ if st.session_state.get('user') is None and acc_token and ref_token:
     except Exception:
         pass
 
+# Haal profiel EN de rol op (Aangepast naar 'roles')
 db_error_message = None
 if st.session_state.get('user'):
     try:
-        prof_res = supabase.table("profiles").select("company_name, role").eq("id", st.session_state.user.id).execute()
+        # HIER IS DE FIX: ZOEKEN NAAR 'roles' INSTEDE VAN 'role'
+        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
         if prof_res.data:
             st.session_state.company_name = prof_res.data[0].get("company_name", "")
-            raw_role = str(prof_res.data[0].get("role", "customer")).strip().lower()
+            # HIER IS DE FIX: VERKRIJGEN VAN 'roles'
+            raw_role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
             st.session_state.role = raw_role
     except Exception as e: 
         st.session_state.role = "customer"
         db_error_message = str(e)
 
-is_employee = st.session_state.get('role') == 'admin'
+is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
 # 4.5 DE DIGITALE UITSMIJTER (THE BOUNCER)
@@ -179,13 +180,16 @@ if not is_employee:
     <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
     """
     st.markdown(html_navbar_empty, unsafe_allow_html=True)
+    
     st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>🔒 Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
     
+    # DEBUG PANEEL 
     st.markdown("<br><hr>", unsafe_allow_html=True)
     st.warning("⚠️ **DEBUG INFORMATIE:**")
     st.write(f"- Jouw opgeslagen rol in Streamlit is nu: **'{st.session_state.get('role')}'**")
-    st.write("- Om toegang te krijgen, moet er in Supabase in de tabel `profiles` onder de kolom `role` exact **admin** staan.")
-    if db_error_message: st.error(f"Foutmelding van Supabase: {db_error_message}")
+    st.write("- Om toegang te krijgen, moet er in Supabase in de tabel `profiles` onder de kolom `roles` exact **admin** staan.")
+    if db_error_message:
+        st.error(f"Foutmelding van Supabase: {db_error_message}")
     
     c1, c2, c3 = st.columns([1,1,1])
     with c2:
@@ -193,6 +197,7 @@ if not is_employee:
         if st.button("← Back to Home", use_container_width=True):
             st.switch_page("Home.py")
     st.stop()
+
 
 # =========================================================
 # 5. NAVBAR SAMENSTELLEN 
@@ -283,7 +288,7 @@ def get_live_fuel_prices():
     return {"diesel": 20.50, "gas": 21.50} 
 
 # ==========================================
-# 7. DASHBOARD LOGICA
+# 7. DASHBOARD LOGICA 
 # ==========================================
 today = datetime.now().date()
 start_of_week = today - timedelta(days=today.weekday())
