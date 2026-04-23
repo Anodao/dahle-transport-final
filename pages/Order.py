@@ -11,7 +11,7 @@ import extra_streamlit_components as stx
 st.set_page_config(page_title="Dahle Transport - Order", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 0. DIRECTE CSS INJECTIE (Puur, Schoon & Stabiel)
+# 0. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
@@ -25,8 +25,9 @@ footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 .block-container { padding-top: 110px; }
 
-/* NAVBAR CSS (Weer perfect in balans!) */
+/* NAVBAR CSS (Nu met margin-left: 20px voor het logo!) */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
+.nav-logo { display: flex; justify-content: flex-start; margin-left: 20px; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
@@ -190,9 +191,8 @@ translations = {
 }
 t = translations[lang]
 
-
 # =========================================================
-# 3. DATABASE & AUTHENTICATIE
+# 3. DATABASE & AUTHENTICATIE 
 # =========================================================
 def init_connection():
     url = st.secrets["supabase"]["url"]
@@ -272,9 +272,8 @@ if "reset" in st.query_params:
     st.query_params.clear()
     st.rerun()
 
-
 # =========================================================
-# 4. NAVBAR TEKENEN (Schoon, geen extra marges!)
+# 4. NAVBAR TEKENEN
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
