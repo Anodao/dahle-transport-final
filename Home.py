@@ -43,7 +43,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
 .nav-text-dropdown-content { display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
-.nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; }
+.nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; border-bottom: none !important; }
 .nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
 
@@ -83,14 +83,13 @@ div[class^="viewerBadge"] { display: none !important; }
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & TAAL LOGICA
+# 2. TAAL LOGICA & WACHTRUIMTE
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-# Stille refresh om inlog-status over te nemen van andere pagina's
 if 'cookie_retry' not in st.session_state:
     st.session_state.cookie_retry = True
-    time.sleep(0.3)
+    time.sleep(0.2)
     st.rerun()
 
 if 'language' not in st.session_state:
@@ -138,15 +137,18 @@ translations = {
 t = translations.get(lang, translations["no"])
 
 # =========================================================
-# 4. DATABASE, AUTHENTICATIE & ROL-CHECK
+# 4. DATABASE & AUTHENTICATIE & ROL-CHECK
 # =========================================================
-@st.cache_resource
 def init_connection():
     url = st.secrets["supabase"]["url"]
     key = st.secrets["supabase"]["key"]
     return create_client(url, key)
 
-supabase = init_connection()
+if 'supabase_client' not in st.session_state:
+    try: st.session_state.supabase_client = init_connection()
+    except: pass
+
+supabase = st.session_state.supabase_client
 
 if 'user' not in st.session_state:
     st.session_state.user = None
@@ -166,7 +168,6 @@ if st.session_state.get('user') is None and acc_token and ref_token:
 
 if st.session_state.get('user'):
     try:
-        # Haal de rol correct op uit de 'roles' kolom
         prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
         if prof_res.data:
             st.session_state.company_name = prof_res.data[0].get("company_name", "")
@@ -177,7 +178,7 @@ if st.session_state.get('user'):
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Dynamisch)
+# 5. NAVBAR SAMENSTELLEN (Geen Enters/Spaties in de menu variabele!)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -185,19 +186,13 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = t['nav_portal']
 
-# Basis linkjes voor IEDEREEN
-dropdown_links = f"""
-<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
-<a href="/Order?lang={lang}" target="_self">📦 {t['menu_order']}</a>
-"""
+# FIX: Bouw de string op ZONDER witregels/enters
+dropdown_links = f'<a href="/Login?lang={lang}" target="_self">🔐 {t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">📦 {t["menu_order"]}</a>'
 
-# Linkjes die ALLEEN zichtbaar zijn voor admins
 if is_employee:
-    dropdown_links += f"""
-<a href="/Dashboard?lang={lang}" target="_self">📈 {t['menu_dash']}</a>
-<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
-"""
+    dropdown_links += f'<a href="/Dashboard?lang={lang}" target="_self">📈 {t["menu_dash"]}</a><a href="/Planner?lang={lang}" target="_self">📅 {t["menu_plan"]}</a>'
 
+# Navbar HTML ook strakker gemaakt rondom de dropdown-content div
 html_navbar = f"""
 <div class="navbar">
 <div class="nav-logo">
@@ -213,9 +208,7 @@ html_navbar = f"""
 <span>{t['nav_contact']}</span>
 <div class="nav-text-dropdown">
 <button class="nav-text-dropbtn">{t['menu_title']}</button>
-<div class="nav-text-dropdown-content">
-{dropdown_links}
-</div>
+<div class="nav-text-dropdown-content">{dropdown_links}</div>
 </div>
 </div>
 <div class="nav-cta">
