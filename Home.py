@@ -7,7 +7,7 @@ import time
 st.set_page_config(page_title="Dahle Transport - Home", page_icon="🚚", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. DIRECTE CSS INJECTIE (Schoon & Gebruiksvriendelijk)
+# 1. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
@@ -25,13 +25,7 @@ footer { display: none !important; }
 div[class^="viewerBadge"] { display: none !important; }
 
 /* NAVBAR CSS */
-.navbar { 
-    position: fixed; top: 0; left: 0; width: 100%; height: 90px; 
-    background-color: #ffffff !important; z-index: 999; 
-    display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; 
-    padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); 
-}
-
+.navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: #ffffff !important; z-index: 999; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
 .nav-logo { display: flex; justify-content: flex-start; margin-left: 20px; }
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
@@ -42,46 +36,25 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-links span:hover { color: #894b9d !important; }
 
 .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
-.cta-btn-purple { 
-    background-color: #894b9d !important; color: white !important; 
-    padding: 10px 24px; border-radius: 50px; text-decoration: none !important; 
-    font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;
-}
+.cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 
 /* DROPDOWN STYLING (Voor Taal en Navigatie) */
 .custom-dropdown { position: relative; display: inline-block; }
-.custom-dropbtn { 
-    background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; 
-    border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; 
-    cursor: pointer; display: flex; align-items: center; gap: 6px; 
-    box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; 
-}
+.custom-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .custom-dropbtn:hover { background-color: #eaeaea; }
 
-/* De 'Outline' variant voor de menu knop */
-.btn-outline { 
-    background-color: transparent !important; border: 2px solid #894b9d !important; 
-    color: #894b9d !important; 
-}
+/* De 'Outline' variant för de menu knop */
+.btn-outline { background-color: transparent !important; border: 2px solid #894b9d !important; color: #894b9d !important; }
 
-.custom-dropdown-content { 
-    display: none; position: absolute; background-color: #ffffff; 
-    min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); 
-    border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; 
-    top: 40px; right: 0; overflow: hidden; 
-}
+.custom-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: 40px; right: 0; overflow: hidden; }
 
 /* Onzichtbare brug om menu open te houden */
 .custom-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 15px; background: transparent; }
 
 .custom-dropdown:hover .custom-dropdown-content { display: block; }
 
-.custom-dropdown-content a { 
-    color: #111 !important; padding: 12px 16px; text-decoration: none; 
-    display: flex; align-items: center; gap: 10px; font-size: 14px; 
-    font-weight: 500; transition: background-color 0.2s; 
-}
+.custom-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .custom-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 
 /* HERO SECTION */
@@ -145,72 +118,68 @@ translations = {
 t = translations[lang]
 
 # =========================================================
-# 4. NAVBAR SAMENSTELLEN
+# 4. NAVBAR SAMENSTELLEN (Geen spaties aan linkerkantlijn!)
 # =========================================================
 html_navbar = f"""
 <div class="navbar">
-    <div class="nav-logo">
-        <a href="/?lang={lang}" target="_self">
-            <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp">
-        </a>
-    </div>
-    
-    <div class="nav-links">
-        <a href="/?lang={lang}" target="_self"><span>{t['nav_home']}</span></a>
-        <span>{t['nav_about']}</span>
-        <span>{t['nav_services']}</span>
-        <span>{t['nav_gallery']}</span>
-        <span>{t['nav_contact']}</span>
-    </div>
-    
-    <div class="nav-cta">
-        <div class="custom-dropdown">
-            <button class="custom-dropbtn">{current_lang_display} ⌄</button>
-            <div class="custom-dropdown-content">
-                <a href="?lang=en" target="_self">🇬🇧 English</a>
-                <a href="?lang=no" target="_self">🇳🇴 Norsk</a>
-                <a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
-                <a href="?lang=da" target="_self">🇩🇰 Dansk</a>
-            </div>
-        </div>
-
-        <div class="custom-dropdown">
-            <button class="custom-dropbtn btn-outline">{t['menu_title']}</button>
-            <div class="custom-dropdown-content">
-                <a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
-                <a href="/Order?lang={lang}" target="_self">📦 {t['menu_order']}</a>
-                <a href="/Dashboard?lang={lang}" target="_self">🌱 {t['menu_dash']}</a>
-                <a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
-            </div>
-        </div>
-
-        <a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
-    </div>
+<div class="nav-logo">
+<a href="/?lang={lang}" target="_self">
+<img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp">
+</a>
+</div>
+<div class="nav-links">
+<a href="/?lang={lang}" target="_self"><span>{t['nav_home']}</span></a>
+<span>{t['nav_about']}</span>
+<span>{t['nav_services']}</span>
+<span>{t['nav_gallery']}</span>
+<span>{t['nav_contact']}</span>
+</div>
+<div class="nav-cta">
+<div class="custom-dropdown">
+<button class="custom-dropbtn">{current_lang_display} ⌄</button>
+<div class="custom-dropdown-content">
+<a href="?lang=en" target="_self">🇬🇧 English</a>
+<a href="?lang=no" target="_self">🇳🇴 Norsk</a>
+<a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
+<a href="?lang=da" target="_self">🇩🇰 Dansk</a>
+</div>
+</div>
+<div class="custom-dropdown">
+<button class="custom-dropbtn btn-outline">{t['menu_title']}</button>
+<div class="custom-dropdown-content">
+<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
+<a href="/Order?lang={lang}" target="_self">📦 {t['menu_order']}</a>
+<a href="/Dashboard?lang={lang}" target="_self">🌱 {t['menu_dash']}</a>
+<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
+</div>
+</div>
+<a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
+</div>
 </div>
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# 5. HERO SECTION
+# 5. HERO SECTION (Geen spaties aan linkerkantlijn!)
 # =========================================================
 st.markdown(f"""
 <div class="hero-container">
-    <div class="hero-left">
-        <h1 class="hero-title">{t['hero_title']}</h1>
-        <p class="hero-subtitle">{t['hero_subtitle']}</p>
-        <div class="opening-box">
-            <p><strong>{t['open_title']}</strong></p>
-            <p>{t['open_days']}</p>
-            <p><i>{t['open_note']}</i></p>
-        </div>
-        <div style="display: flex; gap: 15px;">
-            <a href="/Order?lang={lang}" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_order']}</a>
-            <a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px; background-color: transparent !important; border: 2px solid white !important;">{t['nav_contact_btn']}</a>
-        </div>
-        <a href="#more" class="circle-btn">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
-        </a>
-    </div>
-    <div class="hero-right"></div>
+<div class="hero-left">
+<h1 class="hero-title">{t['hero_title']}</h1>
+<p class="hero-subtitle">{t['hero_subtitle']}</p>
+<div class="opening-box">
+<p><strong>{t['open_title']}</strong></p>
+<p>{t['open_days']}</p>
+<p><i>{t['open_note']}</i></p>
+</div>
+<div style="display: flex; gap: 15px;">
+<a href="/Order?lang={lang}" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_order']}</a>
+<a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px; background-color: transparent !important; border: 2px solid white !important;">{t['nav_contact_btn']}</a>
+</div>
+<a href="#more" class="circle-btn">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+</a>
+</div>
+<div class="hero-right"></div>
 </div>
 """, unsafe_allow_html=True)
