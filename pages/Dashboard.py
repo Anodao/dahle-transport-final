@@ -66,14 +66,18 @@ div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c3
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & WACHTRUIMTE
+# 2. INIT COOKIE MANAGER & WACHTRUIMTE (DE FIX!)
 # =========================================================
 cookie_manager = stx.CookieManager()
 
+# FIX: We gebruiken nu st.rerun() in plaats van st.stop()
 if 'cookie_retry' not in st.session_state:
     st.session_state.cookie_retry = True
-    st.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials... ⏳</h3>", unsafe_allow_html=True)
-    st.stop()
+    loading = st.empty()
+    loading.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials... ⏳</h3>", unsafe_allow_html=True)
+    time.sleep(0.8) # Geef de browser kort de tijd om cookies te laden
+    loading.empty()
+    st.rerun() # Ververs de pagina zodat je ingelogd bent!
 
 if 'language' not in st.session_state:
     st.session_state.language = "no"
@@ -129,7 +133,7 @@ translations = {
 t = translations.get(lang, translations["no"])
 
 # =========================================================
-# 4. DATABASE, AUTHENTICATIE & ROL-CHECK (DE FIX!)
+# 4. DATABASE, AUTHENTICATIE & ROL-CHECK
 # =========================================================
 @st.cache_resource
 def init_connection():
@@ -155,15 +159,12 @@ if st.session_state.get('user') is None and acc_token and ref_token:
     except Exception:
         pass
 
-# Haal profiel EN de rol op (Aangepast naar 'roles')
 db_error_message = None
 if st.session_state.get('user'):
     try:
-        # HIER IS DE FIX: ZOEKEN NAAR 'roles' INSTEDE VAN 'role'
         prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
         if prof_res.data:
             st.session_state.company_name = prof_res.data[0].get("company_name", "")
-            # HIER IS DE FIX: VERKRIJGEN VAN 'roles'
             raw_role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
             st.session_state.role = raw_role
     except Exception as e: 
@@ -187,7 +188,7 @@ if not is_employee:
     st.markdown("<br><hr>", unsafe_allow_html=True)
     st.warning("⚠️ **DEBUG INFORMATIE:**")
     st.write(f"- Jouw opgeslagen rol in Streamlit is nu: **'{st.session_state.get('role')}'**")
-    st.write("- Om toegang te krijgen, moet er in Supabase in de tabel `profiles` onder de kolom `roles` exact **admin** staan.")
+    st.write("- Om toegang te krijgen, moet er in Supabase in de tabel `profiles` under de kolom `roles` exact **admin** staan.")
     if db_error_message:
         st.error(f"Foutmelding van Supabase: {db_error_message}")
     
