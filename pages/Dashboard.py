@@ -19,7 +19,10 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
 .stApp { background-color: #111111 !important; }
-.block-container { padding-top: 130px !important; max-width: 100% !important; margin-top: 0px; padding-left: 5%; padding-right: 5%; }
+
+/* FIX: PADDING-TOP VERKLEIND VAN 130px NAAR 105px VOOR EEN STRAKKERE LOOK */
+.block-container { padding-top: 105px !important; max-width: 100% !important; margin-top: 0px; padding-left: 5%; padding-right: 5%; padding-bottom: 50px !important; }
+
 .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown li { color: #ffffff !important; }
 div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
@@ -240,7 +243,7 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = t['nav_portal']
 
-# Menu plat opbouwen ZONDER EMOJI'S. Dashboard link weggelaten omdat we hier al op zitten!
+# Menu plat opbouwen ZONDER EMOJI'S.
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a><a href="/Planner?lang={lang}" target="_self">{t["menu_plan"]}</a>'
 
 html_navbar = f"""
@@ -279,11 +282,11 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# 5.5 PAGINA TITEL (Strak en professioneel)
+# 5.5 PAGINA TITEL (Strak en professioneel, zonder lege marge!)
 # =========================================================
 st.markdown(f"""
 <div style="margin-bottom: 25px;">
-    <h2 style="color: #b070c6; margin-bottom: 5px;">{t['dash_title']}</h2>
+    <h2 style="color: #ffffff; margin-bottom: 5px; margin-top: 0px;">{t['dash_title']}</h2>
     <p style="color: #888; font-size: 15px; margin-top: 0;">{t['dash_sub']}</p>
 </div>
 """, unsafe_allow_html=True)
