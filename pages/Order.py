@@ -54,8 +54,6 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .cta-btn-outline:hover { background-color: #f4e9f7 !important; }
-
-/* TAAL DROPDOWN */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -90,7 +88,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & WACHTRUIMTE
+# 2. INIT COOKIE MANAGER & TAAL LOGICA
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -102,18 +100,10 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
-if 'language' not in st.session_state:
-    st.session_state.language = "no"
-
-if "lang" in st.query_params:
-    url_lang = st.query_params["lang"]
-    if url_lang in ["no", "en", "sv", "da"]:
-        st.session_state.language = url_lang
-        cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
-
+if 'language' not in st.session_state: st.session_state.language = "no"
+if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
 lang = st.session_state.language 
 
-# Vlaggetjes verwijderd
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -143,8 +133,7 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
-        "calc_t": "Estimert Kostnad", "c_base": "Transport", "c_hw": "Håndtering & Vekt", "c_tr": "Transport", "c_ww": "Internasjonal Flyfrakt", "c_src": "Søker adresse...", "c_aw": "Venter på rute...", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
-        "c_admin": "Adm. gebyr", "c_over": "Overdimensjonert (+25%)"
+        "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)"
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -168,8 +157,7 @@ translations = {
         "l_cn": "COMPANY NAME", "l_rn": "REG. NO", "l_ad": "ADDRESS", "l_cp": "CONTACT PERSON", "l_em": "EMAIL", "l_ph": "PHONE", "l_str": "STREET ADDRESS", "l_zc": "ZIP & CITY",
         "rev_r": "Route", "rev_s": "Shipment", "l_no": "NOTES", "b_edit": "← Edit Details", "b_send": "CONFIRM & SEND",
         "db_err": "⚠️ Error: Failed to send to database.", "s_succ": "Request sent successfully!", "s_sub": "We will get in touch shortly.", "b_new": "← Start a New Request",
-        "calc_t": "Estimated Cost", "c_base": "Transport", "c_hw": "Handling & Weight", "c_tr": "Transport", "c_ww": "Worldwide Air Freight", "c_src": "Searching address...", "c_aw": "Awaiting route...", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
-        "c_admin": "Admin Fee", "c_over": "Oversized (+25%)"
+        "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)"
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -193,8 +181,7 @@ translations = {
         "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD",
         "rev_r": "Rutt", "rev_s": "Försändelse", "l_no": "ANTECKNINGAR", "b_edit": "← Redigera detaljer", "b_send": "BEKRÄFTA & SKICKA",
         "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
-        "calc_t": "Uppskattad Kostnad", "c_base": "Transport", "c_hw": "Hantering & Vikt", "c_tr": "Transport", "c_ww": "Internationell Flygfrakt", "c_src": "Söker adress...", "c_aw": "Väntar på rutt...", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
-        "c_admin": "Adm. avgift", "c_over": "Överdimensionerad (+25%)"
+        "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)"
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -216,10 +203,9 @@ translations = {
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
-        "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
+        "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÄFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
-        "calc_t": "Estimeret Pris", "c_base": "Transport", "c_hw": "Håndtering & Vægt", "c_tr": "Transport", "c_ww": "International Luftfragt", "c_src": "Søger adresse...", "c_aw": "Afventer rute...", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
-        "c_admin": "Adm. gebyr", "c_over": "Overdimensioneret (+25%)"
+        "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
     }
 }
 t = translations[lang]
@@ -315,7 +301,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA 
+# ROUTING, KAART & DAHLE PRIJS LOGICA (FIXED GET_ROUTE_DATA)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -328,7 +314,6 @@ def get_coordinates(address_string):
     except: pass
     return None
 
-# DEZE FUNCTIE TERUGGEZET VOOR DE ROUTE LIJN OP DE KAART!
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
@@ -370,17 +355,31 @@ def get_live_price():
     }
     
     base_cost = 0
+    tier_label = ""
+    
     if total_weight > 999:
         base_cost = prices[zone][-1][1] + (int((total_weight - 999) / 100) + 1) * 100
+        tier_label = "> 999 kg"
     else:
         for max_w, price in prices[zone]:
             if total_weight <= max_w:
                 base_cost = price
+                if max_w == 24: tier_label = "0-24 kg"
+                elif max_w == 49: tier_label = "25-49 kg"
+                elif max_w == 99: tier_label = "50-99 kg"
+                elif max_w == 149: tier_label = "100-149 kg"
+                elif max_w == 199: tier_label = "150-199 kg"
+                elif max_w == 399: tier_label = "200-399 kg"
+                elif max_w == 599: tier_label = "400-599 kg"
+                elif max_w == 799: tier_label = "600-799 kg"
+                elif max_w == 999: tier_label = "800-999 kg"
                 break
-        if base_cost == 0: base_cost = prices[zone][-1][1]
+        if base_cost == 0: 
+            base_cost = prices[zone][-1][1]
+            tier_label = "800-999 kg"
 
     cost = base_cost + 50 
-    breakdown_lines = [(f"{t['c_tr']} (Zone {zone})", base_cost), (t['c_admin'], 50)]
+    breakdown_lines = [(f"{t['c_tr']} ({tier_label})", base_cost), (t['c_admin'], 50)]
     
     if oversized:
         surcharge = cost * 0.25
@@ -566,7 +565,7 @@ else:
                     layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_color=[137, 75, 157, 255], get_radius=1000, radius_min_pixels=6, radius_max_pixels=15))
                     
                     if p_coords and d_coords:
-                        _, route_geom = get_route_data(p_coords, d_coords) # DEZE WERKT NU WEER!
+                        _, route_geom = get_route_data(p_coords, d_coords) 
                         if route_geom:
                             layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 200], width_scale=20, width_min_pixels=3, get_width=5))
                             pitch = 20 
