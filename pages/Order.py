@@ -123,7 +123,7 @@ translations = {
         "b2_t": "Gods & Frakt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tyngre forsendelser (paller/containere)", "b2_l2": "B2B",
         "b3_t": "Post & Markedsføring", "b3_s": "Typisk opptil 2kg", "b3_l1": "Lette varer", "b3_l2": "Internasjonal post (brev, brosjyrer)",
         "err_sel": "❌ Vennligst velg minst ett alternativ.", "time_est": "Tar vanligvis under 5 minutter.", "btn_next": "Neste steg",
-        "w_tot": "Totalvekt (kg)", "w_over": "Overdimensjonert (Lengde > 3.5m)", "l_type": "**Lasttype ***", "l_err": " 🚨 :red[(Velg minst én)]", "l_pal": "Pall", "l_full": "Full container/lastebil", "l_lc": "Stykkgods", "w_est": "Estimert totalvekt (kg)",
+        "w_tot": "Totalvekt (kg)", "w_over": "Overdimensjonert (Lengde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Velg minst én)]", "lbl_qty": "Antall", "l_pal": "Pall", "l_full": "Full container/lastebil", "l_lc": "Stykkgods", "w_est": "Estimert totalvekt (kg)",
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "Foretaksregister (valgfritt)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Etternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruteinformasjon", "r_pick": "Hentested", "r_del": "Leveringssted", "r_str": "Gateadresse *",
@@ -147,7 +147,7 @@ translations = {
         "b2_t": "Cargo & Freight", "b2_s": "Typically over 31.5kg+", "b2_l1": "Heavier shipments (pallets/containers)", "b2_l2": "B2B",
         "b3_t": "Mail & Marketing", "b3_s": "Typically up to 2kg", "b3_l1": "Lightweight goods", "b3_l2": "International business mail",
         "err_sel": "❌ Please select at least one option.", "time_est": "Typically takes less than 5 minutes.", "btn_next": "Next Step",
-        "w_tot": "Total Weight (kg)", "w_over": "Oversized (Length > 3.5m)", "l_type": "**Load Type ***", "l_err": " 🚨 :red[(Select at least one)]", "l_pal": "Pallet", "l_full": "Full Container/Truck", "l_lc": "Loose Cargo", "w_est": "Total Est. Weight (kg)",
+        "w_tot": "Total Weight (kg)", "w_over": "Oversized (Length > 3.5m)", "l_type": "Load Type", "l_err": " 🚨 :red[(Select at least one)]", "lbl_qty": "Quantity", "l_pal": "Pallet", "l_full": "Full Container/Truck", "l_lc": "Loose Cargo", "w_est": "Total Est. Weight (kg)",
         "c_det": "Company & Contact Details", "c_name": "Company Name *", "c_reg": "Registration No. (optional)", "c_addr": "Company Address *", "c_zip": "Zip Code *", "c_city": "City *", "c_ctry": "Country *",
         "c_fn": "First Name *", "c_ln": "Last Name *", "c_em": "Work Email *", "c_ph": "Phone *",
         "r_info": "Route Information", "r_pick": "Pickup Location", "r_del": "Delivery Destination", "r_str": "Street Address *",
@@ -171,7 +171,7 @@ translations = {
         "b2_t": "Gods & Frakt", "b2_s": "Vanligtvis över 31.5kg+", "b2_l1": "Tyngre försändelser (pallar/containrar)", "b2_l2": "B2B",
         "b3_t": "Post & Marknadsföring", "b3_s": "Vanligtvis upp till 2kg", "b3_l1": "Lätta varer", "b3_l2": "Internationell företagspost",
         "err_sel": "❌ Vänligen välj minst ett alternativ.", "time_est": "Tar vanligtvis under 5 minutter.", "btn_next": "Nästa steg",
-        "w_tot": "Totalvikt (kg)", "w_over": "Överdimensionerad (Längd > 3.5m)", "l_type": "**Lasttyp ***", "l_err": " 🚨 :red[(Välj minst en)]", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", "w_est": "Uppskattad totalvikt (kg)",
+        "w_tot": "Totalvikt (kg)", "w_over": "Överdimensionerad (Längd > 3.5m)", "l_type": "Lasttyp", "l_err": " 🚨 :red[(Välj minst en)]", "lbl_qty": "Antal", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", "w_est": "Uppskattad totalvikt (kg)",
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
         "c_fn": "Förnamn *", "c_ln": "Efternamn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *",
@@ -195,7 +195,7 @@ translations = {
         "b2_t": "Gods & Fragt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tungere forsendelser (pallar/containere)", "b2_l2": "B2B",
         "b3_t": "Post & Markedsføring", "b3_s": "Typisk op til 2kg", "b3_l1": "Lette varer", "b3_l2": "International erhvervspost",
         "err_sel": "❌ Vælg venligst mindst én mulighed.", "time_est": "Tager typisk under 5 minutter.", "btn_next": "Næste trin",
-        "w_tot": "Totalvægt (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "**Lasttype ***", "l_err": " 🚨 :red[(Vælg mindst én)]", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", "w_est": "Estimeret totalvægt (kg)",
+        "w_tot": "Totalvægt (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Vælg mindst én)]", "lbl_qty": "Antall", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", "w_est": "Estimeret totalvægt (kg)",
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
         "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *",
@@ -281,7 +281,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN 
+# 5. NAVBAR SAMENSTELLEN
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -303,7 +303,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (FIXED ZONES & LIJNEN)
+# ROUTING, KAART & DAHLE PRIJS LOGICA 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -332,7 +332,6 @@ def determine_zone(p_city, d_city):
     cities = (str(p_city).lower() + " " + str(d_city).lower())
     if any(c in cities for c in ['roan', 'osen', 'bessaker', 'refsnes', 'stokkøy', 'stokkoy', 'linesøya', 'linesoya']): return 3
     if any(c in cities for c in ['bjugn', 'brekstad', 'vallersund', 'lysøysund', 'lysoysund', 'åfjord', 'afjord']): return 2
-    # STADSBYGD TOEGEVOEGD AAN ZONE 1
     if any(c in cities for c in ['stadsbygd', 'rissa', 'hasselvika', 'fevåg', 'fevag', 'husbysjøen', 'husbysjoen', 'råkvåg', 'rakvag', 'leksvik', 'trondheim']): return 1
     return 4 
 
@@ -380,6 +379,15 @@ def get_live_price():
         if base_cost == 0: 
             base_cost = prices[zone][-1][1]
             tier_label = "800-999 kg"
+
+    # Pallet Rate Logic
+    pallet_prices = {1: 700, 2: 750, 3: 800, 4: 600}
+    if "Cargo & Freight" in st.session_state.selected_types and st.session_state.get('cf_pal'):
+        pal_qty = st.session_state.get('cf_pal_qty', 1)
+        pal_cost = pallet_prices[zone] * pal_qty
+        if pal_cost > base_cost:
+            base_cost = pal_cost
+            tier_label = f"{pal_qty}x {t['l_pal']}"
 
     cost = base_cost + 50 
     breakdown_lines = [(f"{t['c_tr']} ({tier_label})", base_cost), (t['c_admin'], 50)]
@@ -496,10 +504,23 @@ else:
                         elif sel == "Cargo & Freight":
                             cf_lbl = t['l_type']
                             if st.session_state.validate_step2 and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')): cf_lbl += t['l_err']
-                            st.markdown(cf_lbl)
-                            st.checkbox(t['l_pal'], value=st.session_state.get('cf_pal', False), key="cf_pal")
-                            st.checkbox(t['l_full'], value=st.session_state.get('cf_full', False), key="cf_full")
-                            st.checkbox(t['l_lc'], value=st.session_state.get('cf_lc', False), key="cf_lc")
+                            st.markdown(f"<div style='font-size:14px; font-weight:600; color:#ccc; margin-bottom:10px;'>{cf_lbl}</div>", unsafe_allow_html=True)
+                            
+                            c_p1, c_p2 = st.columns([1.5, 1])
+                            with c_p1: st.checkbox(t['l_pal'], value=st.session_state.get('cf_pal', False), key="cf_pal")
+                            with c_p2: 
+                                if st.session_state.get('cf_pal'): st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('cf_pal_qty', 1), key="cf_pal_qty", label_visibility="collapsed")
+                                
+                            c_f1, c_f2 = st.columns([1.5, 1])
+                            with c_f1: st.checkbox(t['l_full'], value=st.session_state.get('cf_full', False), key="cf_full")
+                            with c_f2:
+                                if st.session_state.get('cf_full'): st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('cf_full_qty', 1), key="cf_full_qty", label_visibility="collapsed")
+                                
+                            c_lc1, c_lc2 = st.columns([1.5, 1])
+                            with c_lc1: st.checkbox(t['l_lc'], value=st.session_state.get('cf_lc', False), key="cf_lc")
+                            with c_lc2:
+                                if st.session_state.get('cf_lc'): st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('cf_lc_qty', 1), key="cf_lc_qty", label_visibility="collapsed")
+                                
                             st.number_input(t['w_est'], min_value=50, step=50, value=st.session_state.get('cf_weight', 100), key="cf_weight")
                         elif sel == "Mail & Direct Marketing":
                             st.number_input(t['w_tot'], min_value=0.1, step=0.1, value=st.session_state.get('mdm_weight', 0.5), key="mdm_weight")
@@ -616,9 +637,9 @@ else:
                         specs_list.append(f"📦 {t['b1_t']}: {st.session_state.get('pd_weight', 1)}kg ({sz})")
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
-                        if st.session_state.get('cf_pal'): loads.append(t['l_pal'])
-                        if st.session_state.get('cf_full'): loads.append(t['l_full'])
-                        if st.session_state.get('cf_lc'): loads.append(t['l_lc'])
+                        if st.session_state.get('cf_pal'): loads.append(f"{st.session_state.get('cf_pal_qty', 1)}x {t['l_pal']}")
+                        if st.session_state.get('cf_full'): loads.append(f"{st.session_state.get('cf_full_qty', 1)}x {t['l_full']}")
+                        if st.session_state.get('cf_lc'): loads.append(f"{st.session_state.get('cf_lc_qty', 1)}x {t['l_lc']}")
                         specs_list.append(f"🚛 {t['b2_t']}: {', '.join(loads)} | {st.session_state.get('cf_weight', 100)}kg")
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
                         specs_list.append(f"📭 {t['b3_t']}: {st.session_state.get('mdm_weight', 0.5)}kg")
