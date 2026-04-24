@@ -39,7 +39,7 @@ div[class^="viewerBadge"] { display: none !important; }
 
 /* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
-.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: gap: 4px; }
+.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
 .nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
@@ -128,7 +128,7 @@ translations = {
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "Foretaksregister (valgfritt)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Etternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruteinformasjon", "r_pick": "Hentested", "r_del": "Leveringssted", "r_str": "Gateadresse *",
-        "chk_same": "Express / Samme dag levering",
+        "delivery_opts": "Leveringsalternativer", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kartet vises når du skriver inn en adresse...", "a_info": "Tilleggsinformasjon (valgfritt)", 
         "a_ph": "F.eks: Pall 1 = 200kg, Pall 2 = 150kg. Eller andre spesielle krav...", 
         "p_note": "Hvis du vil vite mer om hvordan vi bruker dataene dine, les vår personvernerklæring i bunnteksten.",
@@ -138,7 +138,8 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
-        "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Tol", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)"
+        "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
+        "w_reg": "Registrert vekt", "qty_reg": "Registrert antall", "calc_note_pal": "Frakten er beregnet etter antall paller, da dette gir høyeste fraktberegningsvekt.", "calc_note_we": "Frakten er beregnet etter totalvekt, da dette gir høyeste fraktberegningsvekt."
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -155,7 +156,7 @@ translations = {
         "c_det": "Company & Contact Details", "c_name": "Company Name *", "c_reg": "Registration No. (optional)", "c_addr": "Company Address *", "c_zip": "Zip Code *", "c_city": "City *", "c_ctry": "Country *",
         "c_fn": "First Name *", "c_ln": "Last Name *", "c_em": "Work Email *", "c_ph": "Phone *",
         "r_info": "Route Information", "r_pick": "Pickup Location", "r_del": "Delivery Destination", "r_str": "Street Address *",
-        "chk_same": "Express / Same day delivery",
+        "delivery_opts": "Delivery Options", "chk_same": "Express / Same day delivery",
         "m_wait": "Map will appear when you enter an address...", "a_info": "Additional Information (optional)", 
         "a_ph": "E.g. Pallet 1 = 200kg, Pallet 2 = 150kg. Or other requirements...", 
         "p_note": "To learn how we use your data, read our privacy notice in the footer.",
@@ -165,7 +166,8 @@ translations = {
         "l_cn": "COMPANY NAME", "l_rn": "REG. NO", "l_ad": "ADDRESS", "l_cp": "CONTACT PERSON", "l_em": "EMAIL", "l_ph": "PHONE", "l_str": "STREET ADDRESS", "l_zc": "ZIP & CITY",
         "rev_r": "Route", "rev_s": "Shipment", "l_no": "NOTES", "b_edit": "← Edit Details", "b_send": "CONFIRM & SEND",
         "db_err": "⚠️ Error: Failed to send to database.", "s_succ": "Request sent successfully!", "s_sub": "We will get in touch shortly.", "b_new": "← Start a New Request",
-        "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Toll", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)"
+        "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Toll", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
+        "w_reg": "Registered weight", "qty_reg": "Registered quantity", "calc_note_pal": "Freight is calculated by pallet count (yields highest calculation weight).", "calc_note_we": "Freight is calculated by total weight (yields highest calculation weight)."
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -182,7 +184,7 @@ translations = {
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
         "c_fn": "Förnamn *", "c_ln": "Efternamn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *",
-        "chk_same": "Express / Samma dag leverans",
+        "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
         "a_ph": "T.ex. Pall 1 = 200kg, Pall 2 = 150kg. Eller andra krav...", 
         "p_note": "För att läsa mer om hur vi hanterar din data, se vår integritetspolicy.",
@@ -192,7 +194,8 @@ translations = {
         "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD",
         "rev_r": "Rutt", "rev_s": "Försändelse", "l_no": "ANTECKNINGAR", "b_edit": "← Redigera detaljer", "b_send": "BEKRÄFTA & SKICKA",
         "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
-        "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)"
+        "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
+        "w_reg": "Registrerad vikt", "qty_reg": "Registrerat antal", "calc_note_pal": "Frakten beräknas efter antal pallar (ger högsta fraktberäkningsvikt).", "calc_note_we": "Frakten beräknas efter totalvikt (ger högsta fraktberäkningsvikt)."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -209,7 +212,7 @@ translations = {
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
         "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *",
-        "chk_same": "Express / Samme dag levering",
+        "delivery_opts": "Leveringsmuligheder", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kortet vises, når du indtaster en adresse...", "a_info": "Yderligere information (valgfrit)", 
         "a_ph": "F.eks: Palle 1 = 200kg, Palle 2 = 150kg. Eller andre krav...", 
         "p_note": "Læs vores privatlivspolitik i bunden for at se, hvordan vi bruger dine data.",
@@ -219,7 +222,8 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
-        "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Tol", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
+        "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
+        "w_reg": "Registreret vægt", "qty_reg": "Registreret antal", "calc_note_pal": "Fragten er beregnet efter antal paller (giver højeste fragtberegningsvægt).", "calc_note_we": "Fragten er beregnet efter totalvægt (giver højeste fragtberegningsvægt)."
     }
 }
 t = translations[lang]
@@ -389,36 +393,49 @@ def get_live_price():
         4: [(24, 275), (49, 364), (99, 457), (149, 580), (199, 641), (399, 734), (599, 979), (799, 1100), (999, 1225)]
     }
     
-    base_cost = 0
+    # HIER START DE NIEUWE LOGICA VOOR DUIDELIJKERE BON-WEERGAVE
+    weight_cost = 0
     if total_weight > 999:
-        base_cost = prices[zone][-1][1] + (int((total_weight - 999) / 100) + 1) * 100
+        weight_cost = prices[zone][-1][1] + (int((total_weight - 999) / 100) + 1) * 100
     else:
         for max_w, price in prices[zone]:
             if total_weight <= max_w:
-                base_cost = price
+                weight_cost = price
                 break
-        if base_cost == 0: 
-            base_cost = prices[zone][-1][1]
+        if weight_cost == 0: 
+            weight_cost = prices[zone][-1][1]
 
-    pallet_prices = {1: 700, 2: 750, 3: 800, 4: 600}
-    is_pallet = False
-    pal_qty = 1
+    pal_cost = 0
+    pal_qty = 0
     if "Cargo & Freight" in st.session_state.selected_types and st.session_state.get('cf_pal'):
+        pallet_prices = {1: 700, 2: 750, 3: 800, 4: 600}
         pal_qty = st.session_state.get('cf_pal_qty', 1)
         pal_cost = pallet_prices[zone] * pal_qty
-        if pal_cost > base_cost:
-            base_cost = pal_cost
-            is_pallet = True
+
+    base_cost = 0
+    is_pallet = False
+    
+    if pal_cost > weight_cost:
+        base_cost = pal_cost
+        is_pallet = True
+    else:
+        base_cost = weight_cost
+        is_pallet = False
 
     cost = base_cost + 50 
+    breakdown_lines = []
     
-    lbl_pcs = t['lbl_pcs']
     if is_pallet:
-        lbl = f"{t['c_tr']} ({pal_qty}x {t['l_pal']}, {total_weight:g} kg)"
+        breakdown_lines.append((f"{t['c_tr']} ({pal_qty}x {t['l_pal']})", base_cost))
+        breakdown_lines.append((f"<span style='font-size:11px; color:#888; padding-left:10px;'>↳ {t['w_reg']}: {total_weight:g} kg</span>", ""))
+        calc_note = t['calc_note_pal']
     else:
-        lbl = f"{t['c_tr']} ({total_qty} {lbl_pcs}, {total_weight:g} kg)"
-        
-    breakdown_lines = [(lbl, base_cost), (t['c_admin'], 50)]
+        tier_lbl = "> 999 kg" if total_weight > 999 else f"{total_weight:g} kg"
+        breakdown_lines.append((f"{t['c_tr']} ({tier_lbl})", base_cost))
+        breakdown_lines.append((f"<span style='font-size:11px; color:#888; padding-left:10px;'>↳ {t['qty_reg']}: {total_qty} {t['lbl_pcs']}</span>", ""))
+        calc_note = t['calc_note_we']
+
+    breakdown_lines.append((t['c_admin'], 50))
     
     if oversized:
         surcharge = cost * 0.25
@@ -436,7 +453,7 @@ def get_live_price():
     final_price = cost * 1.10
     profit = final_price - cost
     
-    return final_price, cost, profit, breakdown_lines
+    return final_price, cost, profit, breakdown_lines, calc_note
 
 # =========================================================
 # DE WEBSITE LOGICA
@@ -599,7 +616,6 @@ else:
     
                 st.write("")
                 st.markdown(f"<h3 style='margin-top: 20px;'>{t['r_info']}</h3>", unsafe_allow_html=True)
-                # EXPRESS KNOP IS NU HIER, SUPER STRAK
                 st.checkbox(t['chk_same'], key="req_sameday")
                 st.write("---")
                 
@@ -619,7 +635,7 @@ else:
                     
                 st.write("")
                 
-                # MAP (MET BETER ZOOM LEVEL)
+                # MAP 
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
                 d_addr_map = str(st.session_state.get('d_addr') or '').strip()
@@ -694,7 +710,7 @@ else:
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
                     if str(st.session_state.get('cont_info', '')).strip(): db_info += f"\n\nNotes: {str(st.session_state.get('cont_info')).strip()}"
                     
-                    calc_price, calc_cost, calc_profit, calc_breakdown = get_live_price()
+                    calc_price, calc_cost, calc_profit, calc_breakdown, calc_note = get_live_price()
                     
                     st.session_state.temp_order = {
                         "company": st.session_state.get('comp_name', ''), "reg_no": st.session_state.get('comp_reg', ''),
@@ -703,7 +719,7 @@ else:
                         "info_notes": str(st.session_state.get('cont_info', '')).strip(), "specs_list": specs_list, "db_info": db_info, "types": st.session_state.selected_types,
                         "pickup_address": st.session_state.get('p_addr', ''), "pickup_zip": st.session_state.get('p_zip', ''), "pickup_city": st.session_state.get('p_city', ''),
                         "delivery_address": st.session_state.get('d_addr', ''), "delivery_zip": st.session_state.get('d_zip', ''), "delivery_city": st.session_state.get('d_city', ''),
-                        "price": calc_price, "profit": calc_profit, "price_breakdown": calc_breakdown
+                        "price": calc_price, "profit": calc_profit, "price_breakdown": calc_breakdown, "calc_note": calc_note
                     }
                     st.session_state.step = 3; st.rerun()
 
@@ -779,12 +795,19 @@ else:
                 if st.button(t['b_new'], type="primary", use_container_width=True): reset_form_state(); st.rerun()
 
     with col_calc:
-        if st.session_state.step == 3: current_price, _, _, breakdown_lines = st.session_state.temp_order.get('price', 0), 0, 0, st.session_state.temp_order.get('price_breakdown', [])
-        else: current_price, _, _, breakdown_lines = get_live_price()
+        if st.session_state.step == 3:
+            current_price = st.session_state.temp_order.get('price', 0)
+            breakdown_lines = st.session_state.temp_order.get('price_breakdown', [])
+            calc_note = st.session_state.temp_order.get('calc_note', '')
+        else: 
+            current_price, _, _, breakdown_lines, calc_note = get_live_price()
         
         receipt_items_html = ""
         for name, price in breakdown_lines:
-            receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
+            if price == "":
+                receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;"><span>{name}</span><span></span></div>"""
+            else:
+                receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
             
-        receipt_html = f"""<div class="receipt-card" style="background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">{t['calc_t']}</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">{t['c_tot']}</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">{t['c_vat']}</div></div>"""
+        receipt_html = f"""<div class="receipt-card" style="background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">{t['calc_t']}</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">{t['c_tot']}</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">{t['c_vat']}</div><div style="font-size: 11px; color: #777; font-style: italic; margin-top: 15px; line-height: 1.4; border-top: 1px solid #333; padding-top: 10px;">ℹ️ {calc_note}</div></div>"""
         st.markdown(receipt_html, unsafe_allow_html=True)
