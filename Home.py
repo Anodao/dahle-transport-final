@@ -102,8 +102,10 @@ if "lang" in st.query_params:
         cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
 
 lang = st.session_state.language
-lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
-current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
+
+# Vlaggetjes verwijderd voor een strakkere look
+lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
+current_lang_display = lang_displays.get(lang, "Norsk")
 
 # =========================================================
 # 3. WOORDENBOEK
@@ -178,7 +180,7 @@ if st.session_state.get('user'):
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Geen Enters/Spaties in de menu variabele!)
+# 5. NAVBAR SAMENSTELLEN (ZONDER ICOONTJES)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -186,13 +188,13 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = t['nav_portal']
 
-# FIX: Bouw de string op ZONDER witregels/enters
-dropdown_links = f'<a href="/Login?lang={lang}" target="_self">🔐 {t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">📦 {t["menu_order"]}</a>'
+# Platte string opbouwen ZONDER emoji's
+dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a>'
 
 if is_employee:
-    dropdown_links += f'<a href="/Dashboard?lang={lang}" target="_self">📈 {t["menu_dash"]}</a><a href="/Planner?lang={lang}" target="_self">📅 {t["menu_plan"]}</a>'
+    dropdown_links += f'<a href="/Dashboard?lang={lang}" target="_self">{t["menu_dash"]}</a><a href="/Planner?lang={lang}" target="_self">{t["menu_plan"]}</a>'
 
-# Navbar HTML ook strakker gemaakt rondom de dropdown-content div
+# Ook de vlaggetjes in de taalselectie zijn weg voor een superstrakke uitstraling
 html_navbar = f"""
 <div class="navbar">
 <div class="nav-logo">
@@ -215,10 +217,10 @@ html_navbar = f"""
 <div class="lang-dropdown">
 <button class="lang-dropbtn">{current_lang_display} ⌄</button>
 <div class="lang-dropdown-content">
-<a href="?lang=en" target="_self">🇬🇧 English</a>
-<a href="?lang=no" target="_self">🇳🇴 Norsk</a>
-<a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
-<a href="?lang=da" target="_self">🇩🇰 Dansk</a>
+<a href="?lang=en" target="_self">English</a>
+<a href="?lang=no" target="_self">Norsk</a>
+<a href="?lang=sv" target="_self">Svenska</a>
+<a href="?lang=da" target="_self">Dansk</a>
 </div>
 </div>
 <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a>
