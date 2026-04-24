@@ -39,7 +39,7 @@ div[class^="viewerBadge"] { display: none !important; }
 
 /* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
-.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
 .nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
@@ -128,7 +128,7 @@ translations = {
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "Foretaksregister (valgfritt)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Etternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruteinformasjon", "r_pick": "Hentested", "r_del": "Leveringssted", "r_str": "Gateadresse *",
-        "delivery_opts": "Leveringsalternativer", "chk_same": "Express / Samme dag levering",
+        "chk_same": "Express / Samme dag levering",
         "m_wait": "Kartet vises når du skriver inn en adresse...", "a_info": "Tilleggsinformasjon (valgfritt)", 
         "a_ph": "F.eks: Pall 1 = 200kg, Pall 2 = 150kg. Eller andre spesielle krav...", 
         "p_note": "Hvis du vil vite mer om hvordan vi bruker dataene dine, les vår personvernerklæring i bunnteksten.",
@@ -138,7 +138,7 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
-        "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)"
+        "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Tol", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)"
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -155,7 +155,7 @@ translations = {
         "c_det": "Company & Contact Details", "c_name": "Company Name *", "c_reg": "Registration No. (optional)", "c_addr": "Company Address *", "c_zip": "Zip Code *", "c_city": "City *", "c_ctry": "Country *",
         "c_fn": "First Name *", "c_ln": "Last Name *", "c_em": "Work Email *", "c_ph": "Phone *",
         "r_info": "Route Information", "r_pick": "Pickup Location", "r_del": "Delivery Destination", "r_str": "Street Address *",
-        "delivery_opts": "Delivery Options", "chk_same": "Express / Same day delivery",
+        "chk_same": "Express / Same day delivery",
         "m_wait": "Map will appear when you enter an address...", "a_info": "Additional Information (optional)", 
         "a_ph": "E.g. Pallet 1 = 200kg, Pallet 2 = 150kg. Or other requirements...", 
         "p_note": "To learn how we use your data, read our privacy notice in the footer.",
@@ -182,7 +182,7 @@ translations = {
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
         "c_fn": "Förnamn *", "c_ln": "Efternamn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *",
-        "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
+        "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
         "a_ph": "T.ex. Pall 1 = 200kg, Pall 2 = 150kg. Eller andra krav...", 
         "p_note": "För att läsa mer om hur vi hanterar din data, se vår integritetspolicy.",
@@ -209,7 +209,7 @@ translations = {
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
         "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *",
-        "delivery_opts": "Leveringsmuligheder", "chk_same": "Express / Samme dag levering",
+        "chk_same": "Express / Samme dag levering",
         "m_wait": "Kortet vises, når du indtaster en adresse...", "a_info": "Yderligere information (valgfrit)", 
         "a_ph": "F.eks: Palle 1 = 200kg, Palle 2 = 150kg. Eller andre krav...", 
         "p_note": "Læs vores privatlivspolitik i bunden for at se, hvordan vi bruger dine data.",
@@ -219,7 +219,7 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
-        "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
+        "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Tol", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
     }
 }
 t = translations[lang]
@@ -315,7 +315,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA
+# ROUTING, KAART & DAHLE PRIJS LOGICA (MET AUTO-TOL)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -571,13 +571,6 @@ else:
             st.write("")
             
             with st.container(border=True):
-                st.markdown(f"<h3 style='margin-top: 0px;'>{t['delivery_opts']}</h3>", unsafe_allow_html=True)
-                st.write("---")
-                st.checkbox(t['chk_same'], key="req_sameday")
-                
-            st.write("")
-            
-            with st.container(border=True):
                 st.markdown(f"<h3 style='margin-top: 0px;'>{t['c_det']}</h3>", unsafe_allow_html=True)
                 st.write("---")
                 c_form_left, c_form_right = st.columns(2, gap="large")
@@ -606,6 +599,8 @@ else:
     
                 st.write("")
                 st.markdown(f"<h3 style='margin-top: 20px;'>{t['r_info']}</h3>", unsafe_allow_html=True)
+                # EXPRESS KNOP IS NU HIER, SUPER STRAK
+                st.checkbox(t['chk_same'], key="req_sameday")
                 st.write("---")
                 
                 c_route_left, c_route_right = st.columns(2, gap="large")
@@ -624,7 +619,7 @@ else:
                     
                 st.write("")
                 
-                # MAP 
+                # MAP (MET BETER ZOOM LEVEL)
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
                 d_addr_map = str(st.session_state.get('d_addr') or '').strip()
