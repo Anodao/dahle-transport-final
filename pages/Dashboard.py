@@ -9,7 +9,7 @@ import time
 import extra_streamlit_components as stx
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Dahle Transport - Performance Dashboard", page_icon="📈", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Dahle Transport - Performance Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
 # 1. DIRECTE CSS INJECTIE 
@@ -34,13 +34,13 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
-.nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; }
+.nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
 .nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
-.nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 20px; background: transparent; display: none; }
+.nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
-.nav-text-dropdown-content { display: none; position: absolute; top: calc(100% + 5px); left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
-.nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; }
+.nav-text-dropdown-content { display: none; position: absolute; top: calc(100% + 10px); left: 50%; transform: translateX(-50%); background-color: #ffffff; min-width: 180px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; overflow: hidden; }
+.nav-text-dropdown-content a { color: #111111 !important; padding: 12px 16px; text-decoration: none; display: block; font-size: 14px; font-weight: 500; text-align: left; transition: background-color 0.2s; border-bottom: none !important; }
 .nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
 .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
@@ -51,9 +51,9 @@ div[class^="viewerBadge"] { display: none !important; }
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
-.lang-dropdown::after { content: ''; position: absolute; top: 100%; right: 0; width: 140px; height: 20px; background: transparent; display: none; z-index: 999; }
+.lang-dropdown::after { content: ''; position: absolute; top: 100%; right: 0; width: 140px; height: 30px; background: transparent; display: none; z-index: 999; }
 .lang-dropdown:hover::after { display: block; }
-.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: calc(100% + 5px); right: 0; margin-top: 0; overflow: hidden; }
+.lang-dropdown-content { display: none; position: absolute; background-color: #ffffff; min-width: 140px; box-shadow: 0px 8px 24px rgba(0,0,0,0.12); border-radius: 12px; border: 1px solid #eaeaea; z-index: 1000; top: calc(100% + 10px); right: 0; margin-top: 0; overflow: hidden; }
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
@@ -66,18 +66,17 @@ div[data-testid="stAlert"] * { color: #b3d7ff !important; background-color: #0c3
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & WACHTRUIMTE (DE FIX!)
+# 2. INIT COOKIE MANAGER & WACHTRUIMTE
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-# FIX: We gebruiken nu st.rerun() in plaats van st.stop()
 if 'cookie_retry' not in st.session_state:
     st.session_state.cookie_retry = True
     loading = st.empty()
-    loading.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials... ⏳</h3>", unsafe_allow_html=True)
-    time.sleep(0.8) # Geef de browser kort de tijd om cookies te laden
+    loading.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials...</h3>", unsafe_allow_html=True)
+    time.sleep(0.3)
     loading.empty()
-    st.rerun() # Ververs de pagina zodat je ingelogd bent!
+    st.rerun()
 
 if 'language' not in st.session_state:
     st.session_state.language = "no"
@@ -88,8 +87,10 @@ if "lang" in st.query_params:
         st.session_state.language = url_lang
 
 lang = st.session_state.language 
-lang_displays = { "no": "🇳🇴 Norsk", "en": "🇬🇧 English", "sv": "🇸🇪 Svenska", "da": "🇩🇰 Dansk" }
-current_lang_display = lang_displays.get(lang, "🇳🇴 Norsk")
+
+# Vlaggetjes verwijderd
+lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
+current_lang_display = lang_displays.get(lang, "Norsk")
 
 # =========================================================
 # 3. WOORDENBOEK
@@ -99,35 +100,73 @@ translations = {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "menu_login": "Kundeportal", "menu_order": "Ny bestilling",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", 
-        "fuel_lbl": "⛽ Diesel (per Liter)", "gas_lbl": "🚗 Bensin (per Liter)", "api_txt": "Sist oppdatert via API",
-        "perf_sum": "### Oppsummering", "filter_lbl": "📅 Filtrer etter dato:",
+        "fuel_lbl": "Diesel (per Liter)", "gas_lbl": "Bensin (per Liter)", "api_txt": "Sist oppdatert via API",
+        "perf_sum": "### Oppsummering", "filter_lbl": "Filtrer etter dato:",
         "opt_all": "Alle bestillinger", "opt_today": "I dag", "opt_week": "Denne uken", "opt_lweek": "Forrige uke", "opt_month": "Denne måneden", "opt_custom": "Egendefinert dato...",
         "tot_fuel": "Total Drivstoffkostnad", "tot_profit": "Total Fortjeneste", "avg_margin": "Gjennomsnittlig margin",
         "co2_foot": "CO₂ Fotavtrykk", "act_ship": "Aktive Forsendelser",
         "prof_cust": "### Lønnsomhet per Kunde", "prof_trend": "### Fortjenesteutvikling",
         "det_brk": "### Detaljert Kostnads- og Marginsoversikt",
-        "info_calc": "ℹ️ Hvordan beregnes fortjeneste? Fortjeneste = Estimert inntekt - Drivstoffkostnader. Margin % viser prosentandelen av inntekten som er fortjeneste.",
+        "info_calc": "Hvordan beregnes fortjeneste? Fortjeneste = Estimert inntekt - Drivstoffkostnader. Margin % viser prosentandelen av inntekten som er fortjeneste.",
         "shipments": "FORSENDELSER", "fuel_cost": "DRIVSTOFF", "net_profit": "NETTO FORTJENESTE", "margin": "MARGIN %",
-        "btn_view": "🔍 Se Bestillinger", "last_order": "Siste bestilling:", "unknown": "Ukjent",
-        "dialog_title": "🔍 Ordrehistorikk og Detaljer", "dialog_sub": "Her er en oversikt over alle fullførte bestillinger for denne spesifikke kunden.",
-        "route": "Rute:", "profit": "Fortjeneste:", "margin_lbl": "Margin:"
+        "btn_view": "Se Bestillinger", "last_order": "Siste bestilling:", "unknown": "Ukjent",
+        "dialog_title": "Ordrehistorikk og Detaljer", "dialog_sub": "Her er en oversikt over alle fullførte bestillinger for denne spesifikke kunden.",
+        "route": "Rute:", "profit": "Fortjeneste:", "margin_lbl": "Margin:",
+        "dash_title": "Performance Dashboard", "dash_sub": "Intern oversikt over lønnsomhet og utslipp"
     },
     "en": { 
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
         "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Internal Planner", "menu_login": "Customer Portal", "menu_order": "New Order",
         "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", 
-        "fuel_lbl": "⛽ Diesel (per Liter)", "gas_lbl": "🚗 Petrol (per Liter)", "api_txt": "Live via API",
-        "perf_sum": "### Performance Summary", "filter_lbl": "📅 Filter by date:",
+        "fuel_lbl": "Diesel (per Liter)", "gas_lbl": "Petrol (per Liter)", "api_txt": "Live via API",
+        "perf_sum": "### Performance Summary", "filter_lbl": "Filter by date:",
         "opt_all": "All orders", "opt_today": "Today", "opt_week": "This week", "opt_lweek": "Last week", "opt_month": "This month", "opt_custom": "Custom date...",
         "tot_fuel": "Total Fuel Cost", "tot_profit": "Total Profit", "avg_margin": "Avg. Margin",
         "co2_foot": "CO₂ Footprint", "act_ship": "Active Shipments",
         "prof_cust": "### Profitability per Customer", "prof_trend": "### Profit Trend Over Time",
         "det_brk": "### Detailed Cost & Margin Breakdown",
-        "info_calc": "ℹ️ How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.",
+        "info_calc": "How is profit calculated? Profit = Estimated Revenue - Fuel Costs. The Margin % shows the percentage of revenue that remains as profit.",
         "shipments": "SHIPMENTS", "fuel_cost": "FUEL COST", "net_profit": "NET PROFIT", "margin": "MARGIN %",
-        "btn_view": "🔍 View Orders", "last_order": "Last order:", "unknown": "Unknown",
-        "dialog_title": "🔍 Order History & Details", "dialog_sub": "Here is the overview of all completed orders for this specific customer.",
-        "route": "Route:", "profit": "Profit:", "margin_lbl": "Margin:"
+        "btn_view": "View Orders", "last_order": "Last order:", "unknown": "Unknown",
+        "dialog_title": "Order History & Details", "dialog_sub": "Here is the overview of all completed orders for this specific customer.",
+        "route": "Route:", "profit": "Profit:", "margin_lbl": "Margin:",
+        "dash_title": "Performance Dashboard", "dash_sub": "Internal overview of profitability and emissions"
+    },
+    "sv": { 
+        "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
+        "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "menu_login": "Kundportal", "menu_order": "Ny beställning",
+        "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", 
+        "fuel_lbl": "Diesel (per Liter)", "gas_lbl": "Bensin (per Liter)", "api_txt": "Senast uppdaterad via API",
+        "perf_sum": "### Prestandasammanfattning", "filter_lbl": "Filtrera efter datum:",
+        "opt_all": "Alla beställningar", "opt_today": "I dag", "opt_week": "Denna vecka", "opt_lweek": "Förra veckan", "opt_month": "Denna månad", "opt_custom": "Anpassat datum...",
+        "tot_fuel": "Total bränslekostnad", "tot_profit": "Total vinst", "avg_margin": "Genomsnittlig marginal",
+        "co2_foot": "CO₂ Fotavtryck", "act_ship": "Aktiva Försändelser",
+        "prof_cust": "### Lönsamhet per Kund", "prof_trend": "### Vinstutveckling över tid",
+        "det_brk": "### Detaljerad Kostnads- och Marginalöversikt",
+        "info_calc": "Hur beräknas vinsten? Vinst = Uppskattad intäkt - Bränslekostnader. Marginal % visar procentandelen av intäkten som är vinst.",
+        "shipments": "FÖRSÄNDELSER", "fuel_cost": "BRÄNSLE", "net_profit": "NETTOVINST", "margin": "MARGINAL %",
+        "btn_view": "Visa Beställningar", "last_order": "Senaste beställning:", "unknown": "Okänd",
+        "dialog_title": "Orderhistorik och Detaljer", "dialog_sub": "Här är en översikt över alla slutförda beställningar för denna specifika kund.",
+        "route": "Rutt:", "profit": "Vinst:", "margin_lbl": "Marginal:",
+        "dash_title": "Performance Dashboard", "dash_sub": "Intern översikt över lönsamhet och utsläpp"
+    },
+    "da": { 
+        "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
+        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "menu_login": "Kundeportal", "menu_order": "Ny bestilling",
+        "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", 
+        "fuel_lbl": "Diesel (pr. Liter)", "gas_lbl": "Benzin (pr. Liter)", "api_txt": "Senest opdateret via API",
+        "perf_sum": "### Resultatoversigt", "filter_lbl": "Filtrer efter dato:",
+        "opt_all": "Alle bestillinger", "opt_today": "I dag", "opt_week": "Denne uge", "opt_lweek": "Sidste uge", "opt_month": "Denne måned", "opt_custom": "Brugerdefineret dato...",
+        "tot_fuel": "Samlede Brændstofomkostninger", "tot_profit": "Samlet Fortjeneste", "avg_margin": "Gennemsnitlig margin",
+        "co2_foot": "CO₂ Fodaftryk", "act_ship": "Aktive Forsendelser",
+        "prof_cust": "### Lønsomhed pr. Kunde", "prof_trend": "### Fortjenesteudvikling over tid",
+        "det_brk": "### Detaljeret Omkostnings- og Marginoversigt",
+        "info_calc": "Hvordan beregnes fortjeneste? Fortjeneste = Estimeret indtægt - Brændstofomkostninger. Margin % viser den procentdel af indtægten, der er fortjeneste.",
+        "shipments": "FORSENDELSER", "fuel_cost": "BRÆNDSTOF", "net_profit": "NETTO FORTJENESTE", "margin": "MARGIN %",
+        "btn_view": "Se Bestillinger", "last_order": "Seneste bestilling:", "unknown": "Ukendt",
+        "dialog_title": "Ordrehistorik og Detaljer", "dialog_sub": "Her er en oversigt over alle gennemførte bestillinger for denne specifikke kunde.",
+        "route": "Rute:", "profit": "Fortjeneste:", "margin_lbl": "Margin:",
+        "dash_title": "Performance Dashboard", "dash_sub": "Intern oversigt over lønsomhed og udledning"
     }
 }
 t = translations.get(lang, translations["no"])
@@ -182,15 +221,7 @@ if not is_employee:
     """
     st.markdown(html_navbar_empty, unsafe_allow_html=True)
     
-    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>🔒 Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
-    
-    # DEBUG PANEEL 
-    st.markdown("<br><hr>", unsafe_allow_html=True)
-    st.warning("⚠️ **DEBUG INFORMATIE:**")
-    st.write(f"- Jouw opgeslagen rol in Streamlit is nu: **'{st.session_state.get('role')}'**")
-    st.write("- Om toegang te krijgen, moet er in Supabase in de tabel `profiles` under de kolom `roles` exact **admin** staan.")
-    if db_error_message:
-        st.error(f"Foutmelding van Supabase: {db_error_message}")
+    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
     
     c1, c2, c3 = st.columns([1,1,1])
     with c2:
@@ -201,7 +232,7 @@ if not is_employee:
 
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN 
+# 5. NAVBAR SAMENSTELLEN (Zonder Emojis, Platte string)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -209,11 +240,8 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = t['nav_portal']
 
-dropdown_links = f"""
-<a href="/Login?lang={lang}" target="_self">🔐 {t['menu_login']}</a>
-<a href="/Order?lang={lang}" target="_self">📦 {t['menu_order']}</a>
-<a href="/Planner?lang={lang}" target="_self">📅 {t['menu_plan']}</a>
-"""
+# Menu plat opbouwen ZONDER EMOJI'S. Dashboard link weggelaten omdat we hier al op zitten!
+dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a><a href="/Planner?lang={lang}" target="_self">{t["menu_plan"]}</a>'
 
 html_navbar = f"""
 <div class="navbar">
@@ -230,19 +258,17 @@ html_navbar = f"""
 <span>{t['nav_contact']}</span>
 <div class="nav-text-dropdown">
 <button class="nav-text-dropbtn">{t['menu_title']}</button>
-<div class="nav-text-dropdown-content">
-{dropdown_links}
-</div>
+<div class="nav-text-dropdown-content">{dropdown_links}</div>
 </div>
 </div>
 <div class="nav-cta">
 <div class="lang-dropdown">
 <button class="lang-dropbtn">{current_lang_display} ⌄</button>
 <div class="lang-dropdown-content">
-<a href="?lang=en" target="_self">🇬🇧 English</a>
-<a href="?lang=no" target="_self">🇳🇴 Norsk</a>
-<a href="?lang=sv" target="_self">🇸🇪 Svenska</a>
-<a href="?lang=da" target="_self">🇩🇰 Dansk</a>
+<a href="?lang=en" target="_self">English</a>
+<a href="?lang=no" target="_self">Norsk</a>
+<a href="?lang=sv" target="_self">Svenska</a>
+<a href="?lang=da" target="_self">Dansk</a>
 </div>
 </div>
 <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a>
@@ -251,6 +277,16 @@ html_navbar = f"""
 </div>
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
+
+# =========================================================
+# 5.5 PAGINA TITEL (Strak en professioneel)
+# =========================================================
+st.markdown(f"""
+<div style="margin-bottom: 25px;">
+    <h2 style="color: #b070c6; margin-bottom: 5px;">{t['dash_title']}</h2>
+    <p style="color: #888; font-size: 15px; margin-top: 0;">{t['dash_sub']}</p>
+</div>
+""", unsafe_allow_html=True)
 
 
 # =========================================================
@@ -310,7 +346,6 @@ def make_compact_detailed_chart(df, color):
     fig.update_traces(line_color=color, line_width=3)
     return fig
 
-st.write("")
 f1, f2 = st.columns(2, gap="large")
 with f1:
     with st.container(border=True):
@@ -353,7 +388,7 @@ if 'received_date' in df.columns:
 c_title, c_filter = st.columns([2.5, 1])
 with c_title: st.write(t['perf_sum'])
 with c_filter:
-    filter_optie = st.selectbox(t['filter_lbl'], [t['opt_all'], t['opt_today'], t['opt_week'], t['opt_lweek'], t['opt_month'], t['opt_custom']])
+    filter_optie = st.selectbox(t['filter_lbl'], [t['opt_all'], t['opt_today'], t['opt_week'], t['opt_lweek'], t['opt_month'], t['opt_custom']], label_visibility="collapsed")
     custom_dates = []
     if filter_optie == t['opt_custom']: custom_dates = st.date_input("Select a date range:", value=today)
 
