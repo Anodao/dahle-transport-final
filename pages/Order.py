@@ -54,6 +54,8 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .cta-btn-outline:hover { background-color: #f4e9f7 !important; }
+
+/* TAAL DROPDOWN */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -126,7 +128,7 @@ translations = {
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "Foretaksregister (valgfritt)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Etternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruteinformasjon", "r_pick": "Hentested", "r_del": "Leveringssted", "r_str": "Gateadresse *",
-        "chk_same": "Express / Samme dag levering", "chk_ferry": "Ferge / Bompenger (F.eks. Flakk-Rørvik)",
+        "delivery_opts": "Leveringsalternativer", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kartet vises når du skriver inn en adresse...", "a_info": "Tilleggsinformasjon (valgfritt)", 
         "a_ph": "F.eks: Pall 1 = 200kg, Pall 2 = 150kg. Eller andre spesielle krav...", 
         "p_note": "Hvis du vil vite mer om hvordan vi bruker dataene dine, les vår personvernerklæring i bunnteksten.",
@@ -136,7 +138,7 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
-        "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Ferge / Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)"
+        "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Ferge / Bompenger (Auto)", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)"
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -153,7 +155,7 @@ translations = {
         "c_det": "Company & Contact Details", "c_name": "Company Name *", "c_reg": "Registration No. (optional)", "c_addr": "Company Address *", "c_zip": "Zip Code *", "c_city": "City *", "c_ctry": "Country *",
         "c_fn": "First Name *", "c_ln": "Last Name *", "c_em": "Work Email *", "c_ph": "Phone *",
         "r_info": "Route Information", "r_pick": "Pickup Location", "r_del": "Delivery Destination", "r_str": "Street Address *",
-        "chk_same": "Express / Same day delivery", "chk_ferry": "Ferry / Tolls (e.g. Flakk-Rørvik)",
+        "delivery_opts": "Delivery Options", "chk_same": "Express / Same day delivery",
         "m_wait": "Map will appear when you enter an address...", "a_info": "Additional Information (optional)", 
         "a_ph": "E.g. Pallet 1 = 200kg, Pallet 2 = 150kg. Or other requirements...", 
         "p_note": "To learn how we use your data, read our privacy notice in the footer.",
@@ -163,7 +165,7 @@ translations = {
         "l_cn": "COMPANY NAME", "l_rn": "REG. NO", "l_ad": "ADDRESS", "l_cp": "CONTACT PERSON", "l_em": "EMAIL", "l_ph": "PHONE", "l_str": "STREET ADDRESS", "l_zc": "ZIP & CITY",
         "rev_r": "Route", "rev_s": "Shipment", "l_no": "NOTES", "b_edit": "← Edit Details", "b_send": "CONFIRM & SEND",
         "db_err": "⚠️ Error: Failed to send to database.", "s_succ": "Request sent successfully!", "s_sub": "We will get in touch shortly.", "b_new": "← Start a New Request",
-        "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Ferry / Tolls", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)"
+        "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Ferry / Tolls (Auto)", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)"
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -180,7 +182,7 @@ translations = {
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
         "c_fn": "Förnamn *", "c_ln": "Efternamn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *",
-        "chk_same": "Express / Samma dag leverans", "chk_ferry": "Färja / Vägavgift",
+        "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
         "a_ph": "T.ex. Pall 1 = 200kg, Pall 2 = 150kg. Eller andra krav...", 
         "p_note": "För att läsa mer om hur vi hanterar din data, se vår integritetspolicy.",
@@ -190,7 +192,7 @@ translations = {
         "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD",
         "rev_r": "Rutt", "rev_s": "Försändelse", "l_no": "ANTECKNINGAR", "b_edit": "← Redigera detaljer", "b_send": "BEKRÄFTA & SKICKA",
         "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
-        "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Färja / Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)"
+        "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Färja / Vägavgift (Auto)", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)"
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -207,7 +209,7 @@ translations = {
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
         "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *",
-        "chk_same": "Express / Samme dag levering", "chk_ferry": "Færge / Bompenge",
+        "delivery_opts": "Leveringsmuligheder", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kortet vises, når du indtaster en adresse...", "a_info": "Yderligere information (valgfrit)", 
         "a_ph": "F.eks: Palle 1 = 200kg, Palle 2 = 150kg. Eller andre krav...", 
         "p_note": "Læs vores privatlivspolitik i bunden for at se, hvordan vi bruger dine data.",
@@ -217,7 +219,7 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
-        "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Færge / Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
+        "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Færge / Bompenge (Auto)", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
     }
 }
 t = translations[lang]
@@ -313,7 +315,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA 
+# ROUTING, KAART & DAHLE PRIJS LOGICA (MET AUTO-TOL)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -344,6 +346,15 @@ def determine_zone(p_city, d_city):
     if any(c in cities for c in ['bjugn', 'brekstad', 'vallersund', 'lysøysund', 'lysoysund', 'åfjord', 'afjord']): return 2
     if any(c in cities for c in ['stadsbygd', 'rissa', 'hasselvika', 'fevåg', 'fevag', 'husbysjøen', 'husbysjoen', 'råkvåg', 'rakvag', 'leksvik', 'trondheim']): return 1
     return 4 
+
+def check_if_ferry_needed(p_city, d_city):
+    p = str(p_city).lower().strip()
+    d = str(d_city).lower().strip()
+    fosen_dests = ['roan', 'osen', 'bessaker', 'refsnes', 'stokkøy', 'stokkoy', 'linesøya', 'linesoya', 'bjugn', 'brekstad', 'vallersund', 'lysøysund', 'lysoysund', 'åfjord', 'afjord', 'stadsbygd', 'rissa', 'hasselvika', 'fevåg', 'fevag', 'husbysjøen', 'husbysjoen', 'råkvåg', 'rakvag', 'leksvik']
+    
+    if ('trondheim' in p and any(c in d for c in fosen_dests)) or ('trondheim' in d and any(c in p for c in fosen_dests)):
+        return True
+    return False
 
 def get_live_price():
     total_weight = 0
@@ -414,12 +425,12 @@ def get_live_price():
         cost += surcharge
         breakdown_lines.append((t['c_over'], surcharge))
         
-    # CHECKBOXES LOGIC VOOR EXPRESS & FERGE
     if st.session_state.get('req_sameday'):
         cost += 250
         breakdown_lines.append((t['c_sameday'], 250))
         
-    if st.session_state.get('req_ferry'):
+    # AUTOMATISCHE TOL CHECK
+    if check_if_ferry_needed(st.session_state.get('p_city', ''), st.session_state.get('d_city', '')):
         cost += 250
         breakdown_lines.append((t['c_ferry'], 250))
         
@@ -560,6 +571,14 @@ else:
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
             
+            # --- NIEUWE LOCATIE VOOR EXPRESS KNOP ---
+            with st.container(border=True):
+                st.markdown(f"<h3 style='margin-top: 0px;'>⚡ {t['delivery_opts']}</h3>", unsafe_allow_html=True)
+                st.write("---")
+                st.checkbox(t['chk_same'], key="req_sameday")
+                
+            st.write("")
+            
             with st.container(border=True):
                 st.markdown(f"<h3 style='margin-top: 0px;'>{t['c_det']}</h3>", unsafe_allow_html=True)
                 st.write("---")
@@ -590,12 +609,6 @@ else:
                 st.write("")
                 st.markdown(f"<h3 style='margin-top: 20px;'>{t['r_info']}</h3>", unsafe_allow_html=True)
                 st.write("---")
-                
-                # TOL EN EXPRESS CHECKBOXES TOEGEVOEGD HIER!
-                c_extra1, c_extra2 = st.columns(2)
-                with c_extra1: st.checkbox(t['chk_same'], key="req_sameday")
-                with c_extra2: st.checkbox(t['chk_ferry'], key="req_ferry")
-                st.write("")
                 
                 c_route_left, c_route_right = st.columns(2, gap="large")
                 with c_route_left:
@@ -635,7 +648,7 @@ else:
                         else:
                             layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 200], get_target_color=[137, 75, 157, 200], get_width=3, get_tilt=15))
                             pitch = 45
-                        center_lat, center_lon, zoom = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 8.5 # FIX: PERFECTE INZOOM VOOR REGIO
+                        center_lat, center_lon, zoom = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 8.5
                     else:
                         center_lat, center_lon, zoom, pitch = p_coords[0] if p_coords else d_coords[0], p_coords[1] if p_coords else d_coords[1], 10, 0
                     st.pydeck_chart(pdk.Deck(layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
