@@ -102,10 +102,16 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
-if 'language' not in st.session_state: st.session_state.language = "no"
-if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
-lang = st.session_state.language 
+if 'language' not in st.session_state:
+    st.session_state.language = "no"
 
+if "lang" in st.query_params:
+    url_lang = st.query_params["lang"]
+    if url_lang in ["no", "en", "sv", "da"]:
+        st.session_state.language = url_lang
+        cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
+
+lang = st.session_state.language 
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -195,7 +201,7 @@ translations = {
         "b2_t": "Gods & Fragt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tungere forsendelser (pallar/containere)", "b2_l2": "B2B",
         "b3_t": "Post & Markedsføring", "b3_s": "Typisk op til 2kg", "b3_l1": "Lette varer", "b3_l2": "International erhvervspost",
         "err_sel": "❌ Vælg venligst mindst én mulighed.", "time_est": "Tager typisk under 5 minutter.", "btn_next": "Næste trin",
-        "w_tot": "Totalvægt (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Vælg mindst én)]", "lbl_qty": "Antall", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", "w_est": "Estimeret totalvægt (kg)",
+        "w_tot": "Totalvægt (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Vælg mindst én)]", "lbl_qty": "Antal", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", "w_est": "Estimeret totalvægt (kg)",
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
         "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *",
@@ -281,7 +287,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN
+# 5. NAVBAR SAMENSTELLEN (Zonder Emojis)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -303,7 +309,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA 
+# GLOBALE HELPERS & PRIJS LOGICA 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -380,7 +386,6 @@ def get_live_price():
             base_cost = prices[zone][-1][1]
             tier_label = "800-999 kg"
 
-    # Pallet Rate Logic
     pallet_prices = {1: 700, 2: 750, 3: 800, 4: 600}
     if "Cargo & Freight" in st.session_state.selected_types and st.session_state.get('cf_pal'):
         pal_qty = st.session_state.get('cf_pal_qty', 1)
@@ -499,31 +504,37 @@ else:
                                 st.session_state.validate_step2 = False; st.rerun() 
 
                         if sel == "Parcels & Documents":
-                            st.number_input(t['w_tot'], min_value=0.5, step=0.5, value=st.session_state.get('pd_weight', 1.0), key="pd_weight")
+                            c_p1, c_p2 = st.columns([1.5, 1])
+                            with c_p1: st.number_input(t['w_tot'], min_value=0.5, step=0.5, value=st.session_state.get('pd_weight', 1.0), key="pd_weight")
+                            with c_p2: st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('pd_qty', 1), key="pd_qty")
                             st.checkbox(t['w_over'], value=st.session_state.get('pd_oversized', False), key="pd_oversized")
+                        
                         elif sel == "Cargo & Freight":
                             cf_lbl = t['l_type']
                             if st.session_state.validate_step2 and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')): cf_lbl += t['l_err']
                             st.markdown(f"<div style='font-size:14px; font-weight:600; color:#ccc; margin-bottom:10px;'>{cf_lbl}</div>", unsafe_allow_html=True)
                             
-                            c_p1, c_p2 = st.columns([1.5, 1])
-                            with c_p1: st.checkbox(t['l_pal'], value=st.session_state.get('cf_pal', False), key="cf_pal")
-                            with c_p2: 
+                            c_pf1, c_pf2 = st.columns([1.5, 1])
+                            with c_pf1: st.checkbox(t['l_pal'], value=st.session_state.get('cf_pal', False), key="cf_pal")
+                            with c_pf2: 
                                 if st.session_state.get('cf_pal'): st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('cf_pal_qty', 1), key="cf_pal_qty", label_visibility="collapsed")
                                 
-                            c_f1, c_f2 = st.columns([1.5, 1])
-                            with c_f1: st.checkbox(t['l_full'], value=st.session_state.get('cf_full', False), key="cf_full")
-                            with c_f2:
+                            c_ff1, c_ff2 = st.columns([1.5, 1])
+                            with c_ff1: st.checkbox(t['l_full'], value=st.session_state.get('cf_full', False), key="cf_full")
+                            with c_ff2:
                                 if st.session_state.get('cf_full'): st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('cf_full_qty', 1), key="cf_full_qty", label_visibility="collapsed")
                                 
-                            c_lc1, c_lc2 = st.columns([1.5, 1])
-                            with c_lc1: st.checkbox(t['l_lc'], value=st.session_state.get('cf_lc', False), key="cf_lc")
-                            with c_lc2:
+                            c_lf1, c_lf2 = st.columns([1.5, 1])
+                            with c_lf1: st.checkbox(t['l_lc'], value=st.session_state.get('cf_lc', False), key="cf_lc")
+                            with c_lf2:
                                 if st.session_state.get('cf_lc'): st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('cf_lc_qty', 1), key="cf_lc_qty", label_visibility="collapsed")
                                 
                             st.number_input(t['w_est'], min_value=50, step=50, value=st.session_state.get('cf_weight', 100), key="cf_weight")
+                        
                         elif sel == "Mail & Direct Marketing":
-                            st.number_input(t['w_tot'], min_value=0.1, step=0.1, value=st.session_state.get('mdm_weight', 0.5), key="mdm_weight")
+                            c_m1, c_m2 = st.columns([1.5, 1])
+                            with c_m1: st.number_input(t['w_tot'], min_value=0.1, step=0.1, value=st.session_state.get('mdm_weight', 0.5), key="mdm_weight")
+                            with c_m2: st.number_input(t['lbl_qty'], min_value=1, value=st.session_state.get('mdm_qty', 1), key="mdm_qty")
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
@@ -574,7 +585,7 @@ else:
                     
                 st.write("")
                 
-                # MAP (MET GET_ROUTE_DATA!)
+                # MAP 
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
                 d_addr_map = str(st.session_state.get('d_addr') or '').strip()
@@ -634,15 +645,17 @@ else:
                     
                     if "Parcels & Documents" in st.session_state.selected_types:
                         sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
-                        specs_list.append(f"📦 {t['b1_t']}: {st.session_state.get('pd_weight', 1)}kg ({sz})")
+                        specs_list.append(f"📦 {st.session_state.get('pd_qty', 1)}x {t['b1_t']}: {st.session_state.get('pd_weight', 1)}kg ({sz})")
+                    
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
                         if st.session_state.get('cf_pal'): loads.append(f"{st.session_state.get('cf_pal_qty', 1)}x {t['l_pal']}")
                         if st.session_state.get('cf_full'): loads.append(f"{st.session_state.get('cf_full_qty', 1)}x {t['l_full']}")
                         if st.session_state.get('cf_lc'): loads.append(f"{st.session_state.get('cf_lc_qty', 1)}x {t['l_lc']}")
                         specs_list.append(f"🚛 {t['b2_t']}: {', '.join(loads)} | {st.session_state.get('cf_weight', 100)}kg")
+                    
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
-                        specs_list.append(f"📭 {t['b3_t']}: {st.session_state.get('mdm_weight', 0.5)}kg")
+                        specs_list.append(f"📭 {st.session_state.get('mdm_qty', 1)}x {t['b3_t']}: {st.session_state.get('mdm_weight', 0.5)}kg")
                     
                     db_info = "\n".join([s.replace("**", "") for s in specs_list])
                     if str(st.session_state.get('cont_info', '')).strip(): db_info += f"\n\nNotes: {str(st.session_state.get('cont_info')).strip()}"
