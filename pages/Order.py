@@ -54,6 +54,8 @@ div[class^="viewerBadge"] { display: none !important; }
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .cta-btn-outline:hover { background-color: #f4e9f7 !important; }
+
+/* TAAL DROPDOWN */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -203,7 +205,7 @@ translations = {
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
-        "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÄFT & SEND",
+        "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)"
     }
@@ -279,7 +281,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Plat & Icoon-vrij)
+# 5. NAVBAR SAMENSTELLEN 
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -301,7 +303,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (FIXED GET_ROUTE_DATA)
+# ROUTING, KAART & DAHLE PRIJS LOGICA (FIXED ZONES & LIJNEN)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -330,7 +332,8 @@ def determine_zone(p_city, d_city):
     cities = (str(p_city).lower() + " " + str(d_city).lower())
     if any(c in cities for c in ['roan', 'osen', 'bessaker', 'refsnes', 'stokkøy', 'stokkoy', 'linesøya', 'linesoya']): return 3
     if any(c in cities for c in ['bjugn', 'brekstad', 'vallersund', 'lysøysund', 'lysoysund', 'åfjord', 'afjord']): return 2
-    if any(c in cities for c in ['rissa', 'hasselvika', 'fevåg', 'fevag', 'husbysjøen', 'husbysjoen', 'råkvåg', 'rakvag', 'leksvik', 'trondheim']): return 1
+    # STADSBYGD TOEGEVOEGD AAN ZONE 1
+    if any(c in cities for c in ['stadsbygd', 'rissa', 'hasselvika', 'fevåg', 'fevag', 'husbysjøen', 'husbysjoen', 'råkvåg', 'rakvag', 'leksvik', 'trondheim']): return 1
     return 4 
 
 def get_live_price():
