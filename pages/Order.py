@@ -17,7 +17,12 @@ st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
-[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"], footer, [data-testid="stToolbar"], div[class^="viewerBadge"] { display: none !important; }
+
+/* VERBERG STREAMLIT BRANDING VOLLEDIG */
+[data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
+footer { display: none !important; }
+[data-testid="stToolbar"] { display: none !important; }
+div[class^="viewerBadge"] { display: none !important; }
 .block-container { padding-top: 110px; }
 
 /* NAVBAR CSS */
@@ -26,9 +31,13 @@ st.markdown("""
 .nav-logo a { display: inline-block; height: 48px; text-decoration: none; cursor: pointer; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
+
+/* DE LINK TEKSTEN IN HET MIDDEN */
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
+
+/* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
 .nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
@@ -45,6 +54,8 @@ st.markdown("""
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .cta-btn-outline:hover { background-color: #f4e9f7 !important; }
+
+/* TAAL DROPDOWN */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -79,7 +90,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & TAAL LOGICA
+# 2. INIT COOKIE MANAGER & WACHTRUIMTE
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -91,10 +102,18 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
-if 'language' not in st.session_state: st.session_state.language = "no"
-if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
+if 'language' not in st.session_state:
+    st.session_state.language = "no"
+
+if "lang" in st.query_params:
+    url_lang = st.query_params["lang"]
+    if url_lang in ["no", "en", "sv", "da"]:
+        st.session_state.language = url_lang
+        cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
+
 lang = st.session_state.language 
 
+# Vlaggetjes verwijderd
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -124,7 +143,7 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
-        "calc_t": "Estimert Kostnad", "c_base": "Grunngebyr", "c_hw": "Håndtering & Vekt", "c_tr": "Transport", "c_ww": "Internasjonal Flyfrakt", "c_src": "Søker adresse...", "c_aw": "Venter på rute...", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
+        "calc_t": "Estimert Kostnad", "c_base": "Transport", "c_hw": "Håndtering & Vekt", "c_tr": "Transport", "c_ww": "Internasjonal Flyfrakt", "c_src": "Søker adresse...", "c_aw": "Venter på rute...", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
         "c_admin": "Adm. gebyr", "c_over": "Overdimensjonert (+25%)"
     },
     "en": {
@@ -149,7 +168,7 @@ translations = {
         "l_cn": "COMPANY NAME", "l_rn": "REG. NO", "l_ad": "ADDRESS", "l_cp": "CONTACT PERSON", "l_em": "EMAIL", "l_ph": "PHONE", "l_str": "STREET ADDRESS", "l_zc": "ZIP & CITY",
         "rev_r": "Route", "rev_s": "Shipment", "l_no": "NOTES", "b_edit": "← Edit Details", "b_send": "CONFIRM & SEND",
         "db_err": "⚠️ Error: Failed to send to database.", "s_succ": "Request sent successfully!", "s_sub": "We will get in touch shortly.", "b_new": "← Start a New Request",
-        "calc_t": "Estimated Cost", "c_base": "Base Fee", "c_hw": "Handling & Weight", "c_tr": "Transport", "c_ww": "Worldwide Air Freight", "c_src": "Searching address...", "c_aw": "Awaiting route...", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
+        "calc_t": "Estimated Cost", "c_base": "Transport", "c_hw": "Handling & Weight", "c_tr": "Transport", "c_ww": "Worldwide Air Freight", "c_src": "Searching address...", "c_aw": "Awaiting route...", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
         "c_admin": "Admin Fee", "c_over": "Oversized (+25%)"
     },
     "sv": {
@@ -174,7 +193,7 @@ translations = {
         "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD",
         "rev_r": "Rutt", "rev_s": "Försändelse", "l_no": "ANTECKNINGAR", "b_edit": "← Redigera detaljer", "b_send": "BEKRÄFTA & SKICKA",
         "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
-        "calc_t": "Uppskattad Kostnad", "c_base": "Grundavgift", "c_hw": "Hantering & Vikt", "c_tr": "Transport", "c_ww": "Internationell Flygfrakt", "c_src": "Söker adress...", "c_aw": "Väntar på rutt...", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
+        "calc_t": "Uppskattad Kostnad", "c_base": "Transport", "c_hw": "Hantering & Vikt", "c_tr": "Transport", "c_ww": "Internationell Flygfrakt", "c_src": "Söker adress...", "c_aw": "Väntar på rutt...", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
         "c_admin": "Adm. avgift", "c_over": "Överdimensionerad (+25%)"
     },
     "da": {
@@ -199,7 +218,7 @@ translations = {
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
-        "calc_t": "Estimeret Pris", "c_base": "Grundgebyr", "c_hw": "Håndtering & Vægt", "c_tr": "Transport", "c_ww": "International Luftfragt", "c_src": "Søger adresse...", "c_aw": "Afventer rute...", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
+        "calc_t": "Estimeret Pris", "c_base": "Transport", "c_hw": "Håndtering & Vægt", "c_tr": "Transport", "c_ww": "International Luftfragt", "c_src": "Søger adresse...", "c_aw": "Afventer rute...", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
         "c_admin": "Adm. gebyr", "c_over": "Overdimensioneret (+25%)"
     }
 }
@@ -274,7 +293,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Zonder Emojis)
+# 5. NAVBAR SAMENSTELLEN (Plat & Icoon-vrij)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -296,7 +315,7 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING & DAHLE PRIJS LOGICA (Met 10% winstmarge)
+# ROUTING, KAART & DAHLE PRIJS LOGICA 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
@@ -308,6 +327,18 @@ def get_coordinates(address_string):
         if resp: return float(resp[0]['lat']), float(resp[0]['lon'])
     except: pass
     return None
+
+# DEZE FUNCTIE TERUGGEZET VOOR DE ROUTE LIJN OP DE KAART!
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_route_data(coord1, coord2):
+    if not coord1 or not coord2: return None, None
+    url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
+    try:
+        resp = requests.get(url).json()
+        if resp.get("code") == "Ok":
+            return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
+    except: pass
+    return None, None
 
 @st.cache_data(show_spinner=False)
 def determine_zone(p_city, d_city):
@@ -520,7 +551,7 @@ else:
                     
                 st.write("")
                 
-                # MAP
+                # MAP (MET GET_ROUTE_DATA!)
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
                 d_addr_map = str(st.session_state.get('d_addr') or '').strip()
@@ -535,7 +566,7 @@ else:
                     layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_color=[137, 75, 157, 255], get_radius=1000, radius_min_pixels=6, radius_max_pixels=15))
                     
                     if p_coords and d_coords:
-                        _, route_geom = get_route_data(p_coords, d_coords)
+                        _, route_geom = get_route_data(p_coords, d_coords) # DEZE WERKT NU WEER!
                         if route_geom:
                             layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 200], width_scale=20, width_min_pixels=3, get_width=5))
                             pitch = 20 
