@@ -69,10 +69,10 @@ current_lang_display = lang_displays.get(lang, "Norsk")
 
 # OPGESCHOONDE VERTALINGEN ZONDER NEDERLANDS
 translations = {
-    "no": { "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "stat_title": "📊 Statistikk og KPI-er", "filter_lbl": "Filterperiode:", "opt_30": "Siste 30 dager", "opt_7": "Siste 7 dager", "opt_1": "I dag", "act_req": "Handling kreves", "act_routes": "Aktive ruter", "comp": "Fullført", "canc": "Avbrutt", "tot_ord": "Totale ordrer", "inbox": "Innboks", "pend": "Venter", "prog": "Pågår", "done": "Ferdig", "det_title": "Ordredetaljer", "det_sub": "👈 Velg en ordre fra innboksen for å se detaljer og oppdatere status." },
-    "en": { "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", "menu_title": "Pages ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "stat_title": "📊 Statistics & KPIs", "filter_lbl": "Filter period:", "opt_30": "Last 30 days", "opt_7": "Last 7 days", "opt_1": "Today", "act_req": "Action Required", "act_routes": "Active Routes", "comp": "Completed", "canc": "Cancelled", "tot_ord": "Total Orders", "inbox": "Inbox", "pend": "Pending", "prog": "In Progress", "done": "Done", "det_title": "Order Details", "det_sub": "👈 Select an order from the Inbox to view details and update status." },
-    "sv": { "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sidor ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "stat_title": "📊 Statistik och KPI:er", "filter_lbl": "Filterperiod:", "opt_30": "Senaste 30 dagarna", "opt_7": "Senaste 7 dagarna", "opt_1": "Idag", "act_req": "Åtgärd krävs", "act_routes": "Aktiva rutter", "comp": "Slutförd", "canc": "Avbruten", "tot_ord": "Totala ordrar", "inbox": "Inkorg", "pend": "Väntar", "prog": "Pågår", "done": "Klar", "det_title": "Orderdetaljer", "det_sub": "👈 Välj en order från inkorgen för att se detaljer och uppdatera status." },
-    "da": { "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "stat_title": "📊 Statistik og KPI'er", "filter_lbl": "Filterperiode:", "opt_30": "Seneste 30 dage", "opt_7": "Seneste 7 dage", "opt_1": "I dag", "act_req": "Handling påkrævet", "act_routes": "Aktive ruter", "comp": "Gennemført", "canc": "Annulleret", "tot_ord": "Samlede ordrer", "inbox": "Indbakke", "pend": "Afventer", "prog": "I gang", "done": "Færdig", "det_title": "Ordredetaljer", "det_sub": "👈 Vælg en ordre fra indbakken for at se detaljer og opdatere status." }
+    "no": { "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "stat_title": "📊 Statistikk og KPI-er", "filter_lbl": "Filterperiode:", "opt_30": "Siste 30 dager", "opt_7": "Siste 7 dager", "opt_1": "I dag", "act_req": "Handling kreves", "act_routes": "Aktive ruter", "comp": "Fullført", "canc": "Avbrutt", "tot_ord": "Totale ordrer", "inbox": "Innboks", "pend": "Venter", "prog": "Pågår", "done": "Ferdig", "det_title": "Ordredetaljer", "det_sub": "👈 Velg en ordre fra innboksen for å se detaljer og oppdatere status." },
+    "en": { "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "stat_title": "📊 Statistics & KPIs", "filter_lbl": "Filter period:", "opt_30": "Last 30 days", "opt_7": "Last 7 days", "opt_1": "Today", "act_req": "Action Required", "act_routes": "Active Routes", "comp": "Completed", "canc": "Cancelled", "tot_ord": "Total Orders", "inbox": "Inbox", "pend": "Pending", "prog": "In Progress", "done": "Done", "det_title": "Order Details", "det_sub": "👈 Select an order from the Inbox to view details and update status." },
+    "sv": { "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "stat_title": "📊 Statistik och KPI:er", "filter_lbl": "Filterperiod:", "opt_30": "Senaste 30 dagarna", "opt_7": "Senaste 7 dagarna", "opt_1": "Idag", "act_req": "Åtgärd krävs", "act_routes": "Aktiva rutter", "comp": "Slutförd", "canc": "Avbruten", "tot_ord": "Totala ordrar", "inbox": "Inkorg", "pend": "Väntar", "prog": "Pågår", "done": "Klar", "det_title": "Orderdetaljer", "det_sub": "👈 Välj en order från inkorgen för att se detaljer och uppdatera status." },
+    "da": { "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "stat_title": "📊 Statistik og KPI'er", "filter_lbl": "Filterperiode:", "opt_30": "Seneste 30 dage", "opt_7": "Seneste 7 dage", "opt_1": "I dag", "act_req": "Handling påkrævet", "act_routes": "Aktive ruter", "comp": "Gennemført", "canc": "Annulleret", "tot_ord": "Samlede ordrer", "inbox": "Indbakke", "pend": "Afventer", "prog": "I gang", "done": "Færdig", "det_title": "Ordredetaljer", "det_sub": "👈 Vælg en ordre fra indbakken for at se detaljer og opdatere status." }
 }
 t = translations.get(lang, translations["no"])
 
@@ -100,8 +100,23 @@ if st.session_state.get('user'):
 
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
+# =========================================================
+# ANTI-FLASH BEVEILIGING VOOR PLANNER
+# =========================================================
 if not is_employee:
-    st.markdown(f"""<div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div><div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>""", unsafe_allow_html=True)
+    if 'anti_flash_plan' not in st.session_state:
+        st.session_state.anti_flash_plan = True
+        loading = st.empty()
+        loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
+        time.sleep(0.6) 
+        loading.empty()
+        st.rerun()
+
+    html_navbar_empty = f"""
+    <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
+    """
+    st.markdown(html_navbar_empty, unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1,1,1])
     with c2: 
         if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
@@ -121,7 +136,7 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # =========================================================================
-# VVVVV JOUW PLANNER LOGICA BEGINT HIERONDER (VOLLEDIG VERTAALD) VVVVV
+# VVVVV PLANNER LOGICA VVVVV
 # =========================================================================
 
 # --- STATISTIEKEN EXPANDER ---
