@@ -110,11 +110,11 @@ if st.session_state.get('user'):
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
-# ANTI-FLASH BEVEILIGING VOOR ADMIN PAGINA'S
+# ANTI-FLASH BEVEILIGING VOOR DASHBOARD
 # =========================================================
 if not is_employee:
-    if 'anti_flash_done' not in st.session_state:
-        st.session_state.anti_flash_done = True
+    if 'anti_flash_dash' not in st.session_state:
+        st.session_state.anti_flash_dash = True
         loading = st.empty()
         loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
         time.sleep(0.6) 
@@ -144,6 +144,7 @@ st.markdown(f"""
 <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a><a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a></div></div>
 """, unsafe_allow_html=True)
 
+# TITEL ZONDER MARGE AAN DE BOVENKANT!
 st.markdown(f"""<div style="margin-bottom: 25px;"><h2 style="color: #ffffff; margin: 0 0 5px 0;">{t['dash_title']}</h2><p style="color: #888; font-size: 15px; margin: 0;">{t['dash_sub']}</p></div>""", unsafe_allow_html=True)
 
 @st.dialog(t['dialog_title'])
