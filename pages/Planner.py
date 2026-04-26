@@ -52,16 +52,35 @@ div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 
 </style>
 """, unsafe_allow_html=True)
 
+# =========================================================
+# INIT COOKIE MANAGER & ROBUUSTE AUTH VERIFICATIE
+# =========================================================
 cookie_manager = stx.CookieManager()
 
-# UNIEKE INITIALISATIE VOOR DE PLANNER PAGINA
-if 'planner_init' not in st.session_state:
-    st.session_state.planner_init = True
-    loading = st.empty()
-    loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying credentials...</h3></div>", unsafe_allow_html=True)
-    time.sleep(0.6)
-    loading.empty()
-    st.rerun()
+if 'auth_wait' not in st.session_state:
+    st.session_state.auth_wait = 0
+
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+@st.cache_resource
+def init_connection():
+    return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
+
+supabase = init_connection()
+
+# Geef de cookie manager de tijd om in te laden na een harde navigatie
+if st.session_state.get('user') is None:
+    if acc_token and ref_token:
+        try:
+            st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
+        except: 
+            pass
+    elif st.session_state.auth_wait < 3:
+        st.session_state.auth_wait += 1
+        st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying credentials...</h3></div>", unsafe_allow_html=True)
+        time.sleep(0.4)
+        st.rerun()
 
 if 'language' not in st.session_state: st.session_state.language = "no"
 if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
@@ -78,19 +97,7 @@ translations = {
 }
 t = translations.get(lang, translations["no"])
 
-@st.cache_resource
-def init_connection():
-    return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
-
-supabase = init_connection()
-
-if 'user' not in st.session_state: st.session_state.user = None
 if 'role' not in st.session_state: st.session_state.role = "guest"
-acc_token, ref_token = cookie_manager.get('dahle_acc'), cookie_manager.get('dahle_ref')
-
-if st.session_state.get('user') is None and acc_token and ref_token:
-    try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
-    except: pass
 
 if st.session_state.get('user'):
     try:
@@ -102,7 +109,7 @@ if st.session_state.get('user'):
 
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
-# DE DIGITALE UITSMIJTER (THE BOUNCER)
+# DE DIGITALE UITSMIJTER (NU ZONDER FLITS)
 if not is_employee:
     html_navbar_empty = f"""
     <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
