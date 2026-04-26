@@ -15,7 +15,6 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; padding: 0; }
 .stApp { background-color: #111111 !important; }
-/* NOG MINDER PADDING AAN DE BOVENKANT */
 .block-container { padding-top: 95px !important; max-width: 100% !important; margin-top: 0px; padding-left: 5%; padding-right: 5%; }
 .stMarkdown p, .stMarkdown h1, .stMarkdown h2, .stMarkdown h3, .stMarkdown h4, .stMarkdown li { color: #ffffff !important; }
 div[data-testid="stMetricValue"], div[data-testid="stMetricLabel"] { color: #ffffff !important; }
@@ -110,12 +109,28 @@ if st.session_state.get('user'):
 
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
+# =========================================================
+# ANTI-FLASH BEVEILIGING VOOR ADMIN PAGINA'S
+# =========================================================
 if not is_employee:
-    st.markdown(f"""<div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div><div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>""", unsafe_allow_html=True)
+    if 'anti_flash_done' not in st.session_state:
+        st.session_state.anti_flash_done = True
+        loading = st.empty()
+        loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
+        time.sleep(0.6) 
+        loading.empty()
+        st.rerun()
+
+    html_navbar_empty = f"""
+    <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
+    """
+    st.markdown(html_navbar_empty, unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1,1,1])
     with c2: 
         if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
     st.stop()
+
 
 knop_tekst = f"<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>{st.session_state.company_name}"
 
@@ -129,7 +144,6 @@ st.markdown(f"""
 <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a><a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a></div></div>
 """, unsafe_allow_html=True)
 
-# TITEL ZONDER MARGE AAN DE BOVENKANT!
 st.markdown(f"""<div style="margin-bottom: 25px;"><h2 style="color: #ffffff; margin: 0 0 5px 0;">{t['dash_title']}</h2><p style="color: #888; font-size: 15px; margin: 0;">{t['dash_sub']}</p></div>""", unsafe_allow_html=True)
 
 @st.dialog(t['dialog_title'])
@@ -171,12 +185,12 @@ f1, f2 = st.columns(2, gap="large")
 with f1:
     with st.container(border=True):
         c_text, c_chart = st.columns([1, 1.5]) 
-        with c_text: st.metric(t['fuel_lbl'], f"{live_prices['diesel']:.2f} NOK") # Live via API verwijderd!
+        with c_text: st.metric(t['fuel_lbl'], f"{live_prices['diesel']:.2f} NOK") 
         with c_chart: st.plotly_chart(make_compact_detailed_chart(df_d, '#3498db'), use_container_width=True, config={'displayModeBar': False})
 with f2:
     with st.container(border=True):
         c_text, c_chart = st.columns([1, 1.5])
-        with c_text: st.metric(t['gas_lbl'], f"{live_prices['gas']:.2f} NOK") # Live via API verwijderd!
+        with c_text: st.metric(t['gas_lbl'], f"{live_prices['gas']:.2f} NOK") 
         with c_chart: st.plotly_chart(make_compact_detailed_chart(df_g, '#e67e22'), use_container_width=True, config={'displayModeBar': False})
 
 st.write("---")
