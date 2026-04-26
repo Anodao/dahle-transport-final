@@ -227,7 +227,7 @@ translations = {
         "e_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).", "e_em": "⚠️ Ugyldig e-mailadresse.",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
+        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
@@ -588,8 +588,8 @@ else:
 
                         if sel == "Parcels & Documents":
                             c_p1, c_p2 = st.columns([1.5, 1])
-                            with c_p1: st.number_input(t['lbl_qty'], min_value=1, key="pd_qty")
-                            with c_p2: st.number_input(t['lbl_wgt'], min_value=0.5, step=0.5, key="pd_weight")
+                            with c_p1: st.number_input(t['lbl_qty'], min_value=1, max_value=10000, key="pd_qty")
+                            with c_p2: st.number_input(t['lbl_wgt'], min_value=0.5, max_value=35.0, step=0.5, key="pd_weight")
                             st.checkbox(t['w_over'], key="pd_oversized")
                         
                         elif sel == "Cargo & Freight":
@@ -600,25 +600,25 @@ else:
                             st.checkbox(t['l_pal'], key="cf_pal")
                             if st.session_state.get('cf_pal'):
                                 c_pf1, c_pf2 = st.columns(2)
-                                with c_pf1: st.number_input(t['lbl_qty'], min_value=1, key="cf_pal_qty")
-                                with c_pf2: st.number_input(t['lbl_wgt'], min_value=1.0, step=10.0, key="cf_pal_weight")
+                                with c_pf1: st.number_input(t['lbl_qty'], min_value=1, max_value=33, key="cf_pal_qty")
+                                with c_pf2: st.number_input(t['lbl_wgt'], min_value=1.0, max_value=1200.0, step=10.0, key="cf_pal_weight")
                                 
                             st.checkbox(t['l_full'], key="cf_full")
                             if st.session_state.get('cf_full'):
                                 c_ff1, c_ff2 = st.columns(2)
-                                with c_ff1: st.number_input(t['lbl_qty'], min_value=1, key="cf_full_qty")
-                                with c_ff2: st.number_input(t['lbl_wgt'], min_value=1.0, step=100.0, key="cf_full_weight")
+                                with c_ff1: st.number_input(t['lbl_qty'], min_value=1, max_value=10, key="cf_full_qty")
+                                with c_ff2: st.number_input(t['lbl_wgt'], min_value=1.0, max_value=25000.0, step=100.0, key="cf_full_weight")
                                 
                             st.checkbox(t['l_lc'], key="cf_lc")
                             if st.session_state.get('cf_lc'):
                                 c_lf1, c_lf2 = st.columns(2)
-                                with c_lf1: st.number_input(t['lbl_qty'], min_value=1, key="cf_lc_qty")
-                                with c_lf2: st.number_input(t['lbl_wgt'], min_value=1.0, step=10.0, key="cf_lc_weight")
+                                with c_lf1: st.number_input(t['lbl_qty'], min_value=1, max_value=1000, key="cf_lc_qty")
+                                with c_lf2: st.number_input(t['lbl_wgt'], min_value=1.0, max_value=25000.0, step=10.0, key="cf_lc_weight")
                         
                         elif sel == "Mail & Direct Marketing":
                             c_m1, c_m2 = st.columns(2)
-                            with c_m1: st.number_input(t['lbl_qty'], min_value=1, key="mdm_qty")
-                            with c_m2: st.number_input(t['lbl_wgt'], min_value=0.1, step=0.1, key="mdm_weight")
+                            with c_m1: st.number_input(t['lbl_qty'], min_value=1, max_value=100000, key="mdm_qty")
+                            with c_m2: st.number_input(t['lbl_wgt'], min_value=0.1, max_value=2.0, step=0.1, key="mdm_weight")
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
