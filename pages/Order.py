@@ -169,7 +169,6 @@ translations = {
         "delivery_opts": "Delivery Options", "chk_same": "Express / Same day delivery",
         "m_wait": "Map will appear when you enter an address...", "a_info": "Additional Information (optional)", 
         "a_ph": "E.g. special requirements for delivery...", 
-        "p_note": "To learn how we use your data, read our privacy notice in the footer.",
         "e_req": "⚠️ Please fill in all mandatory fields (*).", "e_em": "⚠️ Invalid email address.",
         "b_back": "← Go Back", "b_cont": "Continue to Review →",
         "rev_t": "Review your request", "rev_s": "Please verify your details below.", "rev_c": "Company & Contact",
