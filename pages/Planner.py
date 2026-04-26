@@ -54,11 +54,14 @@ div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 
 
 cookie_manager = stx.CookieManager()
 
-if 'cookie_retry' not in st.session_state:
-    st.session_state.cookie_retry = True
+# UNIEKE INITIALISATIE VOOR DE PLANNER PAGINA
+if 'planner_init' not in st.session_state:
+    st.session_state.planner_init = True
     loading = st.empty()
-    loading.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials...</h3>", unsafe_allow_html=True)
-    time.sleep(0.3); loading.empty(); st.rerun()
+    loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying credentials...</h3></div>", unsafe_allow_html=True)
+    time.sleep(0.6)
+    loading.empty()
+    st.rerun()
 
 if 'language' not in st.session_state: st.session_state.language = "no"
 if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
@@ -67,7 +70,6 @@ lang = st.session_state.language
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
-# OPGESCHOONDE VERTALINGEN ZONDER NEDERLANDS
 translations = {
     "no": { "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "stat_title": "📊 Statistikk og KPI-er", "filter_lbl": "Filterperiode:", "opt_30": "Siste 30 dager", "opt_7": "Siste 7 dager", "opt_1": "I dag", "act_req": "Handling kreves", "act_routes": "Aktive ruter", "comp": "Fullført", "canc": "Avbrutt", "tot_ord": "Totale ordrer", "inbox": "Innboks", "pend": "Venter", "prog": "Pågår", "done": "Ferdig", "det_title": "Ordredetaljer", "det_sub": "👈 Velg en ordre fra innboksen for å se detaljer og oppdatere status." },
     "en": { "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "stat_title": "📊 Statistics & KPIs", "filter_lbl": "Filter period:", "opt_30": "Last 30 days", "opt_7": "Last 7 days", "opt_1": "Today", "act_req": "Action Required", "act_routes": "Active Routes", "comp": "Completed", "canc": "Cancelled", "tot_ord": "Total Orders", "inbox": "Inbox", "pend": "Pending", "prog": "In Progress", "done": "Done", "det_title": "Order Details", "det_sub": "👈 Select an order from the Inbox to view details and update status." },
@@ -100,18 +102,8 @@ if st.session_state.get('user'):
 
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
-# =========================================================
-# ANTI-FLASH BEVEILIGING VOOR PLANNER
-# =========================================================
+# DE DIGITALE UITSMIJTER (THE BOUNCER)
 if not is_employee:
-    if 'anti_flash_plan' not in st.session_state:
-        st.session_state.anti_flash_plan = True
-        loading = st.empty()
-        loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
-        time.sleep(0.6) 
-        loading.empty()
-        st.rerun()
-
     html_navbar_empty = f"""
     <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
     """
@@ -124,7 +116,6 @@ if not is_employee:
 
 knop_tekst = f"<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>{st.session_state.company_name}"
 
-# MENU ZONDER PLANNER (WANT WE ZIJN OP DE PLANNER PAGINA)
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a><a href="/Dashboard?lang={lang}" target="_self">{t["menu_dash"]}</a>'
 
 st.markdown(f"""
@@ -160,13 +151,11 @@ with col_inbox:
     st.markdown(f"<h2 style='margin-top:0;'>{t['inbox']}</h2>", unsafe_allow_html=True)
     st.markdown(f"<p style='font-size: 13px; color: #888;'>🔴 {t['pend']} &nbsp;&nbsp; 🟡 {t['prog']} &nbsp;&nbsp; 🟢 {t['done']} &nbsp;&nbsp; ❌ {t['canc']}</p>", unsafe_allow_html=True)
     
-    # Voorbeeld order 1
     with st.container(border=True):
         st.markdown("🔴 **Anouar's Company**")
         st.caption("Order #38 | Received: 2026-04-21")
         st.button("View #38", use_container_width=True)
 
-    # Voorbeeld order 2
     with st.container(border=True):
         st.markdown("🔴 **Anouar**")
         st.caption("Order #36 | Received: 2026-04-18")
