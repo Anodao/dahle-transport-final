@@ -227,7 +227,7 @@ translations = {
         "e_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).", "e_em": "⚠️ Ugyldig e-mailadresse.",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
+        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
@@ -417,7 +417,9 @@ def get_live_price():
     weight_cost = 0
     tier_lbl = ""
     if total_weight > 999:
-        weight_cost = prices[zone][-1][1] + (int((total_weight - 999) / 100) + 1) * 100
+        extra_weight = total_weight - 999
+        steps = int((extra_weight - 0.001) / 100) + 1
+        weight_cost = prices[zone][-1][1] + (steps * 100)
         tier_lbl = "> 999 kg"
     else:
         for max_w, price in prices[zone]:
@@ -585,7 +587,7 @@ else:
                                 st.session_state.validate_step2 = False; st.rerun() 
 
                         if sel == "Parcels & Documents":
-                            c_p1, c_p2 = st.columns(2)
+                            c_p1, c_p2 = st.columns([1.5, 1])
                             with c_p1: st.number_input(t['lbl_qty'], min_value=1, key="pd_qty")
                             with c_p2: st.number_input(t['lbl_wgt'], min_value=0.5, step=0.5, key="pd_weight")
                             st.checkbox(t['w_over'], key="pd_oversized")
