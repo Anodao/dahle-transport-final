@@ -1,6 +1,7 @@
 import streamlit as st
 from supabase import create_client
 import extra_streamlit_components as stx
+import time
 
 st.set_page_config(page_title="Dahle Transport - Planner", layout="wide", initial_sidebar_state="collapsed")
 
@@ -52,63 +53,10 @@ div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 
 """, unsafe_allow_html=True)
 
 # =========================================================
-# KOGELVRIJE COOKIE SYNC LOGICA
+# INIT COOKIE MANAGER & TAAL GEHEUGEN
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-# Dit controleert of de component daadwerkelijk gesynchroniseerd is met de browser.
-# Als het None is, heeft de browser de cookies nog niet teruggestuurd.
-cookies_synced = cookie_manager.get_all()
-
-if cookies_synced is None:
-    st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
-    # Stop stelt de frontend in staat om te laden en triggert automatisch een rerun zodra de cookies er zijn.
-    st.stop()
-
-# =========================================================
-# DATABASE & AUTHENTICATIE
-# =========================================================
-acc_token = cookie_manager.get('dahle_acc')
-ref_token = cookie_manager.get('dahle_ref')
-
-@st.cache_resource
-def init_connection():
-    return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
-
-supabase = init_connection()
-
-if 'user' not in st.session_state: st.session_state.user = None
-if 'role' not in st.session_state: st.session_state.role = "guest"
-
-# Inloggen via cookies als we de gebruiker nog niet in de sessie hebben
-if st.session_state.get('user') is None and acc_token and ref_token:
-    try: 
-        st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
-    except: pass
-
-if st.session_state.get('user'):
-    try:
-        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
-        if prof_res.data:
-            st.session_state.company_name = prof_res.data[0].get("company_name", "")
-            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
-    except: st.session_state.role = "customer"
-
-is_employee = st.session_state.get('role') in ['admin', 'employee']
-
-# DE DIGITALE UITSMIJTER 
-if not is_employee:
-    html_navbar_empty = """<div class="navbar"><div class="nav-logo"><a href="/?lang=no"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>"""
-    st.markdown(html_navbar_empty, unsafe_allow_html=True)
-    st.markdown("<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns([1,1,1])
-    with c2: 
-        if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
-    st.stop()
-
-# =========================================================
-# TAAL LOGICA (VERBONDEN MET COOKIES)
-# =========================================================
 saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
@@ -134,6 +82,58 @@ translations = {
 }
 t = translations.get(lang, translations["no"])
 
+# =========================================================
+# DATABASE & AUTHENTICATIE
+# =========================================================
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+@st.cache_resource
+def init_connection():
+    return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
+
+supabase = init_connection()
+
+if 'user' not in st.session_state: st.session_state.user = None
+if 'role' not in st.session_state: st.session_state.role = "guest"
+
+# Inloggen via cookies
+if st.session_state.get('user') is None and acc_token and ref_token:
+    try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
+    except: pass
+
+if st.session_state.get('user'):
+    try:
+        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
+        if prof_res.data:
+            st.session_state.company_name = prof_res.data[0].get("company_name", "")
+            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
+    except: st.session_state.role = "customer"
+
+is_employee = st.session_state.get('role') in ['admin', 'employee']
+
+# DE DIGITALE UITSMIJTER MET ANTI-FLITS LOGICA
+if not is_employee:
+    if 'anti_flash_plan' not in st.session_state:
+        st.session_state.anti_flash_plan = True
+        loading = st.empty()
+        loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
+        time.sleep(0.6) 
+        loading.empty()
+        st.rerun()
+
+    html_navbar_empty = f"""<div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>"""
+    st.markdown(html_navbar_empty, unsafe_allow_html=True)
+    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns([1,1,1])
+    with c2: 
+        if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
+    st.stop()
+else:
+    # Zodra de check succesvol is, resetten we de state voor een volgend bezoek
+    if 'anti_flash_plan' in st.session_state:
+        del st.session_state['anti_flash_plan']
+
 knop_tekst = f"<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>{st.session_state.company_name}"
 
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a><a href="/Dashboard?lang={lang}" target="_self">{t["menu_dash"]}</a>'
@@ -150,6 +150,7 @@ st.markdown(f"""
 # VVVVV PLANNER LOGICA VVVVV
 # =========================================================================
 
+# --- STATISTIEKEN EXPANDER ---
 with st.expander(t['stat_title'], expanded=True):
     st.selectbox(t['filter_lbl'], [t['opt_30'], t['opt_7'], t['opt_1']], key="plan_filter")
     
@@ -163,6 +164,7 @@ with st.expander(t['stat_title'], expanded=True):
 st.write("")
 st.write("")
 
+# --- INBOX & DETAILS SECTIE ---
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
