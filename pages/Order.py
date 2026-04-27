@@ -200,7 +200,7 @@ translations = {
         "err_sel": "❌ Vänligen välj minst ett alternativ.", "time_est": "Tar vanligtvis under 5 minutter.", "btn_next": "Nästa steg",
         "w_item": "Vikt per styck (kg)", "w_over": "Överdimensionerad (Längd > 3.5m)", "l_type": "Lasttyp", "l_err": " 🚨 :red[(Välj minst en)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvikt (kg)", "lbl_pcs": "st", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", 
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
-        "c_fn": "Förnamn *", "c_ln": "Efternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
+        "c_fn": "Förnamn *", "c_ln": "Efternamn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *",
         "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
@@ -331,34 +331,38 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (MET ROBUUSTE FALLBACK)
+# ROUTING, KAART & DAHLE PRIJS LOGICA 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransport/6.0 (contact@dahle.no)'}
+    headers = {'User-Agent': 'DahleTransport/8.0 (contact@dahle.no)'}
     url = "https://nominatim.openstreetmap.org/search"
     
-    # Poging 1: Exacte zoekopdracht mét straatnaam
+    # Poging 1: Straatnaam + Stad (in Noorwegen)
     try:
         if len(street) > 2:
-            p1 = {'q': f"{street}, {zip_code} {city}", 'format': 'json', 'limit': 1}
-            r1 = requests.get(url, params=p1, headers=headers, timeout=3).json()
+            r1 = requests.get(url, params={'street': street, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
             if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
     except: pass
     
-    # Poging 2 (Fallback): Alleen zoeken op postcode en stad
+    # Poging 2: Postcode + Stad (in Noorwegen)
     try:
-        p2 = {'q': f"{zip_code} {city}", 'format': 'json', 'limit': 1}
-        r2 = requests.get(url, params=p2, headers=headers, timeout=3).json()
-        if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
+        if len(zip_code) >= 4:
+            r2 = requests.get(url, params={'postalcode': zip_code, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
+            if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
     except: pass
     
-    # Poging 3 (Extreme Fallback): Alleen zoeken op stad
+    # Poging 3: Alleen Stad (in Noorwegen)
     try:
-        p3 = {'q': f"{city}", 'format': 'json', 'limit': 1}
-        r3 = requests.get(url, params=p3, headers=headers, timeout=3).json()
+        r3 = requests.get(url, params={'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
         if r3: return float(r3[0]['lat']), float(r3[0]['lon'])
+    except: pass
+    
+    # Poging 4: Globaal (Buiten Noorwegen, voor testadressen zoals Alkmaar)
+    try:
+        r4 = requests.get(url, params={'city': city, 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
+        if r4: return float(r4[0]['lat']), float(r4[0]['lon'])
     except: pass
     
     return None
@@ -366,11 +370,10 @@ def get_coordinates(street, zip_code, city):
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
-    url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
-    headers = {'User-Agent': 'DahleTransportApp/1.5 (contact@dahle.no)'}
+    # Veiligere HTTPS API gebruikt
+    url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        # Een time-out van 4 seconden om de app nooit te laten bevriezen
-        resp = requests.get(url, headers=headers, timeout=4).json()
+        resp = requests.get(url, timeout=4).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
@@ -398,9 +401,10 @@ def get_live_price():
     oversized = False
     reg_items = []
     
+    # HARD-CLAMPING tegen Streamlit input bugs
     if "Parcels & Documents" in st.session_state.selected_types:
-        q = st.session_state.get('pd_qty', 1)
-        w = st.session_state.get('pd_weight', 1.0)
+        q = min(st.session_state.get('pd_qty', 1), 10000)
+        w = min(st.session_state.get('pd_weight', 1.0), 35.0)
         total_weight += (w * q)
         reg_items.append(f"{q}x {t['b1_t']} ({w:g} kg)")
         if st.session_state.get('pd_oversized', False): oversized = True
@@ -408,27 +412,27 @@ def get_live_price():
     cargo_units = 0
     if "Cargo & Freight" in st.session_state.selected_types:
         if st.session_state.get('cf_pal'):
-            pq = st.session_state.get('cf_pal_qty', 1)
-            pw = st.session_state.get('cf_pal_weight', 100.0)
+            pq = min(st.session_state.get('cf_pal_qty', 1), 33)
+            pw = min(st.session_state.get('cf_pal_weight', 100.0), 1200.0)
             cargo_units += pq
             total_weight += pw
             reg_items.append(f"{pq}x {t['l_pal']} ({pw:g} kg)")
         if st.session_state.get('cf_full'):
-            fq = st.session_state.get('cf_full_qty', 1)
-            fw = st.session_state.get('cf_full_weight', 500.0)
+            fq = min(st.session_state.get('cf_full_qty', 1), 10)
+            fw = min(st.session_state.get('cf_full_weight', 500.0), 25000.0)
             cargo_units += fq * 33 
             total_weight += fw
             reg_items.append(f"{fq}x {t['l_full']} ({fw:g} kg)")
         if st.session_state.get('cf_lc'):
-            lq = st.session_state.get('cf_lc_qty', 1)
-            lw = st.session_state.get('cf_lc_weight', 50.0)
+            lq = min(st.session_state.get('cf_lc_qty', 1), 1000)
+            lw = min(st.session_state.get('cf_lc_weight', 50.0), 25000.0)
             cargo_units += lq
             total_weight += lw
             reg_items.append(f"{lq}x {t['l_lc']} ({lw:g} kg)")
             
     if "Mail & Direct Marketing" in st.session_state.selected_types:
-        q = st.session_state.get('mdm_qty', 1)
-        w = st.session_state.get('mdm_weight', 0.5)
+        q = min(st.session_state.get('mdm_qty', 1), 100000)
+        w = min(st.session_state.get('mdm_weight', 0.5), 2.0)
         total_weight += (w * q)
         reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
 
@@ -704,7 +708,9 @@ else:
                     
                 st.write("")
                 
-                # MAP LOGICA: ALTIJD ZICHTBAAR + ROBUUSTE FALLBACK + PYDECK FIX
+                # ==================================
+                # DE DEFINITIEVE ONBREEKBARE MAP
+                # ==================================
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
@@ -722,7 +728,7 @@ else:
                 if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
                 
                 if points:
-                    # FIX: `get_fill_color` in plaats van `get_color` voor ScatterplotLayer
+                    # FILL_COLOR ipv COLOR (Belangrijk voor pydeck!)
                     layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color=[137, 75, 157, 255], get_radius=1500, radius_min_pixels=8, radius_max_pixels=20))
 
                 if p_coords and d_coords:
