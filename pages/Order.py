@@ -196,7 +196,7 @@ translations = {
         "t_match": "Välj vad du brukar skicka för att hitta rätt tjänst.", "t_sub": "Välj minst ett alternativ för att fortsätta",
         "b1_t": "Paket & Dokument", "b1_s": "Vanligtvis upp till 31.5kg", "b1_l1": "Lätta till medeltunga försändelser", "b1_l2": "B2B/B2C", "b_com": "Vanliga försändelser:",
         "b2_t": "Gods & Frakt", "b2_s": "Vanligtvis över 31.5kg+", "b2_l1": "Tyngre försändelser (pallar/containrar)", "b2_l2": "B2B",
-        "b3_t": "Post & Markedsføring", "b3_s": "Vanligtvis upp till 2kg", "b3_l1": "Lätta varer", "b3_l2": "Internationell företagspost",
+        "b3_t": "Post & Marknadsföring", "b3_s": "Vanligtvis upp till 2kg", "b3_l1": "Lätta varer", "b3_l2": "Internationell företagspost",
         "err_sel": "❌ Vänligen välj minst ett alternativ.", "time_est": "Tar vanligtvis under 5 minutter.", "btn_next": "Nästa steg",
         "w_item": "Vikt per styck (kg)", "w_over": "Överdimensionerad (Längd > 3.5m)", "l_type": "Lasttyp", "l_err": " 🚨 :red[(Välj minst en)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvikt (kg)", "lbl_pcs": "st", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", 
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
@@ -331,14 +331,15 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (ZONDER LAND BEPERKING)
+# ROUTING, KAART & DAHLE PRIJS LOGICA (MET ROBUUSTE FALLBACK)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransport/5.0 (contact@dahle.no)'}
+    headers = {'User-Agent': 'DahleTransport/6.0 (contact@dahle.no)'}
     url = "https://nominatim.openstreetmap.org/search"
     
+    # Poging 1: Exacte zoekopdracht mét straatnaam
     try:
         if len(street) > 2:
             p1 = {'q': f"{street}, {zip_code} {city}", 'format': 'json', 'limit': 1}
@@ -346,10 +347,18 @@ def get_coordinates(street, zip_code, city):
             if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
     except: pass
     
+    # Poging 2 (Fallback): Alleen zoeken op postcode en stad
     try:
         p2 = {'q': f"{zip_code} {city}", 'format': 'json', 'limit': 1}
         r2 = requests.get(url, params=p2, headers=headers, timeout=3).json()
         if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
+    except: pass
+    
+    # Poging 3 (Extreme Fallback): Alleen zoeken op stad
+    try:
+        p3 = {'q': f"{city}", 'format': 'json', 'limit': 1}
+        r3 = requests.get(url, params=p3, headers=headers, timeout=3).json()
+        if r3: return float(r3[0]['lat']), float(r3[0]['lon'])
     except: pass
     
     return None
@@ -360,6 +369,7 @@ def get_route_data(coord1, coord2):
     url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     headers = {'User-Agent': 'DahleTransportApp/1.5 (contact@dahle.no)'}
     try:
+        # Een time-out van 4 seconden om de app nooit te laten bevriezen
         resp = requests.get(url, headers=headers, timeout=4).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
@@ -694,7 +704,7 @@ else:
                     
                 st.write("")
                 
-                # MAP LOGICA
+                # MAP LOGICA: ALTIJD ZICHTBAAR + ROBUUSTE FALLBACK + PYDECK FIX
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
@@ -712,15 +722,16 @@ else:
                 if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
                 
                 if points:
-                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color=[137, 75, 157, 255], get_radius=1000, radius_min_pixels=6, radius_max_pixels=15))
+                    # FIX: `get_fill_color` in plaats van `get_color` voor ScatterplotLayer
+                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color=[137, 75, 157, 255], get_radius=1500, radius_min_pixels=8, radius_max_pixels=20))
 
                 if p_coords and d_coords:
                     _, route_geom = get_route_data(p_coords, d_coords) 
                     if route_geom:
                         layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 255], width_scale=20, width_min_pixels=3, get_width=5))
                     else:
-                        layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 255], get_target_color=[137, 75, 157, 255], get_width=3))
-                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 8.5, 20
+                        layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 255], get_target_color=[137, 75, 157, 255], get_width=3, get_tilt=15))
+                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 6, 20
                 elif p_coords:
                     center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 10, 0
                 elif d_coords:
