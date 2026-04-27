@@ -39,7 +39,7 @@ div[class^="viewerBadge"] { display: none !important; }
 
 /* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
-.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
 .nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
@@ -102,10 +102,21 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
-if 'language' not in st.session_state: st.session_state.language = "no"
-if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
-lang = st.session_state.language 
+# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
+saved_lang = cookie_manager.get('dahle_lang')
 
+if "lang" in st.query_params:
+    url_lang = st.query_params["lang"]
+    if url_lang in ["no", "en", "sv", "da"]:
+        if url_lang != saved_lang:
+            cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
+        st.session_state.language = url_lang
+elif saved_lang and saved_lang in ["no", "en", "sv", "da"]:
+    st.session_state.language = saved_lang
+elif 'language' not in st.session_state:
+    st.session_state.language = "no"
+
+lang = st.session_state.language 
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -223,7 +234,7 @@ translations = {
         "e_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).", "e_em": "⚠️ Ugyldig e-mailadresse.",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
+        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
@@ -323,22 +334,46 @@ st.markdown(html_navbar, unsafe_allow_html=True)
 # ROUTING, KAART & DAHLE PRIJS LOGICA 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
-def get_coordinates(address_string):
-    if len(address_string) < 5: return None
-    url = f"https://nominatim.openstreetmap.org/search?q={address_string}&format=json&limit=1"
-    headers = {'User-Agent': 'DahleTransportApp/1.0'}
+def get_coordinates(street, zip_code, city):
+    if len(city) < 2: return None
+    headers = {'User-Agent': 'DahleTransport/8.0 (contact@dahle.no)'}
+    url = "https://nominatim.openstreetmap.org/search"
+    
+    # Poging 1: Straatnaam + Stad (in Noorwegen)
     try:
-        resp = requests.get(url, headers=headers).json()
-        if resp: return float(resp[0]['lat']), float(resp[0]['lon'])
+        if len(street) > 2:
+            r1 = requests.get(url, params={'street': street, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
+            if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
     except: pass
+    
+    # Poging 2: Postcode + Stad (in Noorwegen)
+    try:
+        if len(zip_code) >= 4:
+            r2 = requests.get(url, params={'postalcode': zip_code, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
+            if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
+    except: pass
+    
+    # Poging 3: Alleen Stad (in Noorwegen)
+    try:
+        r3 = requests.get(url, params={'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
+        if r3: return float(r3[0]['lat']), float(r3[0]['lon'])
+    except: pass
+    
+    # Poging 4: Globaal (Buiten Noorwegen, voor testadressen zoals Alkmaar)
+    try:
+        r4 = requests.get(url, params={'city': city, 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
+        if r4: return float(r4[0]['lat']), float(r4[0]['lon'])
+    except: pass
+    
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
-    url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
+    # Veiligere HTTPS API gebruikt
+    url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        resp = requests.get(url).json()
+        resp = requests.get(url, timeout=4).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
@@ -364,12 +399,12 @@ def check_if_ferry_needed(p_city, d_city):
 def get_live_price():
     total_weight = 0
     oversized = False
-    
     reg_items = []
     
+    # HARD-CLAMPING tegen Streamlit input bugs
     if "Parcels & Documents" in st.session_state.selected_types:
-        q = st.session_state.get('pd_qty', 1)
-        w = st.session_state.get('pd_weight', 1.0)
+        q = min(st.session_state.get('pd_qty', 1), 10000)
+        w = min(st.session_state.get('pd_weight', 1.0), 35.0)
         total_weight += (w * q)
         reg_items.append(f"{q}x {t['b1_t']} ({w:g} kg)")
         if st.session_state.get('pd_oversized', False): oversized = True
@@ -377,27 +412,27 @@ def get_live_price():
     cargo_units = 0
     if "Cargo & Freight" in st.session_state.selected_types:
         if st.session_state.get('cf_pal'):
-            pq = st.session_state.get('cf_pal_qty', 1)
-            pw = st.session_state.get('cf_pal_weight', 100.0)
+            pq = min(st.session_state.get('cf_pal_qty', 1), 33)
+            pw = min(st.session_state.get('cf_pal_weight', 100.0), 1200.0)
             cargo_units += pq
             total_weight += pw
             reg_items.append(f"{pq}x {t['l_pal']} ({pw:g} kg)")
         if st.session_state.get('cf_full'):
-            fq = st.session_state.get('cf_full_qty', 1)
-            fw = st.session_state.get('cf_full_weight', 500.0)
+            fq = min(st.session_state.get('cf_full_qty', 1), 10)
+            fw = min(st.session_state.get('cf_full_weight', 500.0), 25000.0)
             cargo_units += fq * 33 
             total_weight += fw
             reg_items.append(f"{fq}x {t['l_full']} ({fw:g} kg)")
         if st.session_state.get('cf_lc'):
-            lq = st.session_state.get('cf_lc_qty', 1)
-            lw = st.session_state.get('cf_lc_weight', 50.0)
+            lq = min(st.session_state.get('cf_lc_qty', 1), 1000)
+            lw = min(st.session_state.get('cf_lc_weight', 50.0), 25000.0)
             cargo_units += lq
             total_weight += lw
             reg_items.append(f"{lq}x {t['l_lc']} ({lw:g} kg)")
             
     if "Mail & Direct Marketing" in st.session_state.selected_types:
-        q = st.session_state.get('mdm_qty', 1)
-        w = st.session_state.get('mdm_weight', 0.5)
+        q = min(st.session_state.get('mdm_qty', 1), 100000)
+        w = min(st.session_state.get('mdm_weight', 0.5), 2.0)
         total_weight += (w * q)
         reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
 
@@ -673,33 +708,44 @@ else:
                     
                 st.write("")
                 
-                # MAP 
+                # ==================================
+                # DE DEFINITIEVE ONBREEKBARE MAP
+                # ==================================
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
+                p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
-                d_addr_map = str(st.session_state.get('d_addr') or '').strip()
-                d_city_map = str(st.session_state.get('d_city') or '').strip()
-                p_coords = get_coordinates(f"{p_addr_map}, {st.session_state.get('p_zip', '')} {p_city_map}") if len(p_addr_map)>3 and len(p_city_map)>2 else None
-                d_coords = get_coordinates(f"{d_addr_map}, {st.session_state.get('d_zip', '')} {d_city_map}") if len(d_addr_map)>3 and len(d_city_map)>2 else None
                 
-                if p_coords or d_coords:
-                    layers, points = [], []
-                    if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup"})
-                    if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
-                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_color=[137, 75, 157, 255], get_radius=1000, radius_min_pixels=6, radius_max_pixels=15))
-                    
-                    if p_coords and d_coords:
-                        _, route_geom = get_route_data(p_coords, d_coords) 
-                        if route_geom:
-                            layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 200], width_scale=20, width_min_pixels=3, get_width=5))
-                            pitch = 20 
-                        else:
-                            layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 200], get_target_color=[137, 75, 157, 200], get_width=3, get_tilt=15))
-                            pitch = 45
-                        center_lat, center_lon, zoom = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 8.5
+                d_addr_map = str(st.session_state.get('d_addr') or '').strip()
+                d_zip_map = str(st.session_state.get('d_zip') or '').strip()
+                d_city_map = str(st.session_state.get('d_city') or '').strip()
+                
+                p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
+                d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
+                
+                layers, points = [], []
+                
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup"})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
+                
+                if points:
+                    # FILL_COLOR ipv COLOR (Belangrijk voor pydeck!)
+                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color=[137, 75, 157, 255], get_radius=1500, radius_min_pixels=8, radius_max_pixels=20))
+
+                if p_coords and d_coords:
+                    _, route_geom = get_route_data(p_coords, d_coords) 
+                    if route_geom:
+                        layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 255], width_scale=20, width_min_pixels=3, get_width=5))
                     else:
-                        center_lat, center_lon, zoom, pitch = p_coords[0] if p_coords else d_coords[0], p_coords[1] if p_coords else d_coords[1], 10, 0
-                    st.pydeck_chart(pdk.Deck(layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
-                else: st.markdown(f"<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>{t['m_wait']}</div>", unsafe_allow_html=True)
+                        layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 255], get_target_color=[137, 75, 157, 255], get_width=3, get_tilt=15))
+                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 6, 20
+                elif p_coords:
+                    center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 10, 0
+                elif d_coords:
+                    center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 10, 0
+                else:
+                    center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
+
+                st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
                 
                 st.write("---")
                 st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
