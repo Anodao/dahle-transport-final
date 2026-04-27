@@ -1,7 +1,6 @@
 import streamlit as st
 from supabase import create_client
 import extra_streamlit_components as stx
-import time
 
 st.set_page_config(page_title="Dahle Transport - Planner", layout="wide", initial_sidebar_state="collapsed")
 
@@ -53,19 +52,22 @@ div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 
 """, unsafe_allow_html=True)
 
 # =========================================================
-# INIT COOKIE MANAGER & ROBUUSTE AUTH VERIFICATIE
+# KOGELVRIJE COOKIE SYNC LOGICA
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-if 'render_wait_plan' not in st.session_state:
-    st.session_state.render_wait_plan = 0
+# Dit controleert of de component daadwerkelijk gesynchroniseerd is met de browser.
+# Als het None is, heeft de browser de cookies nog niet teruggestuurd.
+cookies_synced = cookie_manager.get_all()
 
-if st.session_state.render_wait_plan < 2:
-    st.session_state.render_wait_plan += 1
+if cookies_synced is None:
     st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
-    time.sleep(0.3)
-    st.rerun()
+    # Stop stelt de frontend in staat om te laden en triggert automatisch een rerun zodra de cookies er zijn.
+    st.stop()
 
+# =========================================================
+# DATABASE & AUTHENTICATIE
+# =========================================================
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
@@ -78,8 +80,10 @@ supabase = init_connection()
 if 'user' not in st.session_state: st.session_state.user = None
 if 'role' not in st.session_state: st.session_state.role = "guest"
 
+# Inloggen via cookies als we de gebruiker nog niet in de sessie hebben
 if st.session_state.get('user') is None and acc_token and ref_token:
-    try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
+    try: 
+        st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
     except: pass
 
 if st.session_state.get('user'):
@@ -94,16 +98,16 @@ is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # DE DIGITALE UITSMIJTER 
 if not is_employee:
-    html_navbar_empty = f"""<div class="navbar"><div class="nav-logo"><a href="/?lang=no"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>"""
+    html_navbar_empty = """<div class="navbar"><div class="nav-logo"><a href="/?lang=no"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>"""
     st.markdown(html_navbar_empty, unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1,1,1])
     with c2: 
         if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
     st.stop()
 
 # =========================================================
-# TAAL LOGICA MET COOKIES
+# TAAL LOGICA (VERBONDEN MET COOKIES)
 # =========================================================
 saved_lang = cookie_manager.get('dahle_lang')
 
@@ -119,7 +123,6 @@ elif 'language' not in st.session_state:
     st.session_state.language = "no"
 
 lang = st.session_state.language 
-
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -147,7 +150,6 @@ st.markdown(f"""
 # VVVVV PLANNER LOGICA VVVVV
 # =========================================================================
 
-# --- STATISTIEKEN EXPANDER ---
 with st.expander(t['stat_title'], expanded=True):
     st.selectbox(t['filter_lbl'], [t['opt_30'], t['opt_7'], t['opt_1']], key="plan_filter")
     
@@ -161,7 +163,6 @@ with st.expander(t['stat_title'], expanded=True):
 st.write("")
 st.write("")
 
-# --- INBOX & DETAILS SECTIE ---
 col_inbox, col_details = st.columns([1, 2], gap="large")
 
 with col_inbox:
