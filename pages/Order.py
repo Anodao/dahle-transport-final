@@ -102,7 +102,6 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
-# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
 saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
@@ -332,25 +331,26 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (MET FALLBACK)
+# ROUTING, KAART & DAHLE PRIJS LOGICA (MET TIMEOUTS EN FALLBACKS)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
-    if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransportApp/1.1 (contact@dahle.no)'}
+    if len(city) < 2 or len(zip_code) < 2: return None
+    headers = {'User-Agent': 'DahleTransportApp/1.2 (contact@dahle.no)'}
     url = "https://nominatim.openstreetmap.org/search"
     
-    # Poging 1: Volledige adres inclusief straatnaam
-    try:
-        params1 = {'q': f"{street}, {zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
-        r1 = requests.get(url, params=params1, headers=headers, timeout=5).json()
-        if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
-    except: pass
+    # Poging 1: Volledige adres (met timeout van 3 seconden)
+    if len(street) > 2:
+        try:
+            params1 = {'q': f"{street}, {zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
+            r1 = requests.get(url, params=params1, headers=headers, timeout=3).json()
+            if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
+        except: pass
     
-    # Poging 2 (Fallback): Alleen Postcode en Stad, negeer de straatnaam
+    # Poging 2: Alleen Postcode en Stad
     try:
         params2 = {'q': f"{zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
-        r2 = requests.get(url, params=params2, headers=headers, timeout=5).json()
+        r2 = requests.get(url, params=params2, headers=headers, timeout=3).json()
         if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
     except: pass
     
@@ -361,7 +361,8 @@ def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
     url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        resp = requests.get(url).json()
+        # Cruciale timeout toegevoegd om eindeloos laden te voorkomen
+        resp = requests.get(url, timeout=3).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
@@ -695,7 +696,7 @@ else:
                     
                 st.write("")
                 
-                # MAP 
+                # ROBUUSTE KAART LOGICA
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
@@ -704,9 +705,8 @@ else:
                 d_zip_map = str(st.session_state.get('d_zip') or '').strip()
                 d_city_map = str(st.session_state.get('d_city') or '').strip()
                 
-                # ROBUUSTE MAP CHECK
-                p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map) if len(p_city_map) > 1 else None
-                d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map) if len(d_city_map) > 1 else None
+                p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
+                d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
                 
                 if p_coords or d_coords:
                     layers, points = [], []
@@ -725,8 +725,11 @@ else:
                         center_lat, center_lon, zoom = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 8.5
                     else:
                         center_lat, center_lon, zoom, pitch = p_coords[0] if p_coords else d_coords[0], p_coords[1] if p_coords else d_coords[1], 10, 0
-                    st.pydeck_chart(pdk.Deck(layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
-                else: st.markdown(f"<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>{t['m_wait']}</div>", unsafe_allow_html=True)
+                        
+                    # Geforceerde map_style="dark" om laadproblemen met externe kaarten te voorkomen
+                    st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+                else: 
+                    st.markdown(f"<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>{t['m_wait']}</div>", unsafe_allow_html=True)
                 
                 st.write("---")
                 st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
