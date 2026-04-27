@@ -90,7 +90,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & STATE DEFAULTS
+# 2. INIT COOKIE MANAGER & TAAL LOGICA MET COOKIE OPSLAG
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -102,15 +102,15 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
+# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
 saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
     url_lang = st.query_params["lang"]
-    if url_lang in ["no", "en", "sv", "da"]:
-        if url_lang != saved_lang:
-            cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
-        st.session_state.language = url_lang
-elif saved_lang and saved_lang in ["no", "en", "sv", "da"]:
+    if url_lang != saved_lang:
+        cookie_manager.set('dahle_lang', url_lang)
+    st.session_state.language = url_lang
+elif saved_lang:
     st.session_state.language = saved_lang
 elif 'language' not in st.session_state:
     st.session_state.language = "no"
@@ -255,8 +255,7 @@ supabase = st.session_state.supabase_client
 
 if 'user' not in st.session_state: st.session_state.user = None
 if 'role' not in st.session_state: st.session_state.role = "guest"
-acc_token = cookie_manager.get('dahle_acc')
-ref_token = cookie_manager.get('dahle_ref')
+acc_token, ref_token = cookie_manager.get('dahle_acc'), cookie_manager.get('dahle_ref')
 
 if st.session_state.get('user') is None and acc_token and ref_token:
     try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
@@ -331,29 +330,17 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (MET TIMEOUTS EN FALLBACKS)
+# ROUTING, KAART & DAHLE PRIJS LOGICA 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
-def get_coordinates(street, zip_code, city):
-    if len(city) < 2 or len(zip_code) < 2: return None
-    headers = {'User-Agent': 'DahleTransportApp/1.2 (contact@dahle.no)'}
-    url = "https://nominatim.openstreetmap.org/search"
-    
-    # Poging 1: Volledige adres (met timeout van 3 seconden)
-    if len(street) > 2:
-        try:
-            params1 = {'q': f"{street}, {zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
-            r1 = requests.get(url, params=params1, headers=headers, timeout=3).json()
-            if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
-        except: pass
-    
-    # Poging 2: Alleen Postcode en Stad
+def get_coordinates(address_string):
+    if len(address_string) < 5: return None
+    url = f"https://nominatim.openstreetmap.org/search?q={address_string}&format=json&limit=1"
+    headers = {'User-Agent': 'DahleTransportApp/1.0'}
     try:
-        params2 = {'q': f"{zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
-        r2 = requests.get(url, params=params2, headers=headers, timeout=3).json()
-        if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
+        resp = requests.get(url, headers=headers).json()
+        if resp: return float(resp[0]['lat']), float(resp[0]['lon'])
     except: pass
-    
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -361,8 +348,7 @@ def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
     url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        # Cruciale timeout toegevoegd om eindeloos laden te voorkomen
-        resp = requests.get(url, timeout=3).json()
+        resp = requests.get(url).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
@@ -696,17 +682,13 @@ else:
                     
                 st.write("")
                 
-                # ROBUUSTE KAART LOGICA
+                # MAP 
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
-                p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
-                
                 d_addr_map = str(st.session_state.get('d_addr') or '').strip()
-                d_zip_map = str(st.session_state.get('d_zip') or '').strip()
                 d_city_map = str(st.session_state.get('d_city') or '').strip()
-                
-                p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
-                d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
+                p_coords = get_coordinates(f"{p_addr_map}, {st.session_state.get('p_zip', '')} {p_city_map}") if len(p_addr_map)>3 and len(p_city_map)>2 else None
+                d_coords = get_coordinates(f"{d_addr_map}, {st.session_state.get('d_zip', '')} {d_city_map}") if len(d_addr_map)>3 and len(d_city_map)>2 else None
                 
                 if p_coords or d_coords:
                     layers, points = [], []
@@ -725,11 +707,8 @@ else:
                         center_lat, center_lon, zoom = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 8.5
                     else:
                         center_lat, center_lon, zoom, pitch = p_coords[0] if p_coords else d_coords[0], p_coords[1] if p_coords else d_coords[1], 10, 0
-                        
-                    # Geforceerde map_style="dark" om laadproblemen met externe kaarten te voorkomen
-                    st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
-                else: 
-                    st.markdown(f"<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>{t['m_wait']}</div>", unsafe_allow_html=True)
+                    st.pydeck_chart(pdk.Deck(layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+                else: st.markdown(f"<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>{t['m_wait']}</div>", unsafe_allow_html=True)
                 
                 st.write("---")
                 st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
