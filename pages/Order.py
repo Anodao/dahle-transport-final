@@ -102,6 +102,7 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
+# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
 saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
@@ -233,7 +234,7 @@ translations = {
         "e_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).", "e_em": "⚠️ Ugyldig e-mailadresse.",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
+        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
@@ -255,8 +256,7 @@ supabase = st.session_state.supabase_client
 
 if 'user' not in st.session_state: st.session_state.user = None
 if 'role' not in st.session_state: st.session_state.role = "guest"
-acc_token = cookie_manager.get('dahle_acc')
-ref_token = cookie_manager.get('dahle_ref')
+acc_token, ref_token = cookie_manager.get('dahle_acc'), cookie_manager.get('dahle_ref')
 
 if st.session_state.get('user') is None and acc_token and ref_token:
     try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
@@ -331,26 +331,26 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (MET TIMEOUTS EN FALLBACKS)
+# ROUTING, KAART & DAHLE PRIJS LOGICA (MET ROBUUSTE FALLBACK)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
-    if len(city) < 2 or len(zip_code) < 2: return None
-    headers = {'User-Agent': 'DahleTransportApp/1.2 (contact@dahle.no)'}
+    if len(city) < 2: return None
+    headers = {'User-Agent': 'DahleTransport/3.0'}
     url = "https://nominatim.openstreetmap.org/search"
     
-    # Poging 1: Volledige adres (met timeout van 3 seconden)
-    if len(street) > 2:
-        try:
-            params1 = {'q': f"{street}, {zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
-            r1 = requests.get(url, params=params1, headers=headers, timeout=3).json()
-            if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
-        except: pass
-    
-    # Poging 2: Alleen Postcode en Stad
+    # Poging 1: Gestructureerd zoeken mét straatnaam (Timeout: 2 sec)
     try:
-        params2 = {'q': f"{zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
-        r2 = requests.get(url, params=params2, headers=headers, timeout=3).json()
+        if len(street) > 2:
+            p1 = {'street': street, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}
+            r1 = requests.get(url, params=p1, headers=headers, timeout=2).json()
+            if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
+    except: pass
+    
+    # Poging 2 (Fallback): Alleen stad zoeken als straat faalt (Timeout: 2 sec)
+    try:
+        p2 = {'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}
+        r2 = requests.get(url, params=p2, headers=headers, timeout=2).json()
         if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
     except: pass
     
@@ -361,7 +361,7 @@ def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
     url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        # Cruciale timeout toegevoegd om eindeloos laden te voorkomen
+        # Timeout van 3 seconden voorkomt vasthangen van de app
         resp = requests.get(url, timeout=3).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
@@ -696,7 +696,7 @@ else:
                     
                 st.write("")
                 
-                # ROBUUSTE KAART LOGICA
+                # MAP LOGICA: ALTIJD ZICHTBAAR + ROBUUSTE FALLBACK
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
@@ -708,28 +708,30 @@ else:
                 p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
                 d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
                 
-                if p_coords or d_coords:
-                    layers, points = [], []
-                    if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup"})
-                    if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
-                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_color=[137, 75, 157, 255], get_radius=1000, radius_min_pixels=6, radius_max_pixels=15))
-                    
-                    if p_coords and d_coords:
-                        _, route_geom = get_route_data(p_coords, d_coords) 
-                        if route_geom:
-                            layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 200], width_scale=20, width_min_pixels=3, get_width=5))
-                            pitch = 20 
-                        else:
-                            layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 200], get_target_color=[137, 75, 157, 200], get_width=3, get_tilt=15))
-                            pitch = 45
-                        center_lat, center_lon, zoom = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 8.5
+                layers, points = [], []
+                
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [231, 76, 60, 255]})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [46, 204, 113, 255]})
+                
+                if points:
+                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color="color", get_radius=1500, radius_min_pixels=8, radius_max_pixels=20))
+
+                if p_coords and d_coords:
+                    _, route_geom = get_route_data(p_coords, d_coords) 
+                    if route_geom:
+                        layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 200], width_scale=20, width_min_pixels=3, get_width=5))
                     else:
-                        center_lat, center_lon, zoom, pitch = p_coords[0] if p_coords else d_coords[0], p_coords[1] if p_coords else d_coords[1], 10, 0
-                        
-                    # Geforceerde map_style="dark" om laadproblemen met externe kaarten te voorkomen
-                    st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
-                else: 
-                    st.markdown(f"<div style='height: 250px; background-color: #1a1a1c; border: 1px solid #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 13px;'>{t['m_wait']}</div>", unsafe_allow_html=True)
+                        layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[231, 76, 60, 200], get_target_color=[46, 204, 113, 200], get_width=3, get_tilt=15))
+                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 5.5, 20
+                elif p_coords:
+                    center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 10, 0
+                elif d_coords:
+                    center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 10, 0
+                else:
+                    # STANDAARD OVERZICHT NOORWEGEN ALS ER NOG NIETS IS INGEVULD
+                    center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
+
+                st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
                 
                 st.write("---")
                 st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
