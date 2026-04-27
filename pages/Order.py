@@ -90,7 +90,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & TAAL LOGICA MET COOKIE OPSLAG
+# 2. INIT COOKIE MANAGER & STATE DEFAULTS
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -107,10 +107,11 @@ saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
     url_lang = st.query_params["lang"]
-    if url_lang != saved_lang:
-        cookie_manager.set('dahle_lang', url_lang)
-    st.session_state.language = url_lang
-elif saved_lang:
+    if url_lang in ["no", "en", "sv", "da"]:
+        if url_lang != saved_lang:
+            cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
+        st.session_state.language = url_lang
+elif saved_lang and saved_lang in ["no", "en", "sv", "da"]:
     st.session_state.language = saved_lang
 elif 'language' not in st.session_state:
     st.session_state.language = "no"
@@ -330,12 +331,17 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA 
+# ROUTING, KAART & DAHLE PRIJS LOGICA
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(address_string):
     if len(address_string) < 5: return None
-    url = f"https://nominatim.openstreetmap.org/search?q={address_string}&format=json&limit=1"
+    # Voeg expliciet "Norway" toe als het er niet in staat, om zoeken te verbeteren
+    search_query = address_string
+    if "norway" not in search_query.lower() and "norge" not in search_query.lower():
+        search_query += ", Norway"
+        
+    url = f"https://nominatim.openstreetmap.org/search?q={search_query}&format=json&limit=1"
     headers = {'User-Agent': 'DahleTransportApp/1.0'}
     try:
         resp = requests.get(url, headers=headers).json()
@@ -687,8 +693,10 @@ else:
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
                 d_addr_map = str(st.session_state.get('d_addr') or '').strip()
                 d_city_map = str(st.session_state.get('d_city') or '').strip()
-                p_coords = get_coordinates(f"{p_addr_map}, {st.session_state.get('p_zip', '')} {p_city_map}") if len(p_addr_map)>3 and len(p_city_map)>2 else None
-                d_coords = get_coordinates(f"{d_addr_map}, {st.session_state.get('d_zip', '')} {d_city_map}") if len(d_addr_map)>3 and len(d_city_map)>2 else None
+                
+                # We voegen standaard ", Norway" toe om de OpenStreetMap API te helpen
+                p_coords = get_coordinates(f"{p_addr_map}, {st.session_state.get('p_zip', '')} {p_city_map}, Norway") if len(p_addr_map)>3 and len(p_city_map)>2 else None
+                d_coords = get_coordinates(f"{d_addr_map}, {st.session_state.get('d_zip', '')} {d_city_map}, Norway") if len(d_addr_map)>3 and len(d_city_map)>2 else None
                 
                 if p_coords or d_coords:
                     layers, points = [], []
