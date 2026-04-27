@@ -102,9 +102,24 @@ if not is_employee:
         if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
     st.stop()
 
-if 'language' not in st.session_state: st.session_state.language = "no"
-if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
+# =========================================================
+# TAAL LOGICA MET COOKIES
+# =========================================================
+saved_lang = cookie_manager.get('dahle_lang')
+
+if "lang" in st.query_params:
+    url_lang = st.query_params["lang"]
+    if url_lang in ["no", "en", "sv", "da"]:
+        if url_lang != saved_lang:
+            cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
+        st.session_state.language = url_lang
+elif saved_lang and saved_lang in ["no", "en", "sv", "da"]:
+    st.session_state.language = saved_lang
+elif 'language' not in st.session_state:
+    st.session_state.language = "no"
+
 lang = st.session_state.language 
+
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
