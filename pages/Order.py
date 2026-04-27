@@ -39,7 +39,7 @@ div[class^="viewerBadge"] { display: none !important; }
 
 /* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
-.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
 .nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
@@ -142,6 +142,7 @@ translations = {
         "delivery_opts": "Leveringsalternativer", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kartet vises når du skriver inn en adresse...", "a_info": "Tilleggsinformasjon (valgfritt)", 
         "a_ph": "F.eks spesielle krav ved levering...", 
+        "p_note": "Hvis du vil vite mer om hvordan vi bruker dataene dine, les vår personvernerklæring i bunnteksten.",
         "e_req": "⚠️ Vennligst fyll ut alle obligatoriske felt (*) før du fortsetter.", "e_em": "⚠️ Ugyldig e-postadresse.",
         "b_back": "← Gå tilbake", "b_cont": "Fortsett til neste steg →",
         "rev_t": "Se over forespørselen din", "rev_s": "Vennligst sjekk at detaljene stemmer.", "rev_c": "Firma & Kontakt",
@@ -194,6 +195,7 @@ translations = {
         "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
         "a_ph": "T.ex. andra krav vid leverans...", 
+        "p_note": "För att läsa mer om hur vi hanterar din data, se vår integritetspolicy.",
         "e_req": "⚠️ Vänligen fyll i alla obligatoriska fält (*).", "e_em": "⚠️ Ogiltig e-postadress.",
         "b_back": "← Gå tillbaka", "b_cont": "Fortsätt till granskning →",
         "rev_t": "Granska din förfrågan", "rev_s": "Vänligen kontrollera dina uppgifter.", "rev_c": "Företag & Kontakt",
@@ -220,6 +222,7 @@ translations = {
         "delivery_opts": "Leveringsmuligheder", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kortet vises, når du indtaster en adresse...", "a_info": "Yderligere information (valgfrit)", 
         "a_ph": "F.eks. specielle krav ved levering...", 
+        "p_note": "Læs vores privatlivspolitik i bunden for at se, hvordan vi bruger dine data.",
         "e_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).", "e_em": "⚠️ Ugyldig e-mailadresse.",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
@@ -705,6 +708,7 @@ else:
                 st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
 
             st.write("")
+            st.markdown(f"<p style='text-align: center; color: #888; font-size: 13px; margin-bottom: 30px;'>{t['p_note']}</p>", unsafe_allow_html=True)
             
             error_container = st.empty()
             missing_fields = False
