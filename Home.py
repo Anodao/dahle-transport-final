@@ -83,7 +83,7 @@ div[class^="viewerBadge"] { display: none !important; }
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. TAAL LOGICA & WACHTRUIMTE (AANGEPAST MET COOKIE OPSLAG)
+# 2. TAAL LOGICA & WACHTRUIMTE
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -92,22 +92,18 @@ if 'cookie_retry' not in st.session_state:
     time.sleep(0.2)
     st.rerun()
 
-# --- TAAL GEHEUGEN LOGICA ---
-saved_lang = cookie_manager.get('dahle_lang')
+if 'language' not in st.session_state:
+    st.session_state.language = "no"
 
 if "lang" in st.query_params:
     url_lang = st.query_params["lang"]
     if url_lang in ["no", "en", "sv", "da"]:
-        if url_lang != saved_lang:
-            cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
         st.session_state.language = url_lang
-elif saved_lang and saved_lang in ["no", "en", "sv", "da"]:
-    st.session_state.language = saved_lang
-elif 'language' not in st.session_state:
-    st.session_state.language = "no"
+        cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
 
 lang = st.session_state.language
 
+# Vlaggetjes verwijderd voor een strakkere look
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -117,25 +113,25 @@ current_lang_display = lang_displays.get(lang, "Norsk")
 translations = {
     "no": { 
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner",
+        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "hero_title": "D ÅRNE SÆ!", "hero_subtitle": "Rask og sikker transport, uansett distanse.", 
         "open_title": "Åpningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åpningstidene kan avvike ved spesielle høytider.", "btn_order": "BESTILL" 
     },
     "en": { 
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
-        "menu_title": "Pages ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "menu_plan": "Internal Planner",
+        "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "menu_plan": "Internal Planner",
         "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "hero_title": "WE'VE GOT IT!", "hero_subtitle": "Fast and secure transport, regardless of distance.", 
         "open_title": "Opening Hours:", "open_days": "Monday-Friday: 07:00-16:00", "open_note": "Opening hours may vary during public holidays.", "btn_order": "ORDER NOW" 
     },
     "sv": { 
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sidor ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "menu_plan": "Intern Planner",
+        "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "menu_plan": "Intern Planner",
         "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", 
         "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL" 
     },
     "da": { 
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sider ⌄", "menu_dash": "CO2 Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner",
+        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", 
         "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL" 
     }
@@ -184,7 +180,7 @@ if st.session_state.get('user'):
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN
+# 5. NAVBAR SAMENSTELLEN (ZONDER ICOONTJES)
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -192,11 +188,13 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = t['nav_portal']
 
+# Platte string opbouwen ZONDER emoji's
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a>'
 
 if is_employee:
     dropdown_links += f'<a href="/Dashboard?lang={lang}" target="_self">{t["menu_dash"]}</a><a href="/Planner?lang={lang}" target="_self">{t["menu_plan"]}</a>'
 
+# Ook de vlaggetjes in de taalselectie zijn weg voor een superstrakke uitstraling
 html_navbar = f"""
 <div class="navbar">
 <div class="nav-logo">
