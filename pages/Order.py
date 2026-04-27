@@ -39,7 +39,7 @@ div[class^="viewerBadge"] { display: none !important; }
 
 /* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
-.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
+.nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
 .nav-text-dropdown::after { content: ''; position: absolute; top: 100%; left: 0; width: 100%; height: 30px; background: transparent; display: none; }
 .nav-text-dropdown:hover::after { display: block; }
@@ -90,7 +90,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & TAAL LOGICA MET COOKIE OPSLAG
+# 2. INIT COOKIE MANAGER & STATE DEFAULTS
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -102,20 +102,10 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
-# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
-saved_lang = cookie_manager.get('dahle_lang')
-
-if "lang" in st.query_params:
-    url_lang = st.query_params["lang"]
-    if url_lang != saved_lang:
-        cookie_manager.set('dahle_lang', url_lang)
-    st.session_state.language = url_lang
-elif saved_lang:
-    st.session_state.language = saved_lang
-elif 'language' not in st.session_state:
-    st.session_state.language = "no"
-
+if 'language' not in st.session_state: st.session_state.language = "no"
+if "lang" in st.query_params: st.session_state.language = st.query_params["lang"]
 lang = st.session_state.language 
+
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -374,6 +364,7 @@ def check_if_ferry_needed(p_city, d_city):
 def get_live_price():
     total_weight = 0
     oversized = False
+    
     reg_items = []
     
     if "Parcels & Documents" in st.session_state.selected_types:
