@@ -10,6 +10,9 @@ import extra_streamlit_components as stx
 
 st.set_page_config(page_title="Dahle Transport - Performance Dashboard", layout="wide", initial_sidebar_state="collapsed")
 
+# =========================================================
+# 1. DIRECTE CSS INJECTIE 
+# =========================================================
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
@@ -60,17 +63,55 @@ div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !imp
 </style>
 """, unsafe_allow_html=True)
 
+# =========================================================
+# 2. INIT COOKIE MANAGER & ROBUUSTE AUTH VERIFICATIE
+# =========================================================
 cookie_manager = stx.CookieManager()
 
-if 'cookie_retry' not in st.session_state:
-    st.session_state.cookie_retry = True
-    loading = st.empty()
-    loading.markdown("<h3 style='text-align: center; color: #888; margin-top: 150px;'>Verifying credentials...</h3>", unsafe_allow_html=True)
-    time.sleep(0.3); loading.empty(); st.rerun()
+if 'auth_wait' not in st.session_state:
+    st.session_state.auth_wait = 0
 
-if 'language' not in st.session_state: st.session_state.language = "no"
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+@st.cache_resource
+def init_connection():
+    return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
+
+supabase = init_connection()
+
+if 'user' not in st.session_state: st.session_state.user = None
+if 'role' not in st.session_state: st.session_state.role = "guest"
+
+# Geef de cookie manager de tijd om in te laden na een harde navigatie
+if st.session_state.get('user') is None:
+    if acc_token and ref_token:
+        try:
+            st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
+        except: 
+            pass
+    elif st.session_state.auth_wait < 3:
+        st.session_state.auth_wait += 1
+        st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying credentials...</h3></div>", unsafe_allow_html=True)
+        time.sleep(0.4)
+        st.rerun()
+
+# =========================================================
+# 3. TAAL LOGICA MET COOKIES
+# =========================================================
+saved_lang = cookie_manager.get('dahle_lang')
+
 if "lang" in st.query_params:
-    st.session_state.language = st.query_params["lang"]
+    url_lang = st.query_params["lang"]
+    if url_lang in ["no", "en", "sv", "da"]:
+        if url_lang != saved_lang:
+            cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
+        st.session_state.language = url_lang
+elif saved_lang and saved_lang in ["no", "en", "sv", "da"]:
+    st.session_state.language = saved_lang
+elif 'language' not in st.session_state:
+    st.session_state.language = "no"
+
 lang = st.session_state.language 
 
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
@@ -84,43 +125,21 @@ translations = {
 }
 t = translations.get(lang, translations["no"])
 
-@st.cache_resource
-def init_connection():
-    return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
-
-supabase = init_connection()
-
-if 'user' not in st.session_state: st.session_state.user = None
-if 'role' not in st.session_state: st.session_state.role = "guest"
-
-acc_token, ref_token = cookie_manager.get('dahle_acc'), cookie_manager.get('dahle_ref')
-
-if st.session_state.get('user') is None and acc_token and ref_token:
-    try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
-    except: pass
-
 if st.session_state.get('user'):
     try:
         prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
         if prof_res.data:
             st.session_state.company_name = prof_res.data[0].get("company_name", "")
             st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
-    except: st.session_state.role = "customer"
+    except: 
+        st.session_state.role = "customer"
 
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
-# ANTI-FLASH BEVEILIGING VOOR DASHBOARD
+# DE DIGITALE UITSMIJTER
 # =========================================================
 if not is_employee:
-    if 'anti_flash_dash' not in st.session_state:
-        st.session_state.anti_flash_dash = True
-        loading = st.empty()
-        loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
-        time.sleep(0.6) 
-        loading.empty()
-        st.rerun()
-
     html_navbar_empty = f"""
     <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
     """
@@ -144,7 +163,6 @@ st.markdown(f"""
 <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a><a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a></div></div>
 """, unsafe_allow_html=True)
 
-# TITEL ZONDER MARGE AAN DE BOVENKANT!
 st.markdown(f"""<div style="margin-bottom: 25px;"><h2 style="color: #ffffff; margin: 0 0 5px 0;">{t['dash_title']}</h2><p style="color: #888; font-size: 15px; margin: 0;">{t['dash_sub']}</p></div>""", unsafe_allow_html=True)
 
 @st.dialog(t['dialog_title'])
