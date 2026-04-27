@@ -1,6 +1,6 @@
 import streamlit as st
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 from supabase import create_client
 import extra_streamlit_components as stx
 
@@ -95,13 +95,19 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun() 
 
-if 'language' not in st.session_state:
-    st.session_state.language = "no"
+# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
+saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
     url_lang = st.query_params["lang"]
     if url_lang in ["no", "en", "sv", "da"]:
+        if url_lang != saved_lang:
+            cookie_manager.set("dahle_lang", url_lang, key="set_lang_safe")
         st.session_state.language = url_lang
+elif saved_lang and saved_lang in ["no", "en", "sv", "da"]:
+    st.session_state.language = saved_lang
+elif 'language' not in st.session_state:
+    st.session_state.language = "no"
 
 lang = st.session_state.language 
 
@@ -124,7 +130,7 @@ translations = {
         "lbl_comp": "Firmanavn *", "lbl_fn": "Fornavn *", "lbl_ln": "Etternavn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-post (Dette blir din innlogging) *", "lbl_pass_reg": "Velg passord *", "btn_reg": "Opprett konto",
         "msg_creating": "Oppretter konto...", "msg_reg_succ": "Konto opprettet! Du kan nå logge inn via 'Logg inn'-fanen.", "msg_reg_fail": "En feil oppstod, eller e-posten finnes allerede.", "msg_fill_req": "Vennligst fyll ut alle obligatoriske felt (*).",
         "welcome": "Velkommen tilbake", "logged_in_as": "Logget inn som", "btn_logout": "Logg ut",
-        "hist_title": "Din sendingshistorikk", "tot_ship": "Totale sendinger", "pend_appr": "Venter på godkjenning", "processed": "Behandlet",
+        "hist_title": "Din sendingshistorik", "tot_ship": "Totale sendinger", "pend_appr": "Venter på godkjenning", "processed": "Behandlet",
         "tab_myship": "Mine sendinger", "tab_neworder": "Ny bestilling", "tab_prof": "Profilinnstillinger",
         "no_orders": "Du har ikke lagt inn noen bestillinger ennå. Gå til 'Ny bestilling' for å starte!",
         "status": "Status", "pickup": "Hentested", "delivery": "Leveringssted", "addr": "Adresse", "zip": "Postnummer", "city": "By",
@@ -327,8 +333,12 @@ if st.session_state.get('user') is None:
                         try:
                             auth_response = supabase.auth.sign_in_with_password({"email": login_email, "password": login_pass})
                             st.session_state.user = auth_response.user
-                            cookie_manager.set('dahle_acc', auth_response.session.access_token, key="set_a")
-                            cookie_manager.set('dahle_ref', auth_response.session.refresh_token, key="set_r")
+                            
+                            # Cookies opslaan met 24 uur geldigheid
+                            expire_time = datetime.now() + timedelta(days=1)
+                            cookie_manager.set('dahle_acc', auth_response.session.access_token, expires_at=expire_time, key="set_a")
+                            cookie_manager.set('dahle_ref', auth_response.session.refresh_token, expires_at=expire_time, key="set_r")
+                            
                             status_bericht.success(t['msg_login_succ'])
                             time.sleep(1.5) 
                             st.rerun()
@@ -450,7 +460,7 @@ else:
             st.info(t['no_orders'])
         else:
             for o in user_orders:
-                # Hier houd ik de statusicoontjes wel in, omdat dat belangrijke visuele feedback is voor de zending status
+                # Hier houd ik de statusicoontjes wel in, omdat dat belangrijke visuele feedback is for the order status
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']})"):
                     st.markdown("<br>", unsafe_allow_html=True)
