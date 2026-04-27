@@ -256,7 +256,8 @@ supabase = st.session_state.supabase_client
 
 if 'user' not in st.session_state: st.session_state.user = None
 if 'role' not in st.session_state: st.session_state.role = "guest"
-acc_token, ref_token = cookie_manager.get('dahle_acc'), cookie_manager.get('dahle_ref')
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
 
 if st.session_state.get('user') is None and acc_token and ref_token:
     try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
@@ -331,22 +332,28 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA
+# ROUTING, KAART & DAHLE PRIJS LOGICA (MET FALLBACK)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
-def get_coordinates(address_string):
-    if len(address_string) < 5: return None
-    # Voeg expliciet "Norway" toe als het er niet in staat, om zoeken te verbeteren
-    search_query = address_string
-    if "norway" not in search_query.lower() and "norge" not in search_query.lower():
-        search_query += ", Norway"
-        
-    url = f"https://nominatim.openstreetmap.org/search?q={search_query}&format=json&limit=1"
-    headers = {'User-Agent': 'DahleTransportApp/1.0'}
+def get_coordinates(street, zip_code, city):
+    if len(city) < 2: return None
+    headers = {'User-Agent': 'DahleTransportApp/1.1 (contact@dahle.no)'}
+    url = "https://nominatim.openstreetmap.org/search"
+    
+    # Poging 1: Volledige adres inclusief straatnaam
     try:
-        resp = requests.get(url, headers=headers).json()
-        if resp: return float(resp[0]['lat']), float(resp[0]['lon'])
+        params1 = {'q': f"{street}, {zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
+        r1 = requests.get(url, params=params1, headers=headers, timeout=5).json()
+        if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
     except: pass
+    
+    # Poging 2 (Fallback): Alleen Postcode en Stad, negeer de straatnaam
+    try:
+        params2 = {'q': f"{zip_code} {city}, Norway", 'format': 'json', 'limit': 1}
+        r2 = requests.get(url, params=params2, headers=headers, timeout=5).json()
+        if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
+    except: pass
+    
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
@@ -690,13 +697,16 @@ else:
                 
                 # MAP 
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
+                p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
+                
                 d_addr_map = str(st.session_state.get('d_addr') or '').strip()
+                d_zip_map = str(st.session_state.get('d_zip') or '').strip()
                 d_city_map = str(st.session_state.get('d_city') or '').strip()
                 
-                # We voegen standaard ", Norway" toe om de OpenStreetMap API te helpen
-                p_coords = get_coordinates(f"{p_addr_map}, {st.session_state.get('p_zip', '')} {p_city_map}, Norway") if len(p_addr_map)>3 and len(p_city_map)>2 else None
-                d_coords = get_coordinates(f"{d_addr_map}, {st.session_state.get('d_zip', '')} {d_city_map}, Norway") if len(d_addr_map)>3 and len(d_city_map)>2 else None
+                # ROBUUSTE MAP CHECK
+                p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map) if len(p_city_map) > 1 else None
+                d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map) if len(d_city_map) > 1 else None
                 
                 if p_coords or d_coords:
                     layers, points = [], []
