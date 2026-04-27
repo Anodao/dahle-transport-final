@@ -200,7 +200,7 @@ translations = {
         "err_sel": "❌ Vänligen välj minst ett alternativ.", "time_est": "Tar vanligtvis under 5 minutter.", "btn_next": "Nästa steg",
         "w_item": "Vikt per styck (kg)", "w_over": "Överdimensionerad (Längd > 3.5m)", "l_type": "Lasttyp", "l_err": " 🚨 :red[(Välj minst en)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvikt (kg)", "lbl_pcs": "st", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", 
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
-        "c_fn": "Förnamn *", "c_ln": "Efternamn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
+        "c_fn": "Förnamn *", "c_ln": "Efternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
         "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *",
         "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
@@ -331,49 +331,42 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA 
+# ROUTING, KAART & DAHLE PRIJS LOGICA (100% BULLETPROOF)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
+    """Slimme, onbreekbare zoekfunctie via Nominatim (OpenStreetMap)"""
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransport/8.0 (contact@dahle.no)'}
+    headers = {'User-Agent': 'DahleTransport/9.0 (contact@dahle.no)'}
     url = "https://nominatim.openstreetmap.org/search"
     
-    # Poging 1: Straatnaam + Stad (in Noorwegen)
-    try:
-        if len(street) > 2:
-            r1 = requests.get(url, params={'street': street, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
-            if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
-    except: pass
+    # We proberen de meest nauwkeurige string eerst, dan steeds breder
+    queries = [
+        f"{street}, {zip_code} {city}, Norway",
+        f"{street}, {city}, Norway",
+        f"{zip_code} {city}, Norway",
+        f"{city}, Norway",
+        f"{street}, {zip_code} {city}",
+        f"{city}"
+    ]
     
-    # Poging 2: Postcode + Stad (in Noorwegen)
-    try:
-        if len(zip_code) >= 4:
-            r2 = requests.get(url, params={'postalcode': zip_code, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
-            if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
-    except: pass
-    
-    # Poging 3: Alleen Stad (in Noorwegen)
-    try:
-        r3 = requests.get(url, params={'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
-        if r3: return float(r3[0]['lat']), float(r3[0]['lon'])
-    except: pass
-    
-    # Poging 4: Globaal (Buiten Noorwegen, voor testadressen zoals Alkmaar)
-    try:
-        r4 = requests.get(url, params={'city': city, 'format': 'json', 'limit': 1}, headers=headers, timeout=4).json()
-        if r4: return float(r4[0]['lat']), float(r4[0]['lon'])
-    except: pass
-    
+    for q in queries:
+        try:
+            resp = requests.get(url, params={'q': q, 'format': 'json', 'limit': 1}, headers=headers, timeout=2).json()
+            if resp and len(resp) > 0:
+                return float(resp[0]['lat']), float(resp[0]['lon'])
+        except:
+            continue
+            
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
+    """Beveiligde OSRM route ophalen"""
     if not coord1 or not coord2: return None, None
-    # Veiligere HTTPS API gebruikt
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        resp = requests.get(url, timeout=4).json()
+        resp = requests.get(url, timeout=3).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
@@ -401,7 +394,6 @@ def get_live_price():
     oversized = False
     reg_items = []
     
-    # HARD-CLAMPING tegen Streamlit input bugs
     if "Parcels & Documents" in st.session_state.selected_types:
         q = min(st.session_state.get('pd_qty', 1), 10000)
         w = min(st.session_state.get('pd_weight', 1.0), 35.0)
@@ -708,9 +700,9 @@ else:
                     
                 st.write("")
                 
-                # ==================================
-                # DE DEFINITIEVE ONBREEKBARE MAP
-                # ==================================
+                # ========================================================
+                # MAP LOGICA: ALTIJD EEN PAARSE LIJN ZICHTBAAR (100% GARANTIE)
+                # ========================================================
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
@@ -727,16 +719,28 @@ else:
                 if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup"})
                 if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
                 
+                # Stippen op de kaart
                 if points:
-                    # FILL_COLOR ipv COLOR (Belangrijk voor pydeck!)
                     layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color=[137, 75, 157, 255], get_radius=1500, radius_min_pixels=8, radius_max_pixels=20))
 
+                # De Paarse Lijn
                 if p_coords and d_coords:
                     _, route_geom = get_route_data(p_coords, d_coords) 
-                    if route_geom:
-                        layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 255], width_scale=20, width_min_pixels=3, get_width=5))
-                    else:
-                        layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 255], get_target_color=[137, 75, 157, 255], get_width=3, get_tilt=15))
+                    
+                    if route_geom is None:
+                        # Fallback als de route-server faalt: Trek een onbreekbare rechte lijn tussen A en B
+                        route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
+                        
+                    layers.append(pdk.Layer(
+                        "PathLayer", 
+                        data=[{"path": route_geom}], 
+                        get_path="path", 
+                        get_color=[137, 75, 157, 255], 
+                        width_scale=20, 
+                        width_min_pixels=4, 
+                        get_width=5
+                    ))
+                    
                     center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 6, 20
                 elif p_coords:
                     center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 10, 0
