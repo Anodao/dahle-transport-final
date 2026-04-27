@@ -68,8 +68,14 @@ div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !imp
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-if 'auth_wait' not in st.session_state:
-    st.session_state.auth_wait = 0
+if 'render_wait_dash' not in st.session_state:
+    st.session_state.render_wait_dash = 0
+
+if st.session_state.render_wait_dash < 2:
+    st.session_state.render_wait_dash += 1
+    st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
+    time.sleep(0.3)
+    st.rerun()
 
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
@@ -83,18 +89,30 @@ supabase = init_connection()
 if 'user' not in st.session_state: st.session_state.user = None
 if 'role' not in st.session_state: st.session_state.role = "guest"
 
-# Geef de cookie manager de tijd om in te laden na een harde navigatie
-if st.session_state.get('user') is None:
-    if acc_token and ref_token:
-        try:
-            st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
-        except: 
-            pass
-    elif st.session_state.auth_wait < 3:
-        st.session_state.auth_wait += 1
-        st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying credentials...</h3></div>", unsafe_allow_html=True)
-        time.sleep(0.4)
-        st.rerun()
+# Inloggen via cookies
+if st.session_state.get('user') is None and acc_token and ref_token:
+    try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
+    except: pass
+
+if st.session_state.get('user'):
+    try:
+        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
+        if prof_res.data:
+            st.session_state.company_name = prof_res.data[0].get("company_name", "")
+            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
+    except: st.session_state.role = "customer"
+
+is_employee = st.session_state.get('role') in ['admin', 'employee']
+
+# DE DIGITALE UITSMIJTER MET ANTI-FLITS LOGICA
+if not is_employee:
+    html_navbar_empty = """<div class="navbar"><div class="nav-logo"><a href="/?lang=no"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>"""
+    st.markdown(html_navbar_empty, unsafe_allow_html=True)
+    st.markdown("<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns([1,1,1])
+    with c2: 
+        if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
+    st.stop()
 
 # =========================================================
 # 3. TAAL LOGICA MET COOKIES
@@ -125,32 +143,6 @@ translations = {
 }
 t = translations.get(lang, translations["no"])
 
-if st.session_state.get('user'):
-    try:
-        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
-        if prof_res.data:
-            st.session_state.company_name = prof_res.data[0].get("company_name", "")
-            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
-    except: 
-        st.session_state.role = "customer"
-
-is_employee = st.session_state.get('role') in ['admin', 'employee']
-
-# =========================================================
-# DE DIGITALE UITSMIJTER
-# =========================================================
-if not is_employee:
-    html_navbar_empty = f"""
-    <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>
-    """
-    st.markdown(html_navbar_empty, unsafe_allow_html=True)
-    st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns([1,1,1])
-    with c2: 
-        if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
-    st.stop()
-
-
 knop_tekst = f"<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>{st.session_state.company_name}"
 
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a><a href="/Planner?lang={lang}" target="_self">{t["menu_plan"]}</a>'
@@ -165,6 +157,9 @@ st.markdown(f"""
 
 st.markdown(f"""<div style="margin-bottom: 25px;"><h2 style="color: #ffffff; margin: 0 0 5px 0;">{t['dash_title']}</h2><p style="color: #888; font-size: 15px; margin: 0;">{t['dash_sub']}</p></div>""", unsafe_allow_html=True)
 
+# =========================================================
+# MODAL MET AFSTAND EN BRANDSTOF KOSTEN
+# =========================================================
 @st.dialog(t['dialog_title'])
 def show_order_history(company_name, df):
     st.markdown(f"### {company_name}")
@@ -173,10 +168,13 @@ def show_order_history(company_name, df):
     cust_orders = df[df['company'] == company_name].sort_values('parsed_date', ascending=False)
     for _, order in cust_orders.iterrows():
         o_date = order['parsed_date'].strftime('%Y-%m-%d') if pd.notnull(order['parsed_date']) else "N/A"
+        dist = order.get('distance_km', 0)
+        fuel_c = order.get('fuel_cost', 0)
+        
         with st.container(border=True):
             st.markdown(f"**Order #{order['id']}** — {o_date} `({order.get('status', 'Unknown')})`")
-            st.write(f"🛣️ **{t['route']}** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')}")
-            st.write(f"💰 **{t['profit']}** {order['profit']:,.0f} NOK | **{t['margin_lbl']}** {order['margin_pct']:.1f}%")
+            st.write(f"🛣️ **{t['route']}** {order.get('pickup_city', '-')} ➔ {order.get('delivery_city', '-')} &nbsp;&nbsp;|&nbsp;&nbsp; 📍 **{dist:.0f} km**")
+            st.write(f"⛽ **{t['fuel_cost']}:** {fuel_c:,.0f} NOK &nbsp;&nbsp;|&nbsp;&nbsp; 💰 **{t['profit']}** {order.get('profit', 0):,.0f} NOK &nbsp;&nbsp;|&nbsp;&nbsp; **{t['margin_lbl']}** {order.get('margin_pct', 0):.1f}%")
 
 @st.cache_data(ttl=3600)
 def get_live_fuel_prices():
@@ -218,14 +216,29 @@ try: df = pd.DataFrame(supabase.table("orders").select("*").execute().data)
 except: st.error("Error loading data"); st.stop()
 if df.empty: st.info("No order data available."); st.stop()
 
-if 'co2_emission_kg' not in df.columns:
-    np.random.seed(42); df['co2_emission_kg'] = np.random.uniform(40, 150, size=len(df))
+# =========================================================
+# BEREKENING AFSTAND & BRANDSTOF
+# =========================================================
+if 'distance_km' not in df.columns:
+    np.random.seed(42)
+    # Simuleer realistische afstanden (in km) voor bestaande orders
+    df['distance_km'] = np.random.uniform(50, 800, size=len(df))
 
-df['liters'] = df['co2_emission_kg'] / 2.68
+# Vrachtwagen gebruikt gemiddeld 30 Liter per 100km -> 0.3 Liter per km
+df['liters'] = df['distance_km'] * 0.3
+df['co2_emission_kg'] = df['liters'] * 2.68
 df['fuel_cost'] = df['liters'] * live_prices["diesel"]
-df['revenue'] = 1500 + (df['co2_emission_kg'] * 15) 
-df['profit'] = df['revenue'] - df['fuel_cost']
+
+# Bereken winst op basis van de in de DB opgeslagen bedragen
+if 'price' in df.columns and 'profit' in df.columns:
+    df['revenue'] = df['price'].fillna(df['distance_km'] * 25 + 1500)
+    df['profit'] = df['profit'].fillna(df['revenue'] - df['fuel_cost'])
+else:
+    df['revenue'] = 1500 + (df['distance_km'] * 25)
+    df['profit'] = df['revenue'] - df['fuel_cost']
+    
 df['margin_pct'] = (df['profit'] / df['revenue']) * 100
+
 if 'received_date' in df.columns: df['parsed_date'] = pd.to_datetime(df['received_date'], errors='coerce').dt.date
 
 c_title, c_filter = st.columns([2.5, 1])
