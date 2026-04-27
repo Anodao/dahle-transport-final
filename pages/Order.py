@@ -331,26 +331,26 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (MET ROBUUSTE FALLBACK)
+# ROUTING, KAART & DAHLE PRIJS LOGICA (ZONDER LAND BEPERKING)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransport/3.0'}
+    headers = {'User-Agent': 'DahleTransport/4.0 (contact@dahle.no)'}
     url = "https://nominatim.openstreetmap.org/search"
     
-    # Poging 1: Gestructureerd zoeken mét straatnaam (Timeout: 2 sec)
+    # Poging 1: Exacte zoekopdracht mét straatnaam
     try:
         if len(street) > 2:
-            p1 = {'street': street, 'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}
-            r1 = requests.get(url, params=p1, headers=headers, timeout=2).json()
+            p1 = {'q': f"{street}, {zip_code} {city}", 'format': 'json', 'limit': 1}
+            r1 = requests.get(url, params=p1, headers=headers, timeout=3).json()
             if r1: return float(r1[0]['lat']), float(r1[0]['lon'])
     except: pass
     
-    # Poging 2 (Fallback): Alleen stad zoeken als straat faalt (Timeout: 2 sec)
+    # Poging 2 (Fallback): Alleen zoeken op postcode en stad
     try:
-        p2 = {'city': city, 'country': 'Norway', 'format': 'json', 'limit': 1}
-        r2 = requests.get(url, params=p2, headers=headers, timeout=2).json()
+        p2 = {'q': f"{zip_code} {city}", 'format': 'json', 'limit': 1}
+        r2 = requests.get(url, params=p2, headers=headers, timeout=3).json()
         if r2: return float(r2[0]['lat']), float(r2[0]['lon'])
     except: pass
     
@@ -361,8 +361,8 @@ def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
     url = f"http://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        # Timeout van 3 seconden voorkomt vasthangen van de app
-        resp = requests.get(url, timeout=3).json()
+        # Een time-out van 4 seconden om de app nooit te laten bevriezen
+        resp = requests.get(url, timeout=4).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
@@ -696,7 +696,7 @@ else:
                     
                 st.write("")
                 
-                # MAP LOGICA: ALTIJD ZICHTBAAR + ROBUUSTE FALLBACK
+                # MAP LOGICA: ALTIJD ZICHTBAAR + ROBUUSTE FALLBACK + PAARSE KLEUR
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
@@ -710,25 +710,25 @@ else:
                 
                 layers, points = [], []
                 
-                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [231, 76, 60, 255]})
-                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [46, 204, 113, 255]})
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup"})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
                 
                 if points:
-                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color="color", get_radius=1500, radius_min_pixels=8, radius_max_pixels=20))
+                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_color=[137, 75, 157, 255], get_radius=1500, radius_min_pixels=8, radius_max_pixels=20))
 
                 if p_coords and d_coords:
                     _, route_geom = get_route_data(p_coords, d_coords) 
                     if route_geom:
                         layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 200], width_scale=20, width_min_pixels=3, get_width=5))
                     else:
-                        layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[231, 76, 60, 200], get_target_color=[46, 204, 113, 200], get_width=3, get_tilt=15))
-                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 5.5, 20
+                        layers.append(pdk.Layer("ArcLayer", data=[{"source": [p_coords[1], p_coords[0]], "target": [d_coords[1], d_coords[0]]}], get_source_position="source", get_target_position="target", get_source_color=[137, 75, 157, 200], get_target_color=[137, 75, 157, 200], get_width=5, get_tilt=15))
+                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, 6, 20
                 elif p_coords:
                     center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 10, 0
                 elif d_coords:
                     center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 10, 0
                 else:
-                    # STANDAARD OVERZICHT NOORWEGEN ALS ER NOG NIETS IS INGEVULD
+                    # STANDAARD OVERZICHT ALS ER NOG NIETS IS INGEVULD
                     center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
 
                 st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
