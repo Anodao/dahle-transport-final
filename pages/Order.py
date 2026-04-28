@@ -19,7 +19,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
 
-/* VERBERG STREAMLIT BRANDING VOLLEDIG */
+/* VERBERG STREAMLIT BRANDING */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
@@ -103,6 +103,7 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
+# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
 saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
@@ -120,14 +121,14 @@ lang = st.session_state.language
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
-# HIER ZIJN ALLE GEWICHTEN NETJES OP 0 GEZET
+# ALLES START OP 0.0 KG OM SPOOKKOSTEN TE VOORKOMEN
 default_keys = {
     'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-    'pd_weight': 0.0, 'pd_qty': 1, 'pd_oversized': False,
-    'cf_pal': False, 'cf_pal_qty': 1, 'cf_pal_weight': 0.0,
-    'cf_full': False, 'cf_full_qty': 1, 'cf_full_weight': 0.0,
-    'cf_lc': False, 'cf_lc_qty': 1, 'cf_lc_weight': 0.0,
-    'mdm_weight': 0.0, 'mdm_qty': 1,
+    'pd_weight': 0.0, 'pd_qty': 0, 'pd_oversized': False,
+    'cf_pal': False, 'cf_pal_qty': 0, 'cf_pal_weight': 0.0,
+    'cf_full': False, 'cf_full_qty': 0, 'cf_full_weight': 0.0,
+    'cf_lc': False, 'cf_lc_qty': 0, 'cf_lc_weight': 0.0,
+    'mdm_weight': 0.0, 'mdm_qty': 0,
     'req_sameday': False, 'req_ferry': False
 }
 for k, v in default_keys.items():
@@ -155,9 +156,10 @@ translations = {
         "m_wait": "Kartet vises når du skriver inn en adresse...", "a_info": "Tilleggsinformasjon (valgfritt)", 
         "a_ph": "F.eks spesielle krav ved levering...", 
         "e_req": "⚠️ Vennligst fyll ut alle obligatoriske felt (*) før du fortsetter.", "e_em": "⚠️ Ugyldig e-postadresse.",
+        "e_wgt": "⚠️ Vennligst fyll inn vekt og antall (må være større enn 0).",
         "b_back": "← Gå tilbake", "b_cont": "Fortsett til neste steg →",
         "rev_t": "Se over forespørselen din", "rev_s": "Vennligst sjekk at detaljene stemmer.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
+        "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
         "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
@@ -181,6 +183,7 @@ translations = {
         "m_wait": "Map will appear when you enter an address...", "a_info": "Additional Information (optional)", 
         "a_ph": "E.g. special requirements for delivery...", 
         "e_req": "⚠️ Please fill in all mandatory fields (*).", "e_em": "⚠️ Invalid email address.",
+        "e_wgt": "⚠️ Please enter a valid weight and quantity (greater than 0).",
         "b_back": "← Go Back", "b_cont": "Continue to Review →",
         "rev_t": "Review your request", "rev_s": "Please verify your details below.", "rev_c": "Company & Contact",
         "l_cn": "COMPANY NAME", "l_rn": "REG. NO", "l_ad": "ADDRESS", "l_cp": "CONTACT PERSON", "l_em": "EMAIL", "l_ph": "PHONE", "l_str": "STREET ADDRESS", "l_zc": "ZIP & CITY",
@@ -207,6 +210,7 @@ translations = {
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
         "a_ph": "T.ex. andra krav vid leverans...", 
         "e_req": "⚠️ Vänligen fyll i alla obligatoriska fält (*).", "e_em": "⚠️ Ogiltig e-postadress.",
+        "e_wgt": "⚠️ Vänligen ange en giltig vikt och antal (större än 0).",
         "b_back": "← Gå tillbaka", "b_cont": "Fortsätt till granskning →",
         "rev_t": "Granska din förfrågan", "rev_s": "Vänligen kontrollera dina uppgifter.", "rev_c": "Företag & Kontakt",
         "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD",
@@ -233,6 +237,7 @@ translations = {
         "m_wait": "Kortet vises, når du indtaster en adresse...", "a_info": "Yderligere information (valgfrit)", 
         "a_ph": "F.eks. specielle krav ved levering...", 
         "e_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).", "e_em": "⚠️ Ugyldig e-mailadresse.",
+        "e_wgt": "⚠️ Indtast venligst en gyldig vægt og mængde (større end 0).",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
@@ -332,12 +337,12 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA 
+# ROUTING, KAART & DAHLE PRIJS LOGICA
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransport/12.0 (contact@dahle.no)'}
+    headers = {'User-Agent': 'DahleTransport/15.0 (contact@dahle.no)'}
     url = "https://nominatim.openstreetmap.org/search"
     
     queries = [
@@ -361,7 +366,7 @@ def get_route_data(coord1, coord2):
     if not coord1 or not coord2: return None, None
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
-        resp = requests.get(url, timeout=3).json()
+        resp = requests.get(url, timeout=4).json()
         if resp.get("code") == "Ok":
             return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
@@ -403,41 +408,46 @@ def get_live_price():
     reg_items = []
     
     if "Parcels & Documents" in st.session_state.selected_types:
-        q = min(st.session_state.get('pd_qty', 1), 10000)
+        q = min(st.session_state.get('pd_qty', 0), 10000)
         w = min(st.session_state.get('pd_weight', 0.0), 35.0)
-        total_weight += (w * q)
-        reg_items.append(f"{q}x {t['b1_t']} ({w:g} kg)")
-        if st.session_state.get('pd_oversized', False): oversized = True
+        if q > 0 and w > 0:
+            total_weight += (w * q)
+            reg_items.append(f"{q}x {t['b1_t']} ({w:g} kg)")
+            if st.session_state.get('pd_oversized', False): oversized = True
         
     cargo_units = 0
     if "Cargo & Freight" in st.session_state.selected_types:
         if st.session_state.get('cf_pal'):
-            pq = min(st.session_state.get('cf_pal_qty', 1), 33)
+            pq = min(st.session_state.get('cf_pal_qty', 0), 33)
             pw = min(st.session_state.get('cf_pal_weight', 0.0), 1200.0)
-            cargo_units += pq
-            total_weight += pw
-            reg_items.append(f"{pq}x {t['l_pal']} ({pw:g} kg)")
+            if pq > 0 and pw > 0:
+                cargo_units += pq
+                total_weight += pw
+                reg_items.append(f"{pq}x {t['l_pal']} ({pw:g} kg)")
         if st.session_state.get('cf_full'):
-            fq = min(st.session_state.get('cf_full_qty', 1), 10)
+            fq = min(st.session_state.get('cf_full_qty', 0), 10)
             fw = min(st.session_state.get('cf_full_weight', 0.0), 25000.0)
-            cargo_units += fq * 33 
-            total_weight += fw
-            reg_items.append(f"{fq}x {t['l_full']} ({fw:g} kg)")
+            if fq > 0 and fw > 0:
+                cargo_units += fq * 33 
+                total_weight += fw
+                reg_items.append(f"{fq}x {t['l_full']} ({fw:g} kg)")
         if st.session_state.get('cf_lc'):
-            lq = min(st.session_state.get('cf_lc_qty', 1), 1000)
+            lq = min(st.session_state.get('cf_lc_qty', 0), 1000)
             lw = min(st.session_state.get('cf_lc_weight', 0.0), 25000.0)
-            cargo_units += lq
-            total_weight += lw
-            reg_items.append(f"{lq}x {t['l_lc']} ({lw:g} kg)")
+            if lq > 0 and lw > 0:
+                cargo_units += lq
+                total_weight += lw
+                reg_items.append(f"{lq}x {t['l_lc']} ({lw:g} kg)")
             
     if "Mail & Direct Marketing" in st.session_state.selected_types:
-        q = min(st.session_state.get('mdm_qty', 1), 100000)
+        q = min(st.session_state.get('mdm_qty', 0), 100000)
         w = min(st.session_state.get('mdm_weight', 0.0), 2.0)
-        total_weight += (w * q)
-        reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
+        if q > 0 and w > 0:
+            total_weight += (w * q)
+            reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
 
-    # NUL-STATUS CHECK
-    if total_weight == 0 and cargo_units == 0 and not reg_items:
+    # NUL-STATUS CHECK (Als alles 0 is, kost het letterlijk 0)
+    if total_weight <= 0 and cargo_units <= 0:
         return 0, 0, 0, [(t['c_tr'], 0)], ""
 
     zone = determine_zone(st.session_state.get('p_city', ''), st.session_state.get('d_city', ''))
@@ -591,6 +601,11 @@ else:
     def req_lbl(key, base_text):
         if st.session_state.validate_step2 and not str(st.session_state.get(key) or "").strip(): return f"{base_text} 🚨 :red[(Required)]"
         return base_text
+        
+    def wgt_lbl(key, base_text):
+        if st.session_state.validate_step2 and float(st.session_state.get(key) or 0) <= 0: return f"{base_text} 🚨 <span style='color:#ff4b4b;'>(> 0)</span>"
+        return base_text
+        
     def email_lbl():
         base = t['c_em']
         if st.session_state.validate_step2:
@@ -621,11 +636,10 @@ else:
                                 if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
                                 st.session_state.validate_step2 = False; st.rerun() 
 
-                        # OPLOSSING: min_value is nu 0.0 voor alle gewichten
                         if sel == "Parcels & Documents":
                             c_p1, c_p2 = st.columns([1.5, 1])
-                            with c_p1: st.number_input(t['lbl_qty'], min_value=1, max_value=10000, key="pd_qty")
-                            with c_p2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=35.0, step=0.5, key="pd_weight")
+                            with c_p1: st.markdown(f"<label>{wgt_lbl('pd_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("qty_pd", min_value=0, max_value=10000, key="pd_qty", label_visibility="collapsed")
+                            with c_p2: st.markdown(f"<label>{wgt_lbl('pd_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("wgt_pd", min_value=0.0, max_value=35.0, step=0.5, key="pd_weight", label_visibility="collapsed")
                             st.checkbox(t['w_over'], key="pd_oversized")
                         
                         elif sel == "Cargo & Freight":
@@ -636,25 +650,25 @@ else:
                             st.checkbox(t['l_pal'], key="cf_pal")
                             if st.session_state.get('cf_pal'):
                                 c_pf1, c_pf2 = st.columns(2)
-                                with c_pf1: st.number_input(t['lbl_qty'], min_value=1, max_value=33, key="cf_pal_qty")
-                                with c_pf2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=1200.0, step=10.0, key="cf_pal_weight")
+                                with c_pf1: st.markdown(f"<label>{wgt_lbl('cf_pal_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("pq", min_value=0, max_value=33, key="cf_pal_qty", label_visibility="collapsed")
+                                with c_pf2: st.markdown(f"<label>{wgt_lbl('cf_pal_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("pw", min_value=0.0, max_value=1200.0, step=10.0, key="cf_pal_weight", label_visibility="collapsed")
                                 
                             st.checkbox(t['l_full'], key="cf_full")
                             if st.session_state.get('cf_full'):
                                 c_ff1, c_ff2 = st.columns(2)
-                                with c_ff1: st.number_input(t['lbl_qty'], min_value=1, max_value=10, key="cf_full_qty")
-                                with c_ff2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=25000.0, step=100.0, key="cf_full_weight")
+                                with c_ff1: st.markdown(f"<label>{wgt_lbl('cf_full_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("fq", min_value=0, max_value=10, key="cf_full_qty", label_visibility="collapsed")
+                                with c_ff2: st.markdown(f"<label>{wgt_lbl('cf_full_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("fw", min_value=0.0, max_value=25000.0, step=100.0, key="cf_full_weight", label_visibility="collapsed")
                                 
                             st.checkbox(t['l_lc'], key="cf_lc")
                             if st.session_state.get('cf_lc'):
                                 c_lf1, c_lf2 = st.columns(2)
-                                with c_lf1: st.number_input(t['lbl_qty'], min_value=1, max_value=1000, key="cf_lc_qty")
-                                with c_lf2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=25000.0, step=10.0, key="cf_lc_weight")
+                                with c_lf1: st.markdown(f"<label>{wgt_lbl('cf_lc_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("lq", min_value=0, max_value=1000, key="cf_lc_qty", label_visibility="collapsed")
+                                with c_lf2: st.markdown(f"<label>{wgt_lbl('cf_lc_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("lw", min_value=0.0, max_value=25000.0, step=10.0, key="cf_lc_weight", label_visibility="collapsed")
                         
                         elif sel == "Mail & Direct Marketing":
                             c_m1, c_m2 = st.columns(2)
-                            with c_m1: st.number_input(t['lbl_qty'], min_value=1, max_value=100000, key="mdm_qty")
-                            with c_m2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=2.0, step=0.1, key="mdm_weight")
+                            with c_m1: st.markdown(f"<label>{wgt_lbl('mdm_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("mq", min_value=0, max_value=100000, key="mdm_qty", label_visibility="collapsed")
+                            with c_m2: st.markdown(f"<label>{wgt_lbl('mdm_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("mw", min_value=0.0, max_value=2.0, step=0.1, key="mdm_weight", label_visibility="collapsed")
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
@@ -779,16 +793,40 @@ else:
             st.write("")
             
             error_container = st.empty()
+            
+            # --- VALIDATIE CHECK ---
             missing_fields = False
+            invalid_wgt = False
+            
             for rk in ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'comp_country', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
                 if not str(st.session_state.get(rk) or '').strip(): missing_fields = True; break
-            if "Cargo & Freight" in st.session_state.selected_types and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')): missing_fields = True
+                
+            if "Parcels & Documents" in st.session_state.selected_types:
+                if st.session_state.get('pd_qty', 0) <= 0 or st.session_state.get('pd_weight', 0.0) <= 0: invalid_wgt = True
+            
+            if "Cargo & Freight" in st.session_state.selected_types:
+                has_cf = False
+                if st.session_state.get('cf_pal'):
+                    has_cf = True
+                    if st.session_state.get('cf_pal_qty', 0) <= 0 or st.session_state.get('cf_pal_weight', 0.0) <= 0: invalid_wgt = True
+                if st.session_state.get('cf_full'):
+                    has_cf = True
+                    if st.session_state.get('cf_full_qty', 0) <= 0 or st.session_state.get('cf_full_weight', 0.0) <= 0: invalid_wgt = True
+                if st.session_state.get('cf_lc'):
+                    has_cf = True
+                    if st.session_state.get('cf_lc_qty', 0) <= 0 or st.session_state.get('cf_lc_weight', 0.0) <= 0: invalid_wgt = True
+                if not has_cf: missing_fields = True
+                
+            if "Mail & Direct Marketing" in st.session_state.selected_types:
+                if st.session_state.get('mdm_qty', 0) <= 0 or st.session_state.get('mdm_weight', 0.0) <= 0: invalid_wgt = True
+
             email_val = str(st.session_state.get('cont_email') or '').strip()
             invalid_email = bool(email_val and "@" not in email_val)
 
             if st.session_state.validate_step2:
                 if missing_fields: error_container.error(t['e_req'])
                 elif invalid_email: error_container.error(t['e_em'])
+                elif invalid_wgt: error_container.error(t['e_wgt'])
 
             c_back, c_next = st.columns([1, 4])
             if c_back.button(t['b_back'], type="secondary", use_container_width=True):
@@ -796,7 +834,7 @@ else:
                 
             if c_next.button(t['b_cont'], type="primary", use_container_width=True):
                 st.session_state.validate_step2 = True 
-                if missing_fields or invalid_email:
+                if missing_fields or invalid_email or invalid_wgt:
                     st.session_state.scroll_up = True; st.rerun()
                 else:
                     st.session_state.validate_step2 = False; st.session_state.scroll_up = False
