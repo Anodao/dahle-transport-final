@@ -103,7 +103,6 @@ if 'cookie_retry' not in st.session_state:
     loading.empty()
     st.rerun()
 
-# --- TAAL GEHEUGEN (COOKIE LOGICA) ---
 saved_lang = cookie_manager.get('dahle_lang')
 
 if "lang" in st.query_params:
@@ -121,13 +120,14 @@ lang = st.session_state.language
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
+# HIER ZIJN ALLE GEWICHTEN NETJES OP 0 GEZET
 default_keys = {
     'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
-    'pd_weight': 1.0, 'pd_qty': 1, 'pd_oversized': False,
-    'cf_pal': False, 'cf_pal_qty': 1, 'cf_pal_weight': 100.0,
-    'cf_full': False, 'cf_full_qty': 1, 'cf_full_weight': 500.0,
-    'cf_lc': False, 'cf_lc_qty': 1, 'cf_lc_weight': 50.0,
-    'mdm_weight': 0.5, 'mdm_qty': 1,
+    'pd_weight': 0.0, 'pd_qty': 1, 'pd_oversized': False,
+    'cf_pal': False, 'cf_pal_qty': 1, 'cf_pal_weight': 0.0,
+    'cf_full': False, 'cf_full_qty': 1, 'cf_full_weight': 0.0,
+    'cf_lc': False, 'cf_lc_qty': 1, 'cf_lc_weight': 0.0,
+    'mdm_weight': 0.0, 'mdm_qty': 1,
     'req_sameday': False, 'req_ferry': False
 }
 for k, v in default_keys.items():
@@ -157,7 +157,7 @@ translations = {
         "e_req": "⚠️ Vennligst fyll ut alle obligatoriske felt (*) før du fortsetter.", "e_em": "⚠️ Ugyldig e-postadresse.",
         "b_back": "← Gå tilbake", "b_cont": "Fortsett til neste steg →",
         "rev_t": "Se over forespørselen din", "rev_s": "Vennligst sjekk at detaljene stemmer.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
+        "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
         "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
@@ -332,16 +332,14 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (ROBUUSTE VERSIE)
+# ROUTING, KAART & DAHLE PRIJS LOGICA 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
-    """Vindt GPS coördinaten. Zoekt eerst specifiek, dan breed (Global)."""
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransportMap/15.0'}
+    headers = {'User-Agent': 'DahleTransport/12.0 (contact@dahle.no)'}
     url = "https://nominatim.openstreetmap.org/search"
     
-    # Razendsnelle slimme zoek-combinaties
     queries = [
         f"{street}, {zip_code} {city}, Norway",
         f"{street}, {city}, Norway",
@@ -354,13 +352,12 @@ def get_coordinates(street, zip_code, city):
     for q in queries:
         try:
             r = requests.get(url, params={'q': q, 'format': 'json', 'limit': 1}, headers=headers, timeout=2).json()
-            if r: return float(r[0]['lat']), float(r[0]['lon'])
+            if r and len(r) > 0: return float(r[0]['lat']), float(r[0]['lon'])
         except: continue
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
-    """Haalt de blauwe routelijn op van de server (met HTTPS)."""
     if not coord1 or not coord2: return None, None
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
@@ -371,18 +368,17 @@ def get_route_data(coord1, coord2):
     return None, None
 
 def calculate_zoom(coord1, coord2):
-    """Berekent het ideale zoomniveau op basis van de afstand tussen twee punten."""
     if not coord1 or not coord2: return 4.0
     lat_diff = abs(coord1[0] - coord2[0])
     lon_diff = abs(coord1[1] - coord2[1])
     max_diff = max(lat_diff, lon_diff)
     
-    if max_diff < 0.02: return 13.5  # Zeer dichtbij (binnen wijk)
-    if max_diff < 0.1:  return 11.0  # Stadniveau
-    if max_diff < 0.5:  return 9.0   # Regionaal
-    if max_diff < 2.0:  return 7.5   # Provinciaal
-    if max_diff < 5.0:  return 6.0   # Landelijk
-    return 4.5 # Scandinavië-breed
+    if max_diff < 0.02: return 13.5
+    if max_diff < 0.1:  return 11.0
+    if max_diff < 0.5:  return 9.0
+    if max_diff < 2.0:  return 7.5
+    if max_diff < 5.0:  return 6.0
+    return 4.5 
 
 @st.cache_data(show_spinner=False)
 def determine_zone(p_city, d_city):
@@ -408,7 +404,7 @@ def get_live_price():
     
     if "Parcels & Documents" in st.session_state.selected_types:
         q = min(st.session_state.get('pd_qty', 1), 10000)
-        w = min(st.session_state.get('pd_weight', 1.0), 35.0)
+        w = min(st.session_state.get('pd_weight', 0.0), 35.0)
         total_weight += (w * q)
         reg_items.append(f"{q}x {t['b1_t']} ({w:g} kg)")
         if st.session_state.get('pd_oversized', False): oversized = True
@@ -417,30 +413,30 @@ def get_live_price():
     if "Cargo & Freight" in st.session_state.selected_types:
         if st.session_state.get('cf_pal'):
             pq = min(st.session_state.get('cf_pal_qty', 1), 33)
-            pw = min(st.session_state.get('cf_pal_weight', 100.0), 1200.0)
+            pw = min(st.session_state.get('cf_pal_weight', 0.0), 1200.0)
             cargo_units += pq
             total_weight += pw
             reg_items.append(f"{pq}x {t['l_pal']} ({pw:g} kg)")
         if st.session_state.get('cf_full'):
             fq = min(st.session_state.get('cf_full_qty', 1), 10)
-            fw = min(st.session_state.get('cf_full_weight', 500.0), 25000.0)
+            fw = min(st.session_state.get('cf_full_weight', 0.0), 25000.0)
             cargo_units += fq * 33 
             total_weight += fw
             reg_items.append(f"{fq}x {t['l_full']} ({fw:g} kg)")
         if st.session_state.get('cf_lc'):
             lq = min(st.session_state.get('cf_lc_qty', 1), 1000)
-            lw = min(st.session_state.get('cf_lc_weight', 50.0), 25000.0)
+            lw = min(st.session_state.get('cf_lc_weight', 0.0), 25000.0)
             cargo_units += lq
             total_weight += lw
             reg_items.append(f"{lq}x {t['l_lc']} ({lw:g} kg)")
             
     if "Mail & Direct Marketing" in st.session_state.selected_types:
         q = min(st.session_state.get('mdm_qty', 1), 100000)
-        w = min(st.session_state.get('mdm_weight', 0.5), 2.0)
+        w = min(st.session_state.get('mdm_weight', 0.0), 2.0)
         total_weight += (w * q)
         reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
 
-    # NUL-STATUS CHECK: Geen items = 0 NOK!
+    # NUL-STATUS CHECK
     if total_weight == 0 and cargo_units == 0 and not reg_items:
         return 0, 0, 0, [(t['c_tr'], 0)], ""
 
@@ -625,10 +621,11 @@ else:
                                 if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
                                 st.session_state.validate_step2 = False; st.rerun() 
 
+                        # OPLOSSING: min_value is nu 0.0 voor alle gewichten
                         if sel == "Parcels & Documents":
                             c_p1, c_p2 = st.columns([1.5, 1])
                             with c_p1: st.number_input(t['lbl_qty'], min_value=1, max_value=10000, key="pd_qty")
-                            with c_p2: st.number_input(t['lbl_wgt'], min_value=0.5, max_value=35.0, step=0.5, key="pd_weight")
+                            with c_p2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=35.0, step=0.5, key="pd_weight")
                             st.checkbox(t['w_over'], key="pd_oversized")
                         
                         elif sel == "Cargo & Freight":
@@ -640,24 +637,24 @@ else:
                             if st.session_state.get('cf_pal'):
                                 c_pf1, c_pf2 = st.columns(2)
                                 with c_pf1: st.number_input(t['lbl_qty'], min_value=1, max_value=33, key="cf_pal_qty")
-                                with c_pf2: st.number_input(t['lbl_wgt'], min_value=1.0, max_value=1200.0, step=10.0, key="cf_pal_weight")
+                                with c_pf2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=1200.0, step=10.0, key="cf_pal_weight")
                                 
                             st.checkbox(t['l_full'], key="cf_full")
                             if st.session_state.get('cf_full'):
                                 c_ff1, c_ff2 = st.columns(2)
                                 with c_ff1: st.number_input(t['lbl_qty'], min_value=1, max_value=10, key="cf_full_qty")
-                                with c_ff2: st.number_input(t['lbl_wgt'], min_value=1.0, max_value=25000.0, step=100.0, key="cf_full_weight")
+                                with c_ff2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=25000.0, step=100.0, key="cf_full_weight")
                                 
                             st.checkbox(t['l_lc'], key="cf_lc")
                             if st.session_state.get('cf_lc'):
                                 c_lf1, c_lf2 = st.columns(2)
                                 with c_lf1: st.number_input(t['lbl_qty'], min_value=1, max_value=1000, key="cf_lc_qty")
-                                with c_lf2: st.number_input(t['lbl_wgt'], min_value=1.0, max_value=25000.0, step=10.0, key="cf_lc_weight")
+                                with c_lf2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=25000.0, step=10.0, key="cf_lc_weight")
                         
                         elif sel == "Mail & Direct Marketing":
                             c_m1, c_m2 = st.columns(2)
                             with c_m1: st.number_input(t['lbl_qty'], min_value=1, max_value=100000, key="mdm_qty")
-                            with c_m2: st.number_input(t['lbl_wgt'], min_value=0.1, max_value=2.0, step=0.1, key="mdm_weight")
+                            with c_m2: st.number_input(t['lbl_wgt'], min_value=0.0, max_value=2.0, step=0.1, key="mdm_weight")
                             
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
@@ -735,11 +732,9 @@ else:
                 if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup"})
                 if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
                 
-                # Stippen op de kaart
                 if points:
                     layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color=[137, 75, 157, 255], get_radius=200, radius_min_pixels=5, radius_max_pixels=12))
 
-                # De Paarse Lijn en Zoom
                 if p_coords and d_coords:
                     _, route_geom = get_route_data(p_coords, d_coords) 
                     
@@ -813,9 +808,9 @@ else:
                     
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
-                        if st.session_state.get('cf_pal'): loads.append(f"{st.session_state.get('cf_pal_qty', 1)}x {t['l_pal']} ({st.session_state.get('cf_pal_weight', 100.0)}kg)")
-                        if st.session_state.get('cf_full'): loads.append(f"{st.session_state.get('cf_full_qty', 1)}x {t['l_full']} ({st.session_state.get('cf_full_weight', 500.0)}kg)")
-                        if st.session_state.get('cf_lc'): loads.append(f"{st.session_state.get('cf_lc_qty', 1)}x {t['l_lc']} ({st.session_state.get('cf_lc_weight', 50.0)}kg)")
+                        if st.session_state.get('cf_pal'): loads.append(f"{st.session_state.get('cf_pal_qty', 1)}x {t['l_pal']} ({st.session_state.get('cf_pal_weight', 0.0)}kg)")
+                        if st.session_state.get('cf_full'): loads.append(f"{st.session_state.get('cf_full_qty', 1)}x {t['l_full']} ({st.session_state.get('cf_full_weight', 0.0)}kg)")
+                        if st.session_state.get('cf_lc'): loads.append(f"{st.session_state.get('cf_lc_qty', 1)}x {t['l_lc']} ({st.session_state.get('cf_lc_weight', 0.0)}kg)")
                         specs_list.append(f"🚛 {t['b2_t']}: {', '.join(loads)}")
                     
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
