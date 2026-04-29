@@ -337,32 +337,45 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA
+# ROUTING, KAART & DAHLE PRIJS LOGICA (ROBUUSTE VERSIE)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
+    """Vindt GPS coördinaten. Zoekt eerst specifiek, dan breed (Global)."""
     if len(city) < 2: return None
     headers = {'User-Agent': 'DahleTransportMap/17.0'}
     url = "https://nominatim.openstreetmap.org/search"
-    queries = [f"{street}, {zip_code} {city}, Norway", f"{street}, {city}, Norway", f"{zip_code} {city}, Norway", f"{city}, Norway", f"{street}, {city}", f"{city}"]
+    
+    queries = [
+        f"{street}, {zip_code} {city}, Norway",
+        f"{street}, {city}, Norway",
+        f"{zip_code} {city}, Norway",
+        f"{city}, Norway",
+        f"{street}, {city}",
+        f"{city}"
+    ]
+    
     for q in queries:
         try:
             r = requests.get(url, params={'q': q, 'format': 'json', 'limit': 1}, headers=headers, timeout=2).json()
-            if r: return float(r[0]['lat']), float(r[0]['lon'])
+            if r and len(r) > 0: return float(r[0]['lat']), float(r[0]['lon'])
         except: continue
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
+    """Haalt de blauwe routelijn op van de server (met HTTPS)."""
     if not coord1 or not coord2: return None, None
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
         resp = requests.get(url, timeout=3).json()
-        if resp.get("code") == "Ok": return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
+        if resp.get("code") == "Ok":
+            return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
     return None, None
 
 def calculate_zoom(coord1, coord2):
+    """Berekent het ideale zoomniveau op basis van de afstand tussen twee punten."""
     if not coord1 or not coord2: return 4.0
     lat_diff = abs(coord1[0] - coord2[0])
     lon_diff = abs(coord1[1] - coord2[1])
@@ -702,7 +715,7 @@ else:
                 st.write("")
                 
                 # ========================================================
-                # MAP LOGICA: Z-ORDER (LIJN ONDER, CIKRELS BOVEN) + HOLLE CIRKELS
+                # MAP LOGICA: LIJN ONDEROP, DONKER PAARSE HOLLE CIRKELS BOVENOP
                 # ========================================================
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
@@ -717,7 +730,7 @@ else:
                 
                 layers = []
                 
-                # 1. VOEG EERST DE LIJN TOE (LAAGSTE NIVEAU)
+                # 1. TEKEN DE LIJN ALS EERSTE (Onderste laag)
                 if p_coords and d_coords:
                     _, route_geom = get_route_data(p_coords, d_coords) 
                     if route_geom:
@@ -742,7 +755,10 @@ else:
                             get_width=5
                         ))
                     
-                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, calculate_zoom(p_coords, d_coords), 20
+                    center_lat = (p_coords[0] + d_coords[0]) / 2
+                    center_lon = (p_coords[1] + d_coords[1]) / 2
+                    zoom = calculate_zoom(p_coords, d_coords)
+                    pitch = 20
                 elif p_coords:
                     center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
                 elif d_coords:
@@ -750,25 +766,25 @@ else:
                 else:
                     center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
 
-                # 2. VOEG DAARNA DE CIRKELS TOE (BOVENOP DE LIJN)
+                # 2. TEKEN DE CIRKELS ALS TWEEDE (Bovenste laag)
                 points = []
-                # Kleuren (Groen/Rood) met donkere kern om "hol" effect met witte buitenkant te simuleren
-                    if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [137, 75, 157, 255]})
-                    if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [137, 75, 157, 255]})
+                # Donkerpaarse kleur (rgb: 55, 30, 65) voor het 'holle' effect
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
                 
                 if points:
                     layers.append(pdk.Layer(
                         "ScatterplotLayer", 
                         data=points, 
                         get_position="pos", 
-                        get_fill_color="color", # Vulkleur (Rood/Groen)
-                        get_line_color=[255, 255, 255, 255], # Witte buitenste lijn (stroke)
-                        stroked=True,
-                        filled=True,
-                        line_width_min_pixels=3,
-                        get_radius=300, 
-                        radius_min_pixels=7, 
-                        radius_max_pixels=15
+                        get_fill_color="color",              # Donkerpaarse kern
+                        get_line_color=[255, 255, 255, 255], # Witte buitenrand
+                        stroked=True,                        # Zet de rand aan
+                        filled=True,                         # Zet de opvulling aan
+                        line_width_min_pixels=3,             # Dikte van de witte rand
+                        get_radius=200, 
+                        radius_min_pixels=6, 
+                        radius_max_pixels=14
                     ))
 
                 st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
