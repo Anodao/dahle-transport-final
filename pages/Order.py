@@ -753,8 +753,8 @@ else:
                 # 2. VOEG DAARNA DE CIRKELS TOE (BOVENOP DE LIJN)
                 points = []
                 # Kleuren (Groen/Rood) met donkere kern om "hol" effect met witte buitenkant te simuleren
-                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [46, 204, 113, 255]})
-                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [231, 76, 60, 255]})
+                    if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [137, 75, 157, 255]})
+                    if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [137, 75, 157, 255]})
                 
                 if points:
                     layers.append(pdk.Layer(
