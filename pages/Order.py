@@ -19,7 +19,7 @@ st.markdown("""
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
 * { font-family: 'Montserrat', sans-serif; }
 
-/* VERBERG STREAMLIT BRANDING */
+/* VERBERG STREAMLIT BRANDING VOLLEDIG */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"] { display: none !important; }
 footer { display: none !important; }
 [data-testid="stToolbar"] { display: none !important; }
@@ -337,57 +337,43 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (ROBUUSTE VERSIE)
+# ROUTING, KAART & DAHLE PRIJS LOGICA
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
-    """Vindt GPS coördinaten. Zoekt eerst specifiek, dan breed (Global)."""
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransportMap/16.0'}
+    headers = {'User-Agent': 'DahleTransportMap/17.0'}
     url = "https://nominatim.openstreetmap.org/search"
-    
-    # Razendsnelle slimme zoek-combinaties
-    queries = [
-        f"{street}, {zip_code} {city}, Norway",
-        f"{street}, {city}, Norway",
-        f"{zip_code} {city}, Norway",
-        f"{city}, Norway",
-        f"{street}, {city}",
-        f"{city}"
-    ]
-    
+    queries = [f"{street}, {zip_code} {city}, Norway", f"{street}, {city}, Norway", f"{zip_code} {city}, Norway", f"{city}, Norway", f"{street}, {city}", f"{city}"]
     for q in queries:
         try:
             r = requests.get(url, params={'q': q, 'format': 'json', 'limit': 1}, headers=headers, timeout=2).json()
-            if r and len(r) > 0: return float(r[0]['lat']), float(r[0]['lon'])
+            if r: return float(r[0]['lat']), float(r[0]['lon'])
         except: continue
     return None
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
-    """Haalt de blauwe routelijn op van de server (met HTTPS)."""
     if not coord1 or not coord2: return None, None
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
         resp = requests.get(url, timeout=3).json()
-        if resp.get("code") == "Ok":
-            return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
+        if resp.get("code") == "Ok": return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
     return None, None
 
 def calculate_zoom(coord1, coord2):
-    """Berekent het ideale zoomniveau op basis van de afstand tussen twee punten."""
     if not coord1 or not coord2: return 4.0
     lat_diff = abs(coord1[0] - coord2[0])
     lon_diff = abs(coord1[1] - coord2[1])
     max_diff = max(lat_diff, lon_diff)
     
-    if max_diff < 0.02: return 13.5  # Zeer dichtbij (binnen wijk)
-    if max_diff < 0.1:  return 11.0  # Stadniveau
-    if max_diff < 0.5:  return 9.0   # Regionaal
-    if max_diff < 2.0:  return 7.5   # Provinciaal
-    if max_diff < 5.0:  return 6.0   # Landelijk
-    return 4.5 # Scandinavië-breed
+    if max_diff < 0.02: return 13.5
+    if max_diff < 0.1:  return 11.0
+    if max_diff < 0.5:  return 9.0
+    if max_diff < 2.0:  return 7.5
+    if max_diff < 5.0:  return 6.0
+    return 4.5 
 
 @st.cache_data(show_spinner=False)
 def determine_zone(p_city, d_city):
@@ -401,9 +387,7 @@ def check_if_ferry_needed(p_city, d_city):
     p = str(p_city).lower().strip()
     d = str(d_city).lower().strip()
     fosen_dests = ['roan', 'osen', 'bessaker', 'refsnes', 'stokkøy', 'stokkoy', 'linesøya', 'linesoya', 'bjugn', 'brekstad', 'vallersund', 'lysøysund', 'lysoysund', 'åfjord', 'afjord', 'stadsbygd', 'rissa', 'hasselvika', 'fevåg', 'fevag', 'husbysjøen', 'husbysjoen', 'råkvåg', 'rakvag', 'leksvik']
-    
-    if ('trondheim' in p and any(c in d for c in fosen_dests)) or ('trondheim' in d and any(c in p for c in fosen_dests)):
-        return True
+    if ('trondheim' in p and any(c in d for c in fosen_dests)) or ('trondheim' in d and any(c in p for c in fosen_dests)): return True
     return False
 
 def get_live_price():
@@ -450,7 +434,6 @@ def get_live_price():
             total_weight += (w * q)
             reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
 
-    # NUL-STATUS CHECK (Als alles 0 is, kost het letterlijk 0)
     if total_weight <= 0 and cargo_units <= 0:
         return 0, 0, 0, [(t['c_tr'], 0)], ""
 
@@ -484,19 +467,12 @@ def get_live_price():
                 elif max_w == 799: tier_lbl = "600-799 kg"
                 elif max_w == 999: tier_lbl = "800-999 kg"
                 break
-        if weight_cost == 0: 
-            weight_cost = prices[zone][-1][1]
-            tier_lbl = "800-999 kg"
+        if weight_cost == 0: weight_cost = prices[zone][-1][1]; tier_lbl = "800-999 kg"
 
     space_cost = 0
     pallet_prices = {1: 700, 2: 750, 3: 800, 4: 600}
-    if cargo_units > 0:
-        space_cost = pallet_prices[zone] * cargo_units
+    if cargo_units > 0: space_cost = pallet_prices[zone] * cargo_units
 
-    base_cost = 0
-    lbl = ""
-    calc_note = ""
-    
     if space_cost > weight_cost:
         base_cost = space_cost
         lbl = f"{t['c_tr']} ({cargo_units} {t['lbl_pcs']})"
@@ -508,28 +484,22 @@ def get_live_price():
         calc_note = t['calc_note_we']
 
     cost = base_cost + 50 
-    breakdown_lines = []
-    
-    breakdown_lines.append((lbl, base_cost))
+    breakdown_lines = [(lbl, base_cost)]
     
     if reg_items:
         breakdown_lines.append((f"<span style='display:block; font-size:12px; color:#aaa; padding-left:10px; margin-top:-4px;'>↳ {t['qty_reg']}:</span>", ""))
-        for item in reg_items:
-            breakdown_lines.append((f"<span style='display:block; font-size:12px; color:#888; padding-left:25px; margin-top:-6px;'>• {item}</span>", ""))
+        for item in reg_items: breakdown_lines.append((f"<span style='display:block; font-size:12px; color:#888; padding-left:25px; margin-top:-6px;'>• {item}</span>", ""))
             
     breakdown_lines.append((f"<span style='display:block; font-size:12px; color:#aaa; padding-left:10px; margin-top:-4px;'>↳ {t['w_reg']}: {total_weight:g} kg</span>", ""))
-
     breakdown_lines.append((t['c_admin'], 50))
     
     if oversized:
         surcharge = cost * 0.25
         cost += surcharge
         breakdown_lines.append((t['c_over'], surcharge))
-        
     if st.session_state.get('req_sameday'):
         cost += 250
         breakdown_lines.append((t['c_sameday'], 250))
-        
     if check_if_ferry_needed(st.session_state.get('p_city', ''), st.session_state.get('d_city', '')):
         cost += 250
         breakdown_lines.append((t['c_ferry'], 250))
@@ -732,7 +702,7 @@ else:
                 st.write("")
                 
                 # ========================================================
-                # MAP LOGICA MET GROENE/RODE PUNTEN
+                # MAP LOGICA: Z-ORDER (LIJN ONDER, CIKRELS BOVEN) + HOLLE CIRKELS
                 # ========================================================
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
@@ -745,26 +715,11 @@ else:
                 p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
                 d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
                 
-                layers, points = [], []
+                layers = []
                 
-                # KLEUR TOEGEVOEGD: Groen [46, 204, 113] voor A, Rood [231, 76, 60] voor B
-                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [46, 204, 113, 255]})
-                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [231, 76, 60, 255]})
-                
-                if points:
-                    layers.append(pdk.Layer(
-                        "ScatterplotLayer", 
-                        data=points, 
-                        get_position="pos", 
-                        get_fill_color="color", # Haalt kleur uit de data
-                        get_radius=300, 
-                        radius_min_pixels=6, 
-                        radius_max_pixels=14
-                    ))
-
+                # 1. VOEG EERST DE LIJN TOE (LAAGSTE NIVEAU)
                 if p_coords and d_coords:
                     _, route_geom = get_route_data(p_coords, d_coords) 
-                    
                     if route_geom:
                         layers.append(pdk.Layer(
                             "PathLayer", 
@@ -787,16 +742,34 @@ else:
                             get_width=5
                         ))
                     
-                    center_lat = (p_coords[0] + d_coords[0]) / 2
-                    center_lon = (p_coords[1] + d_coords[1]) / 2
-                    zoom = calculate_zoom(p_coords, d_coords)
-                    pitch = 20
+                    center_lat, center_lon, zoom, pitch = (p_coords[0]+d_coords[0])/2, (p_coords[1]+d_coords[1])/2, calculate_zoom(p_coords, d_coords), 20
                 elif p_coords:
                     center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
                 elif d_coords:
                     center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
                 else:
                     center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
+
+                # 2. VOEG DAARNA DE CIRKELS TOE (BOVENOP DE LIJN)
+                points = []
+                # Kleuren (Groen/Rood) met donkere kern om "hol" effect met witte buitenkant te simuleren
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [46, 204, 113, 255]})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [231, 76, 60, 255]})
+                
+                if points:
+                    layers.append(pdk.Layer(
+                        "ScatterplotLayer", 
+                        data=points, 
+                        get_position="pos", 
+                        get_fill_color="color", # Vulkleur (Rood/Groen)
+                        get_line_color=[255, 255, 255, 255], # Witte buitenste lijn (stroke)
+                        stroked=True,
+                        filled=True,
+                        line_width_min_pixels=3,
+                        get_radius=300, 
+                        radius_min_pixels=7, 
+                        radius_max_pixels=15
+                    ))
 
                 st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
                 
