@@ -121,6 +121,7 @@ lang = st.session_state.language
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
+# ALLES START OP 0.0 KG OM SPOOKKOSTEN TE VOORKOMEN
 default_keys = {
     'chk_parcels': False, 'chk_freight': False, 'chk_mail': False,
     'pd_weight': 0.0, 'pd_qty': 0, 'pd_oversized': False,
@@ -160,7 +161,7 @@ translations = {
         "rev_t": "Se over forespørselen din", "rev_s": "Vennligst sjekk at detaljene stemmer.", "rev_c": "Firma & Kontakt",
         "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
-        "db_err": "⚠️ Feil ved lagring i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
+        "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
         "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
         "w_reg": "Totalvekt", "qty_reg": "Registrert", "calc_note_pal": "Frakten er beregnet etter plass/antall, da dette gir høyeste fraktberegningsvekt.", "calc_note_we": "Frakten er beregnet etter totalvekt, da dette gir høyeste fraktberegningsvekt."
     },
@@ -214,7 +215,7 @@ translations = {
         "rev_t": "Granska din förfrågan", "rev_s": "Vänligen kontrollera dina uppgifter.", "rev_c": "Företag & Kontakt",
         "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD",
         "rev_r": "Rutt", "rev_s": "Försändelse", "l_no": "ANTECKNINGAR", "b_edit": "← Redigera detaljer", "b_send": "BEKRÄFTA & SKICKA",
-        "db_err": "⚠️ Fel vid sparande i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
+        "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
         "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
         "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats (ger högsta fraktberäkningsvikt).", "calc_note_we": "Frakten beräknas efter totalvikt (ger högsta fraktberäkningsvikt)."
     },
@@ -241,7 +242,7 @@ translations = {
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
         "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
-        "db_err": "⚠️ Fejl ved lagring i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
+        "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
         "w_reg": "Totalvægt", "qty_reg": "Registreret", "calc_note_pal": "Fragten er beregnet efter plads/antal (giver højeste fragtberegningsvægt).", "calc_note_we": "Fragten er beregnet efter totalvægt (giver højeste fragtberegningsvægt)."
     }
@@ -342,11 +343,15 @@ st.markdown(html_navbar, unsafe_allow_html=True)
 def get_coordinates(street, zip_code, city):
     """Vindt GPS coördinaten. Zoekt eerst specifiek, dan breed (Global)."""
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransportMap/15.0'}
+    headers = {'User-Agent': 'DahleTransportMap/16.0'}
     url = "https://nominatim.openstreetmap.org/search"
     
     # Razendsnelle slimme zoek-combinaties
     queries = [
+        f"{street}, {zip_code} {city}, Norway",
+        f"{street}, {city}, Norway",
+        f"{zip_code} {city}, Norway",
+        f"{city}, Norway",
         f"{street}, {city}",
         f"{city}"
     ]
@@ -354,7 +359,7 @@ def get_coordinates(street, zip_code, city):
     for q in queries:
         try:
             r = requests.get(url, params={'q': q, 'format': 'json', 'limit': 1}, headers=headers, timeout=2).json()
-            if r: return float(r[0]['lat']), float(r[0]['lon'])
+            if r and len(r) > 0: return float(r[0]['lat']), float(r[0]['lon'])
         except: continue
     return None
 
@@ -726,7 +731,9 @@ else:
                     
                 st.write("")
                 
-                # MAP LOGICA
+                # ========================================================
+                # MAP LOGICA MET GROENE/RODE PUNTEN
+                # ========================================================
                 p_addr_map = str(st.session_state.get('p_addr') or '').strip()
                 p_zip_map = str(st.session_state.get('p_zip') or '').strip()
                 p_city_map = str(st.session_state.get('p_city') or '').strip()
@@ -740,11 +747,20 @@ else:
                 
                 layers, points = [], []
                 
-                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup"})
-                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery"})
+                # KLEUR TOEGEVOEGD: Groen [46, 204, 113] voor A, Rood [231, 76, 60] voor B
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [46, 204, 113, 255]})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [231, 76, 60, 255]})
                 
                 if points:
-                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color=[137, 75, 157, 255], get_radius=200, radius_min_pixels=5, radius_max_pixels=12))
+                    layers.append(pdk.Layer(
+                        "ScatterplotLayer", 
+                        data=points, 
+                        get_position="pos", 
+                        get_fill_color="color", # Haalt kleur uit de data
+                        get_radius=300, 
+                        radius_min_pixels=6, 
+                        radius_max_pixels=14
+                    ))
 
                 if p_coords and d_coords:
                     _, route_geom = get_route_data(p_coords, d_coords) 
@@ -934,8 +950,7 @@ else:
                             st.session_state.is_submitted = True
                             st.rerun()
                         except Exception as e:
-                            # EXPLICITE FOUTMELDING M.B.T SUPABASE KOLOMMEN
-                            st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. (Zorg dat 'price', 'profit', 'pickup_address' etc. zijn toegevoegd in Supabase). Details: {e}")
+                            st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. (Zorg dat 'price', 'profit', 'pickup_address' etc. erin staan). Details: {e}")
             else:
                 st.success(t['s_succ']); st.info(t['s_sub'])
                 if st.button(t['b_new'], type="primary", use_container_width=True): reset_form_state(); st.rerun()
