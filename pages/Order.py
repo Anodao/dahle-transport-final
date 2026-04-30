@@ -579,7 +579,24 @@ if st.session_state.step == 1:
                     st.rerun()
 
 else:
-    st.markdown("""<style> div[data-testid="column"]:nth-of-type(3), div[data-testid="stColumn"]:nth-of-type(3) { position: -webkit-sticky !important; position: sticky !important; top: 110px !important; align-self: flex-start !important; z-index: 100; } .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } .step2-panel div[role="radiogroup"] { gap: 0.5rem; } </style>""", unsafe_allow_html=True)
+    st.markdown("""
+    <style> 
+    div[data-testid="column"]:nth-of-type(3), div[data-testid="stColumn"]:nth-of-type(3) { position: -webkit-sticky !important; position: sticky !important; top: 110px !important; align-self: flex-start !important; z-index: 100; } 
+    
+    /* FIX VOOR GELIJKE HOOGTE BLOKKEN */
+    .step2-panel [data-testid="stColumn"] > div { height: 100% !important; }
+    .step2-panel div[data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
+    
+    .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} 
+    .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} 
+    .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} 
+    .step2-panel div[data-testid="stCheckbox"] label p { display: block; font-size: 14px !important; } 
+    .step2-panel button[kind="tertiary"] { color: #888 !important; padding: 0px !important; min-height: 0px !important; margin-top: 15px !important; font-size: 16px !important; } 
+    .step2-panel button[kind="tertiary"]:hover { color: #ff4b4b !important; background-color: transparent !important; } 
+    .step2-panel div[role="radiogroup"] { gap: 0.5rem; } 
+    </style>
+    """, unsafe_allow_html=True)
+    
     st.markdown("<div id='error-top'></div>", unsafe_allow_html=True)
     if st.session_state.get('scroll_up', False):
         st.components.v1.html("""<script>const doc = window.parent.document; const el = doc.getElementById("error-top"); if(el) { el.scrollIntoView({behavior: "smooth"}); }</script>""", height=0)
