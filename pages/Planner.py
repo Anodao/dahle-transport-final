@@ -65,23 +65,6 @@ div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; 
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-if 'role' not in st.session_state: st.session_state.role = "guest"
-if 'user' not in st.session_state: st.session_state.user = None
-if 'company_name' not in st.session_state: st.session_state.company_name = ""
-if 'selected_order_id' not in st.session_state: st.session_state.selected_order_id = None
-
-# --- SLIMME LAADCYCLUS (Verhelpt lock-outs én het flikkeren) ---
-# Checkt alleen 2x naar cookies als de gebruiker nog onbekend is in deze sessie.
-if st.session_state.role not in ['admin', 'employee']:
-    if 'render_wait_plan' not in st.session_state:
-        st.session_state.render_wait_plan = 0
-
-    if st.session_state.render_wait_plan < 2:
-        st.session_state.render_wait_plan += 1
-        st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
-        time.sleep(0.3)
-        st.rerun()
-
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
 
@@ -90,6 +73,11 @@ def init_connection():
     return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
 
 supabase = init_connection()
+
+if 'role' not in st.session_state: st.session_state.role = "guest"
+if 'user' not in st.session_state: st.session_state.user = None
+if 'company_name' not in st.session_state: st.session_state.company_name = ""
+if 'selected_order_id' not in st.session_state: st.session_state.selected_order_id = None
 
 if st.session_state.get('user') is None and acc_token and ref_token:
     try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
@@ -106,8 +94,20 @@ if st.session_state.get('user'):
 
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
-# DE DIGITALE UITSMIJTER 
+# --- DE SLIMME UITSMIJTER (Verhelpt de flash) ---
 if not is_employee:
+    # We geven de cookies 2 kleine kansen (ongeveer 1 seconde) om in te laden, 
+    # zonder direct de rode Access Denied te laten zien.
+    if 'auth_denied_wait' not in st.session_state:
+        st.session_state.auth_denied_wait = 0
+    
+    if st.session_state.auth_denied_wait < 2:
+        st.session_state.auth_denied_wait += 1
+        st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying permissions...</h3></div>", unsafe_allow_html=True)
+        time.sleep(0.4)
+        st.rerun()
+
+    # Is hij na 2 pogingen nóg geen medewerker? Dán gooien we de deur dicht.
     html_navbar_empty = f"""<div class="navbar"><div class="nav-logo"><a href="/?lang=no"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>"""
     st.markdown(html_navbar_empty, unsafe_allow_html=True)
     st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
