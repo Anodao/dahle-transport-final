@@ -65,14 +65,21 @@ div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; 
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-if 'render_wait_plan' not in st.session_state:
-    st.session_state.render_wait_plan = 0
+if 'role' not in st.session_state: st.session_state.role = "guest"
+if 'user' not in st.session_state: st.session_state.user = None
+if 'company_name' not in st.session_state: st.session_state.company_name = ""
+if 'selected_order_id' not in st.session_state: st.session_state.selected_order_id = None
 
-if st.session_state.render_wait_plan < 2:
-    st.session_state.render_wait_plan += 1
-    st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
-    time.sleep(0.3)
-    st.rerun()
+# --- SLIMME AUTHENTICATIE (Voorkomt de "Access Denied" flits) ---
+# Als we al weten dat u admin bent in deze sessie, slaan we de wachttijd over!
+if st.session_state.role not in ['admin', 'employee']:
+    if 'planner_cookie_wait' not in st.session_state:
+        st.session_state.planner_cookie_wait = True
+        loading = st.empty()
+        loading.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying access...</h3></div>", unsafe_allow_html=True)
+        time.sleep(0.5)
+        loading.empty()
+        st.rerun()
 
 acc_token = cookie_manager.get('dahle_acc')
 ref_token = cookie_manager.get('dahle_ref')
@@ -83,21 +90,20 @@ def init_connection():
 
 supabase = init_connection()
 
-if 'user' not in st.session_state: st.session_state.user = None
-if 'role' not in st.session_state: st.session_state.role = "guest"
-if 'selected_order_id' not in st.session_state: st.session_state.selected_order_id = None
-
 if st.session_state.get('user') is None and acc_token and ref_token:
     try: st.session_state.user = supabase.auth.set_session(acc_token, ref_token).user
     except: pass
 
 if st.session_state.get('user'):
-    try:
-        prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
-        if prof_res.data:
-            st.session_state.company_name = prof_res.data[0].get("company_name", "")
-            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
-    except: st.session_state.role = "customer"
+    # DB CACHING: Alleen ophalen als we de rol nog niet weten. Dit stopt het onnodig knipperen!
+    if st.session_state.role in ['guest'] or not st.session_state.company_name:
+        try:
+            prof_res = supabase.table("profiles").select("company_name, roles").eq("id", st.session_state.user.id).execute()
+            if prof_res.data:
+                st.session_state.company_name = prof_res.data[0].get("company_name", "")
+                st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
+        except: 
+            pass
 
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
@@ -108,8 +114,10 @@ if not is_employee:
     st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns([1,1,1])
     with c2: 
-        if st.button("← Back to Home", use_container_width=True): st.switch_page("Home.py")
+        # Streamlit link terug naar home als men verdwaald is
+        st.markdown(f'<a href="/" target="_self" style="display: block; text-align: center; background-color: transparent; color: #894b9d; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: 600; border: 2px solid #894b9d;">← Back to Home</a>', unsafe_allow_html=True)
     st.stop()
+
 
 # =========================================================
 # 3. TAAL LOGICA MET COOKIES
