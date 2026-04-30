@@ -582,11 +582,6 @@ else:
     st.markdown("""
     <style> 
     div[data-testid="column"]:nth-of-type(3), div[data-testid="stColumn"]:nth-of-type(3) { position: -webkit-sticky !important; position: sticky !important; top: 110px !important; align-self: flex-start !important; z-index: 100; } 
-    
-    /* FIX VOOR GELIJKE HOOGTE BLOKKEN */
-    .step2-panel [data-testid="stColumn"] > div { height: 100% !important; }
-    .step2-panel div[data-testid="stVerticalBlockBorderWrapper"] { height: 100% !important; }
-    
     .step2-panel div[data-testid="stCheckbox"] { justify-content: flex-start; margin-bottom: 5px; position: static; height: auto;} 
     .step2-panel div[data-testid="stCheckbox"] label { display: flex; width: auto; height: auto;} 
     .step2-panel div[data-testid="stCheckbox"] label span[role="checkbox"] { position: static; transform: scale(1.0); margin-right: 10px; border-width: 1px;} 
@@ -624,56 +619,55 @@ else:
             st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
             if not st.session_state.selected_types: st.session_state.step = 1; st.rerun()
 
-            cols = st.columns(len(st.session_state.selected_types))
-            for i, sel in enumerate(st.session_state.selected_types[:]):
-                with cols[i]:
-                    with st.container(border=True):
-                        c_title, c_close = st.columns([8, 1])
-                        
-                        disp_title = t['b1_t'] if sel=="Parcels & Documents" else t['b2_t'] if sel=="Cargo & Freight" else t['b3_t']
-                        with c_title: st.markdown(f"#### {disp_title}")
-                        with c_close:
-                            if st.button("✖", key=f"btn_close_{sel}", type="tertiary"):
-                                st.session_state.selected_types.remove(sel)
-                                if sel == "Parcels & Documents": st.session_state.chk_parcels = False
-                                if sel == "Cargo & Freight": st.session_state.chk_freight = False
-                                if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
-                                st.session_state.validate_step2 = False; st.rerun() 
+            # BLOKKEN ONDER ELKAAR IN PLAATS VAN NAAST ELKAAR
+            for sel in st.session_state.selected_types[:]:
+                with st.container(border=True):
+                    c_title, c_close = st.columns([12, 1])
+                    
+                    disp_title = t['b1_t'] if sel=="Parcels & Documents" else t['b2_t'] if sel=="Cargo & Freight" else t['b3_t']
+                    with c_title: st.markdown(f"<h4 style='margin-top: 0px; margin-bottom: 10px;'>{disp_title}</h4>", unsafe_allow_html=True)
+                    with c_close:
+                        if st.button("✖", key=f"btn_close_{sel}", type="tertiary"):
+                            st.session_state.selected_types.remove(sel)
+                            if sel == "Parcels & Documents": st.session_state.chk_parcels = False
+                            if sel == "Cargo & Freight": st.session_state.chk_freight = False
+                            if sel == "Mail & Direct Marketing": st.session_state.chk_mail = False
+                            st.session_state.validate_step2 = False; st.rerun() 
 
-                        if sel == "Parcels & Documents":
-                            c_p1, c_p2 = st.columns([1.5, 1])
-                            with c_p1: st.markdown(f"<label>{wgt_lbl('pd_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("qty_pd", min_value=0, max_value=10000, key="pd_qty", label_visibility="collapsed")
-                            with c_p2: st.markdown(f"<label>{wgt_lbl('pd_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("wgt_pd", min_value=0.0, max_value=35.0, step=0.5, key="pd_weight", label_visibility="collapsed")
-                            st.checkbox(t['w_over'], key="pd_oversized")
+                    if sel == "Parcels & Documents":
+                        c_p1, c_p2 = st.columns(2)
+                        with c_p1: st.markdown(f"<label>{wgt_lbl('pd_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("qty_pd", min_value=0, max_value=10000, key="pd_qty", label_visibility="collapsed")
+                        with c_p2: st.markdown(f"<label>{wgt_lbl('pd_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("wgt_pd", min_value=0.0, max_value=35.0, step=0.5, key="pd_weight", label_visibility="collapsed")
+                        st.checkbox(t['w_over'], key="pd_oversized")
+                    
+                    elif sel == "Cargo & Freight":
+                        cf_lbl = t['l_type']
+                        if st.session_state.validate_step2 and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')): cf_lbl += t['l_err']
+                        st.markdown(f"<div style='font-size:14px; font-weight:600; color:#ccc; margin-bottom:10px;'>{cf_lbl}</div>", unsafe_allow_html=True)
                         
-                        elif sel == "Cargo & Freight":
-                            cf_lbl = t['l_type']
-                            if st.session_state.validate_step2 and not (st.session_state.get('cf_pal') or st.session_state.get('cf_full') or st.session_state.get('cf_lc')): cf_lbl += t['l_err']
-                            st.markdown(f"<div style='font-size:14px; font-weight:600; color:#ccc; margin-bottom:10px;'>{cf_lbl}</div>", unsafe_allow_html=True)
+                        st.checkbox(t['l_pal'], key="cf_pal")
+                        if st.session_state.get('cf_pal'):
+                            c_pf1, c_pf2 = st.columns(2)
+                            with c_pf1: st.markdown(f"<label>{wgt_lbl('cf_pal_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("pq", min_value=0, max_value=33, key="cf_pal_qty", label_visibility="collapsed")
+                            with c_pf2: st.markdown(f"<label>{wgt_lbl('cf_pal_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("pw", min_value=0.0, max_value=1200.0, step=10.0, key="cf_pal_weight", label_visibility="collapsed")
                             
-                            st.checkbox(t['l_pal'], key="cf_pal")
-                            if st.session_state.get('cf_pal'):
-                                c_pf1, c_pf2 = st.columns(2)
-                                with c_pf1: st.markdown(f"<label>{wgt_lbl('cf_pal_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("pq", min_value=0, max_value=33, key="cf_pal_qty", label_visibility="collapsed")
-                                with c_pf2: st.markdown(f"<label>{wgt_lbl('cf_pal_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("pw", min_value=0.0, max_value=1200.0, step=10.0, key="cf_pal_weight", label_visibility="collapsed")
-                                
-                            st.checkbox(t['l_full'], key="cf_full")
-                            if st.session_state.get('cf_full'):
-                                c_ff1, c_ff2 = st.columns(2)
-                                with c_ff1: st.markdown(f"<label>{wgt_lbl('cf_full_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("fq", min_value=0, max_value=10, key="cf_full_qty", label_visibility="collapsed")
-                                with c_ff2: st.markdown(f"<label>{wgt_lbl('cf_full_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("fw", min_value=0.0, max_value=25000.0, step=100.0, key="cf_full_weight", label_visibility="collapsed")
-                                
-                            st.checkbox(t['l_lc'], key="cf_lc")
-                            if st.session_state.get('cf_lc'):
-                                c_lf1, c_lf2 = st.columns(2)
-                                with c_lf1: st.markdown(f"<label>{wgt_lbl('cf_lc_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("lq", min_value=0, max_value=1000, key="cf_lc_qty", label_visibility="collapsed")
-                                with c_lf2: st.markdown(f"<label>{wgt_lbl('cf_lc_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("lw", min_value=0.0, max_value=25000.0, step=10.0, key="cf_lc_weight", label_visibility="collapsed")
+                        st.checkbox(t['l_full'], key="cf_full")
+                        if st.session_state.get('cf_full'):
+                            c_ff1, c_ff2 = st.columns(2)
+                            with c_ff1: st.markdown(f"<label>{wgt_lbl('cf_full_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("fq", min_value=0, max_value=10, key="cf_full_qty", label_visibility="collapsed")
+                            with c_ff2: st.markdown(f"<label>{wgt_lbl('cf_full_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("fw", min_value=0.0, max_value=25000.0, step=100.0, key="cf_full_weight", label_visibility="collapsed")
+                            
+                        st.checkbox(t['l_lc'], key="cf_lc")
+                        if st.session_state.get('cf_lc'):
+                            c_lf1, c_lf2 = st.columns(2)
+                            with c_lf1: st.markdown(f"<label>{wgt_lbl('cf_lc_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("lq", min_value=0, max_value=1000, key="cf_lc_qty", label_visibility="collapsed")
+                            with c_lf2: st.markdown(f"<label>{wgt_lbl('cf_lc_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("lw", min_value=0.0, max_value=25000.0, step=10.0, key="cf_lc_weight", label_visibility="collapsed")
+                    
+                    elif sel == "Mail & Direct Marketing":
+                        c_m1, c_m2 = st.columns(2)
+                        with c_m1: st.markdown(f"<label>{wgt_lbl('mdm_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("mq", min_value=0, max_value=100000, key="mdm_qty", label_visibility="collapsed")
+                        with c_m2: st.markdown(f"<label>{wgt_lbl('mdm_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("mw", min_value=0.0, max_value=2.0, step=0.1, key="mdm_weight", label_visibility="collapsed")
                         
-                        elif sel == "Mail & Direct Marketing":
-                            c_m1, c_m2 = st.columns(2)
-                            with c_m1: st.markdown(f"<label>{wgt_lbl('mdm_qty', t['lbl_qty'])}</label>", unsafe_allow_html=True); st.number_input("mq", min_value=0, max_value=100000, key="mdm_qty", label_visibility="collapsed")
-                            with c_m2: st.markdown(f"<label>{wgt_lbl('mdm_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("mw", min_value=0.0, max_value=2.0, step=0.1, key="mdm_weight", label_visibility="collapsed")
-                            
             st.markdown("</div>", unsafe_allow_html=True)
             st.write("")
             
