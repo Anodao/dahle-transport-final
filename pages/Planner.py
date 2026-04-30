@@ -96,18 +96,17 @@ is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # --- DE SLIMME UITSMIJTER (Verhelpt de flash) ---
 if not is_employee:
-    # We geven de cookies 2 kleine kansen (ongeveer 1 seconde) om in te laden, 
-    # zonder direct de rode Access Denied te laten zien.
+    # We geven de cookies nu MEER tijd (maximaal ~2.5 sec) om veilig binnen te komen.
     if 'auth_denied_wait' not in st.session_state:
         st.session_state.auth_denied_wait = 0
     
-    if st.session_state.auth_denied_wait < 2:
+    if st.session_state.auth_denied_wait < 3:  # 3 pogingen
         st.session_state.auth_denied_wait += 1
         st.markdown("<div style='text-align: center; margin-top: 150px; color: #888;'><h3>Verifying permissions...</h3></div>", unsafe_allow_html=True)
-        time.sleep(0.4)
+        time.sleep(0.6) # Iets langer wachten per poging
         st.rerun()
 
-    # Is hij na 2 pogingen nóg geen medewerker? Dán gooien we de deur dicht.
+    # Is hij na alle 3 pogingen nóg geen medewerker? Dán pas de rode melding tonen.
     html_navbar_empty = f"""<div class="navbar"><div class="nav-logo"><a href="/?lang=no"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div></div>"""
     st.markdown(html_navbar_empty, unsafe_allow_html=True)
     st.markdown(f"<div style='text-align: center; margin-top: 120px;'><h1 style='color:#ff4b4b;'>Access Denied</h1><p style='color:#aaa; font-size: 18px;'>You do not have permission to view the internal dashboard.</p></div>", unsafe_allow_html=True)
