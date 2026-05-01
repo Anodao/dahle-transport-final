@@ -345,17 +345,15 @@ st.markdown(html_navbar, unsafe_allow_html=True)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
-    """Vindt GPS coördinaten. Zoekt eerst specifiek, dan breed (Global)."""
+    """Vindt GPS coördinaten. Wereldwijde zoekopdracht (Zonder hardcoded Norway)."""
     if len(city) < 2: return None
-    headers = {'User-Agent': 'DahleTransportMap/17.0'}
+    headers = {'User-Agent': 'DahleTransportMap/18.0'}
     url = "https://nominatim.openstreetmap.org/search"
     
     queries = [
-        f"{street}, {zip_code} {city}, Norway",
-        f"{street}, {city}, Norway",
-        f"{zip_code} {city}, Norway",
-        f"{city}, Norway",
+        f"{street}, {zip_code} {city}",
         f"{street}, {city}",
+        f"{zip_code} {city}",
         f"{city}"
     ]
     
