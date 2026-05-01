@@ -163,7 +163,8 @@ translations = {
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
         "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
-        "w_reg": "Totalvekt", "qty_reg": "Registrert", "calc_note_pal": "Frakten er beregnet etter plass/antall, da dette gir høyeste fraktberegningsvekt.", "calc_note_we": "Frakten er beregnet etter totalvekt, da dette gir høyeste fraktberegningsvekt."
+        "w_reg": "Totalvekt", "qty_reg": "Registrert", "calc_note_pal": "Frakten er beregnet etter plass/antall, da dette gir høyeste fraktberegningsvekt.", "calc_note_we": "Frakten er beregnet etter totalvekt, da dette gir høyeste fraktberegningsvekt.",
+        "guest_msg": "Du bestiller for øyeblikket som gjest.", "guest_link": "Logg inn for å fylle ut automatisk."
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -190,7 +191,8 @@ translations = {
         "rev_r": "Route", "rev_s": "Shipment", "l_no": "NOTES", "b_edit": "← Edit Details", "b_send": "CONFIRM & SEND",
         "db_err": "⚠️ Error: Failed to send to database.", "s_succ": "Request sent successfully!", "s_sub": "We will get in touch shortly.", "b_new": "← Start a New Request",
         "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Toll", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
-        "w_reg": "Total weight", "qty_reg": "Registered", "calc_note_pal": "Freight is calculated by space/quantity (yields highest calculation weight).", "calc_note_we": "Freight is calculated by total weight (yields highest calculation weight)."
+        "w_reg": "Total weight", "qty_reg": "Registered", "calc_note_pal": "Freight is calculated by space/quantity (yields highest calculation weight).", "calc_note_we": "Freight is calculated by total weight (yields highest calculation weight).",
+        "guest_msg": "You are currently ordering as a guest.", "guest_link": "Log in to auto-fill your details."
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -217,7 +219,8 @@ translations = {
         "rev_r": "Rutt", "rev_s": "Försändelse", "l_no": "ANTECKNINGAR", "b_edit": "← Redigera detaljer", "b_send": "BEKRÄFTA & SKICKA",
         "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
         "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
-        "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats (ger högsta fraktberäkningsvikt).", "calc_note_we": "Frakten beräknas efter totalvikt (ger högsta fraktberäkningsvikt)."
+        "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats (ger högsta fraktberäkningsvikt).", "calc_note_we": "Frakten beräknas efter totalvikt (ger högsta fraktberäkningsvikt).",
+        "guest_msg": "Du beställer för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -244,7 +247,8 @@ translations = {
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
-        "w_reg": "Totalvægt", "qty_reg": "Registreret", "calc_note_pal": "Fragten er beregnet efter plads/antal (giver højeste fragtberegningsvægt).", "calc_note_we": "Fragten er beregnet efter totalvægt (giver højeste fragtberegningsvægt)."
+        "w_reg": "Totalvægt", "qty_reg": "Registreret", "calc_note_pal": "Fragten er beregnet efter plads/antal (giver højeste fragtberegningsvægt).", "calc_note_we": "Fragten er beregnet efter totalvægt (giver højeste fragtberegningsvægt).",
+        "guest_msg": "Du bestiller i øjeblikket som gæst.", "guest_link": "Log ind for at udfylde automatisk."
     }
 }
 t = translations[lang]
@@ -619,7 +623,6 @@ else:
             st.markdown("<div class='step2-panel'>", unsafe_allow_html=True)
             if not st.session_state.selected_types: st.session_state.step = 1; st.rerun()
 
-            # BLOKKEN ONDER ELKAAR IN PLAATS VAN NAAST ELKAAR
             for sel in st.session_state.selected_types[:]:
                 with st.container(border=True):
                     c_title, c_close = st.columns([12, 1])
@@ -681,6 +684,17 @@ else:
             with st.container(border=True):
                 st.markdown(f"<h3 style='margin-top: 0px;'>{t['c_det']}</h3>", unsafe_allow_html=True)
                 st.write("---")
+                
+                # --- GAST CHECK ---
+                if current_user_id == "guest":
+                    st.markdown(f"""
+                    <div style="background-color: #1a1a2e; border-left: 4px solid #b070c6; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="color: #ccc; font-size: 13px;">👤 {t['guest_msg']}</span>
+                        <a href="/Login?lang={lang}" target="_self" style="color: #b070c6; font-size: 13px; font-weight: 600; text-decoration: none;">{t['guest_link']} →</a>
+                    </div>
+                    """, unsafe_allow_html=True)
+                # -----------------
+                
                 c_form_left, c_form_right = st.columns(2, gap="large")
                 
                 with c_form_left:
@@ -779,7 +793,6 @@ else:
 
                 # 2. TEKEN DE CIRKELS ALS TWEEDE (Bovenste laag)
                 points = []
-                # Donkerpaarse kleur (rgb: 55, 30, 65) voor het 'holle' effect
                 if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
                 if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
                 
