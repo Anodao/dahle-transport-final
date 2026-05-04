@@ -249,21 +249,18 @@ with col_details:
         selected_order = next((o for o in all_orders if o['id'] == st.session_state.selected_order_id), None)
         
         if selected_order:
-            # --- JOUW MOOIE FINANCIËLE BLOCK MET FERRY HACK ---
+            # --- FINANCIËLE BLOCK MET FERRY HACK ---
             p_city = selected_order.get('pickup_city', 'Unknown')
             d_city = selected_order.get('delivery_city', 'Unknown')
             
-            # 1. Bepaal afstand (inclusief ferry fix)
             dist_km = get_route_distance(p_city, d_city)
             
-            # 2. Haal Profit & Price uit database
             price = selected_order.get('price') or 0
             profit = selected_order.get('profit') or 0
             cost = price - profit
             
-            # 3. Bereken logische waarden voor UI
             margin = round((profit / price * 100), 1) if price > 0 else 0.0
-            fuel_cost = int(dist_km * 6.5) if dist_km > 0 else int(cost * 0.4) # Gemiddelde vrachtwagen kost 6.5 NOK per km
+            fuel_cost = int(dist_km * 6.5) if dist_km > 0 else int(cost * 0.4) 
             
             stat_color = "#4CAF50" if selected_order.get('status') == "New" else "#b070c6"
             date_str = selected_order.get('received_date', '')[:10]
@@ -288,7 +285,13 @@ with col_details:
             c_info1, c_info2 = st.columns(2)
             with c_info1:
                 st.markdown(f"#### 🏢 {selected_order.get('company', '-')}")
-                st.write(f"**Contact:** {selected_order.get('contact_name', '-')} ({selected_order.get('phone', '-')})")
+                # Registration No. toegevoegd, toon '-' als het leeg is.
+                reg_no = selected_order.get('reg_no') or '-'
+                st.write(f"**Registration No.:** {reg_no}")
+                
+                # Contact netjes gesplitst
+                st.write(f"**Contact:** {selected_order.get('contact_name', '-')}")
+                st.write(f"**Phone:** {selected_order.get('phone', '-')}")
                 st.write(f"**Email:** {selected_order.get('email', '-')}")
                 
                 st.write("")
@@ -307,20 +310,25 @@ with col_details:
 
             st.write("---")
             
-            # --- STATUS & TRACKING UPDATE MODULE ---
-            st.markdown(f"#### {t['status_lbl']} & Tracking")
+            # --- STATUS & TRACKING UPDATE MODULE MET LABELS BOVENAAN ---
+            st.markdown(f"<h4 style='margin-bottom: 15px;'>{t['status_lbl']} & Tracking</h4>", unsafe_allow_html=True)
             current_status = selected_order.get('status', 'New')
             current_tracking = selected_order.get('tracking_code') or ""
             status_options = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
             
             idx = status_options.index(current_status) if current_status in status_options else 0
             
+            # 3 Kolommen: Dropdown, Text Input, Save Button
             c_stat1, c_stat2, c_stat3 = st.columns([2, 2, 1.5])
             with c_stat1:
-                new_status = st.selectbox("Select new status:", status_options, index=idx, label_visibility="collapsed")
+                # Label zichtbaar gemaakt
+                new_status = st.selectbox("Select New Status:", status_options, index=idx)
             with c_stat2:
-                new_tracking = st.text_input("Tracking Code", value=current_tracking, placeholder="E.g. DT-849201", label_visibility="collapsed")
+                # Label zichtbaar gemaakt
+                new_tracking = st.text_input("Tracking / Reference No:", value=current_tracking, placeholder="E.g. DT-849201")
             with c_stat3:
+                # Knop iets naar beneden gedrukt zodat hij uitlijnt met de invoervelden
+                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
                 if st.button(t['btn_save'], type="primary", use_container_width=True):
                     try:
                         update_data = {
