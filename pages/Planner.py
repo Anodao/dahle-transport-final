@@ -285,19 +285,33 @@ with col_details:
             c_info1, c_info2 = st.columns(2)
             with c_info1:
                 st.markdown(f"#### 🏢 {selected_order.get('company', '-')}")
-                # Registration No. toegevoegd, toon '-' als het leeg is.
                 reg_no = selected_order.get('reg_no') or '-'
                 st.write(f"**Registration No.:** {reg_no}")
                 
-                # Contact netjes gesplitst
                 st.write(f"**Contact:** {selected_order.get('contact_name', '-')}")
                 st.write(f"**Phone:** {selected_order.get('phone', '-')}")
                 st.write(f"**Email:** {selected_order.get('email', '-')}")
                 
                 st.write("")
                 st.markdown("#### 🛣️ Adressen")
-                st.write(f"**From:** {selected_order.get('pickup_address', '-')} ({selected_order.get('pickup_zip', '-')})")
-                st.write(f"**To:** {selected_order.get('delivery_address', '-')} ({selected_order.get('delivery_zip', '-')})")
+                
+                # Haal de gegevens op en formatteer ze netjes, met toevoeging van stad en standaard 'Norway'
+                p_addr = selected_order.get('pickup_address', '-').strip()
+                p_zip = selected_order.get('pickup_zip', '-').strip()
+                p_city_display = selected_order.get('pickup_city', '-').strip()
+                p_country = "Norway" # Standaard land aanname
+                
+                d_addr = selected_order.get('delivery_address', '-').strip()
+                d_zip = selected_order.get('delivery_zip', '-').strip()
+                d_city_display = selected_order.get('delivery_city', '-').strip()
+                d_country = "Norway" # Standaard land aanname
+                
+                # Formatteer de strings
+                from_str = f"{p_addr}, {p_zip} {p_city_display}, {p_country}" if p_addr != '-' else "-"
+                to_str = f"{d_addr}, {d_zip} {d_city_display}, {d_country}" if d_addr != '-' else "-"
+                
+                st.write(f"**From:** {from_str}")
+                st.write(f"**To:** {to_str}")
 
             with c_info2:
                 st.markdown("#### 📦 Freight Details")
