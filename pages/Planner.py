@@ -3,6 +3,7 @@ from supabase import create_client
 import extra_streamlit_components as stx
 import time
 import requests
+import pydeck as pdk  # <-- Toegevoegd voor de interactieve kaart!
 
 st.set_page_config(page_title="Dahle Transport - Planner", layout="wide", initial_sidebar_state="collapsed")
 
@@ -67,19 +68,60 @@ div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; 
 """, unsafe_allow_html=True)
 
 # =========================================================
-# DISTANCE & FERRY HACK LOGIC
+# MAP, DISTANCE & FERRY HACK LOGIC
 # =========================================================
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_coordinates(street, zip_code, city):
+    """Vindt GPS coördinaten. Wereldwijde zoekopdracht."""
+    if len(city) < 2: return None
+    headers = {'User-Agent': 'DahleApp/2.0'}
+    url = "https://nominatim.openstreetmap.org/search"
+    queries = [
+        f"{street}, {zip_code} {city}",
+        f"{street}, {city}",
+        f"{zip_code} {city}",
+        f"{city}"
+    ]
+    for q in queries:
+        try:
+            r = requests.get(url, params={'q': q, 'format': 'json', 'limit': 1}, headers=headers, timeout=2).json()
+            if r and len(r) > 0: return float(r[0]['lat']), float(r[0]['lon'])
+        except: continue
+    return None
+
+@st.cache_data(ttl=3600, show_spinner=False)
+def get_route_data(coord1, coord2):
+    """Haalt de blauwe routelijn op."""
+    if not coord1 or not coord2: return None, None
+    url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
+    try:
+        resp = requests.get(url, timeout=3).json()
+        if resp.get("code") == "Ok":
+            return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
+    except: pass
+    return None, None
+
+def calculate_zoom(coord1, coord2):
+    if not coord1 or not coord2: return 4.0
+    lat_diff = abs(coord1[0] - coord2[0])
+    lon_diff = abs(coord1[1] - coord2[1])
+    max_diff = max(lat_diff, lon_diff)
+    if max_diff < 0.02: return 13.5
+    if max_diff < 0.1:  return 11.0
+    if max_diff < 0.5:  return 9.0
+    if max_diff < 2.0:  return 7.5
+    if max_diff < 5.0:  return 6.0
+    return 4.5 
+
 @st.cache_data(show_spinner=False)
 def get_route_distance(city1, city2):
     if not city1 or not city2: return 0
     c1, c2 = str(city1).lower(), str(city2).lower()
     
-    # --- DEMO FERRY HACKS ---
     fosen = ['rissa', 'stadsbygd', 'bjugn', 'brekstad', 'åfjord']
     if ("trondheim" in c1 and any(f in c2 for f in fosen)) or ("trondheim" in c2 and any(f in c1 for f in fosen)): return 45
     if ("'s-gravenzande" in c1 and "heerhugowaard" in c2) or ("heerhugowaard" in c1 and "'s-gravenzande" in c2): return 102
         
-    # --- OSRM API CALL (Wereldwijd, geen 'Norway' lock meer!) ---
     headers = {'User-Agent': 'DahleApp/2.0'}
     url = "https://nominatim.openstreetmap.org/search"
     try:
@@ -170,7 +212,7 @@ translations = {
     "no": { "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "stat_title": "📊 Statistikk og KPI-er", "filter_lbl": "Filterperiode:", "opt_30": "Siste 30 dager", "opt_7": "Siste 7 dager", "opt_1": "I dag", "act_req": "Handling kreves", "act_routes": "Aktive ruter", "comp": "Fullført", "canc": "Avbrutt", "tot_ord": "Totale ordrer", "inbox": "Innboks", "pend": "Venter", "prog": "Pågår", "done": "Ferdig", "det_title": "Ordredetaljer", "det_sub": "👈 Velg en ordre fra innboksen for å se detaljer og oppdatere status.", "btn_view": "Vis Ordre", "status_lbl": "Oppdater Status", "btn_save": "Lagre Status", "msg_succ": "Status oppdatert!" },
     "en": { "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "stat_title": "📊 Statistics & KPIs", "filter_lbl": "Filter period:", "opt_30": "Last 30 days", "opt_7": "Last 7 days", "opt_1": "Today", "act_req": "Action Required", "act_routes": "Active Routes", "comp": "Completed", "canc": "Cancelled", "tot_ord": "Total Orders", "inbox": "Inbox", "pend": "Pending", "prog": "In Progress", "done": "Done", "det_title": "Order Details", "det_sub": "👈 Select an order from the Inbox to view details and update status.", "btn_view": "View Order", "status_lbl": "Update Status", "btn_save": "Save Status", "msg_succ": "Status updated successfully!" }
 }
-# Fallback for SV/DA to EN for brevity in this example
+# Fallback for SV/DA to EN for brevity
 t = translations.get(lang, translations["en"])
 
 knop_tekst = f"<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>{st.session_state.company_name}"
@@ -249,6 +291,17 @@ with col_details:
         selected_order = next((o for o in all_orders if o['id'] == st.session_state.selected_order_id), None)
         
         if selected_order:
+            # --- ADRES VARIABELEN (Verplaatst naar boven zodat de kaart ze ook kan gebruiken) ---
+            p_addr = selected_order.get('pickup_address', '-').strip()
+            p_zip = selected_order.get('pickup_zip', '-').strip()
+            p_city_display = selected_order.get('pickup_city', '-').strip()
+            p_country = "Norway"
+            
+            d_addr = selected_order.get('delivery_address', '-').strip()
+            d_zip = selected_order.get('delivery_zip', '-').strip()
+            d_city_display = selected_order.get('delivery_city', '-').strip()
+            d_country = "Norway"
+            
             # --- FINANCIËLE BLOCK MET FERRY HACK ---
             p_city = selected_order.get('pickup_city', 'Unknown')
             d_city = selected_order.get('delivery_city', 'Unknown')
@@ -295,17 +348,6 @@ with col_details:
                 st.write("")
                 st.markdown("#### 🛣️ Adressen")
                 
-                # --- OPGESPLITSTE WEERGAVE ---
-                p_addr = selected_order.get('pickup_address', '-').strip()
-                p_zip = selected_order.get('pickup_zip', '-').strip()
-                p_city_display = selected_order.get('pickup_city', '-').strip()
-                p_country = "Norway"
-                
-                d_addr = selected_order.get('delivery_address', '-').strip()
-                d_zip = selected_order.get('delivery_zip', '-').strip()
-                d_city_display = selected_order.get('delivery_city', '-').strip()
-                d_country = "Norway"
-                
                 c_addr_left, c_addr_right = st.columns(2)
                 
                 with c_addr_left:
@@ -333,6 +375,70 @@ with col_details:
                 if info_notes:
                     st.markdown(f"<div style='background-color:#262626; padding:10px; border-radius:6px; font-size:13px; color:#ddd;'>{info_notes}</div>", unsafe_allow_html=True)
 
+                # --- DE INTERACTIEVE KAART VOOR DE PLANNER ---
+                st.write("")
+                st.markdown("#### 🗺️ Route Map")
+                
+                # Haal GPS coordinaten op met de functies bovenaan
+                p_coords = get_coordinates(p_addr, p_zip, p_city_display)
+                d_coords = get_coordinates(d_addr, d_zip, d_city_display)
+                
+                layers = []
+                if p_coords and d_coords:
+                    _, route_geom = get_route_data(p_coords, d_coords) 
+                    if route_geom:
+                        layers.append(pdk.Layer(
+                            "PathLayer", 
+                            data=[{"path": route_geom}], 
+                            get_path="path", 
+                            get_color=[137, 75, 157, 255], 
+                            width_scale=20, 
+                            width_min_pixels=4, 
+                            get_width=5
+                        ))
+                    else:
+                        route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
+                        layers.append(pdk.Layer(
+                            "PathLayer", 
+                            data=[{"path": route_geom}], 
+                            get_path="path", 
+                            get_color=[137, 75, 157, 255], 
+                            width_scale=20, 
+                            width_min_pixels=4, 
+                            get_width=5
+                        ))
+                    center_lat = (p_coords[0] + d_coords[0]) / 2
+                    center_lon = (p_coords[1] + d_coords[1]) / 2
+                    zoom = calculate_zoom(p_coords, d_coords)
+                    pitch = 20
+                elif p_coords:
+                    center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
+                elif d_coords:
+                    center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
+                else:
+                    center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
+
+                points = []
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
+                
+                if points:
+                    layers.append(pdk.Layer(
+                        "ScatterplotLayer", 
+                        data=points, 
+                        get_position="pos", 
+                        get_fill_color="color",              # Donkerpaarse kern
+                        get_line_color=[255, 255, 255, 255], # Witte buitenrand
+                        stroked=True,
+                        filled=True,
+                        line_width_min_pixels=3,
+                        get_radius=200, 
+                        radius_min_pixels=6, 
+                        radius_max_pixels=14
+                    ))
+
+                st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+
             st.write("---")
             
             # --- STATUS & TRACKING UPDATE MODULE MET LABELS BOVENAAN ---
@@ -346,13 +452,10 @@ with col_details:
             # 3 Kolommen: Dropdown, Text Input, Save Button
             c_stat1, c_stat2, c_stat3 = st.columns([2, 2, 1.5])
             with c_stat1:
-                # Label zichtbaar gemaakt
                 new_status = st.selectbox("Select New Status:", status_options, index=idx)
             with c_stat2:
-                # Label zichtbaar gemaakt
                 new_tracking = st.text_input("Tracking / Reference No:", value=current_tracking, placeholder="E.g. DT-849201")
             with c_stat3:
-                # Knop iets naar beneden gedrukt zodat hij uitlijnt met de invoervelden
                 st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
                 if st.button(t['btn_save'], type="primary", use_container_width=True):
                     try:
