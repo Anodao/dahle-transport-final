@@ -291,7 +291,7 @@ with col_details:
         selected_order = next((o for o in all_orders if o['id'] == st.session_state.selected_order_id), None)
         
         if selected_order:
-            # --- ADRES VARIABELEN (Verplaatst naar boven) ---
+            # --- ADRES VARIABELEN ---
             p_addr = selected_order.get('pickup_address', '-').strip()
             p_zip = selected_order.get('pickup_zip', '-').strip()
             p_city_display = selected_order.get('pickup_city', '-').strip()
@@ -436,11 +436,16 @@ with col_details:
                             radius_max_pixels=14
                         ))
 
-                    st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+                    # DE HOOGTE IS HIER OP 330 GEZET VOOR EEN PERFECTE UITLIJNING
+                    st.pydeck_chart(pdk.Deck(
+                        map_style="dark", 
+                        layers=layers, 
+                        initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)
+                    ), height=330)
 
             st.write("---")
             
-            # --- STATUS & TRACKING UPDATE MODULE MET LABELS BOVENAAN ---
+            # --- STATUS & TRACKING UPDATE MODULE ---
             st.markdown(f"<h4 style='margin-bottom: 15px;'>{t['status_lbl']} & Tracking</h4>", unsafe_allow_html=True)
             current_status = selected_order.get('status', 'New')
             current_tracking = selected_order.get('tracking_code') or ""
