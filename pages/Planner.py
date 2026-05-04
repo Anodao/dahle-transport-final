@@ -51,7 +51,10 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 div[data-baseweb="select"] > div, div[data-baseweb="base-input"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 6px !important; }
 .stSelectbox div[data-baseweb="select"] span, .stSelectbox div[data-baseweb="select"] div, .stDateInput input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 label[data-testid="stWidgetLabel"] p { color: #ffffff !important; font-weight: 600; font-size: 14px; }
-div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !important; border: 1px solid #333333 !important; border-radius: 10px !important; padding: 15px !important; }
+
+/* FIX: Hoogte containers aanpassen zodat tekst niet meer afbreekt */
+div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !important; border: 1px solid #333333 !important; border-radius: 10px !important; padding: 15px !important; height: auto !important; min-height: 100%; display: flex; flex-direction: column; justify-content: flex-start;}
+
 div[data-testid="stMetric"] { background-color: #161616 !important; border: 1px solid #333 !important; padding: 15px !important; border-radius: 8px !important; }
 div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 !important; }
 /* KNOPPEN STYLING */
@@ -102,16 +105,18 @@ def get_route_data(coord1, coord2):
     return None, None
 
 def calculate_zoom(coord1, coord2):
+    """Berekent het ideale zoomniveau, geoptimaliseerd voor Europa."""
     if not coord1 or not coord2: return 4.0
     lat_diff = abs(coord1[0] - coord2[0])
     lon_diff = abs(coord1[1] - coord2[1])
     max_diff = max(lat_diff, lon_diff)
-    if max_diff < 0.02: return 13.5
-    if max_diff < 0.1:  return 11.0
-    if max_diff < 0.5:  return 9.0
-    if max_diff < 2.0:  return 7.5
-    if max_diff < 5.0:  return 6.0
-    return 4.5 
+    
+    if max_diff < 0.05: return 12.0 # Heel dichtbij (binnen dezelfde stad)
+    if max_diff < 0.2:  return 10.0 # Zelfde regio
+    if max_diff < 1.0:  return 7.5  # Zelfde provincie/deel van land
+    if max_diff < 5.0:  return 5.5  # Landelijk (bijv. Oslo naar Trondheim)
+    if max_diff < 15.0: return 4.0  # Internationaal Europa (bijv. Noorwegen naar NL)
+    return 3.0 # Wereldwijd
 
 @st.cache_data(show_spinner=False)
 def get_route_distance(city1, city2):
@@ -436,7 +441,6 @@ with col_details:
                             radius_max_pixels=14
                         ))
 
-                    # DE HOOGTE IS HIER OP 330 GEZET VOOR EEN PERFECTE UITLIJNING
                     st.pydeck_chart(pdk.Deck(
                         map_style="dark", 
                         layers=layers, 
