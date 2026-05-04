@@ -3,7 +3,7 @@ from supabase import create_client
 import extra_streamlit_components as stx
 import time
 import requests
-import pydeck as pdk  # <-- Toegevoegd voor de interactieve kaart!
+import pydeck as pdk
 
 st.set_page_config(page_title="Dahle Transport - Planner", layout="wide", initial_sidebar_state="collapsed")
 
@@ -60,7 +60,7 @@ div.stButton > button[kind="primary"]:hover { background: #ffffff !important; co
 div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 1px solid #894b9d !important; border-radius: 6px !important; padding: 8px 16px !important; font-weight: 600 !important; font-size: 13px !important; width: 100% !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; }
 
-.finance-card { background-color: #1a1a2e; padding: 16px; border-radius: 8px; border-left: 4px solid #b070c6; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.finance-card { background-color: #1a1a2e; padding: 16px; border-radius: 10px; border-left: 4px solid #b070c6; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 .finance-title { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 .finance-row { display: flex; align-items: center; font-size: 15px; color: #ddd; margin-bottom: 8px; }
 .finance-val { font-weight: bold; color: #fff; margin-left: 5px; }
@@ -291,7 +291,7 @@ with col_details:
         selected_order = next((o for o in all_orders if o['id'] == st.session_state.selected_order_id), None)
         
         if selected_order:
-            # --- ADRES VARIABELEN (Verplaatst naar boven zodat de kaart ze ook kan gebruiken) ---
+            # --- ADRES VARIABELEN (Verplaatst naar boven) ---
             p_addr = selected_order.get('pickup_address', '-').strip()
             p_zip = selected_order.get('pickup_zip', '-').strip()
             p_city_display = selected_order.get('pickup_city', '-').strip()
@@ -335,109 +335,108 @@ with col_details:
             """, unsafe_allow_html=True)
             # ----------------------------------------------------
 
-            c_info1, c_info2 = st.columns(2)
+            c_info1, c_info2 = st.columns(2, gap="medium")
+            
             with c_info1:
-                st.markdown(f"#### 🏢 {selected_order.get('company', '-')}")
-                reg_no = selected_order.get('reg_no') or '-'
-                st.write(f"**Registration No.:** {reg_no}")
+                with st.container(border=True):
+                    st.markdown(f"<h4 style='margin-top:0px;'>🏢 {selected_order.get('company', '-')}</h4>", unsafe_allow_html=True)
+                    reg_no = selected_order.get('reg_no') or '-'
+                    st.write(f"**Registration No.:** {reg_no}")
+                    st.write(f"**Contact:** {selected_order.get('contact_name', '-')}")
+                    st.write(f"**Phone:** {selected_order.get('phone', '-')}")
+                    st.write(f"**Email:** {selected_order.get('email', '-')}")
                 
-                st.write(f"**Contact:** {selected_order.get('contact_name', '-')}")
-                st.write(f"**Phone:** {selected_order.get('phone', '-')}")
-                st.write(f"**Email:** {selected_order.get('email', '-')}")
-                
-                st.write("")
-                st.markdown("#### 🛣️ Adressen")
-                
-                c_addr_left, c_addr_right = st.columns(2)
-                
-                with c_addr_left:
-                    st.markdown(f"<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 5px;'>FROM</div>", unsafe_allow_html=True)
-                    st.markdown(f"<span style='color:#888; font-size:12px;'>Street:</span><br><b>{p_addr}</b>", unsafe_allow_html=True)
-                    st.write("")
-                    st.markdown(f"<span style='color:#888; font-size:12px;'>Zip Code & City:</span><br><b>{p_zip} {p_city_display}</b>", unsafe_allow_html=True)
-                    st.write("")
-                    st.markdown(f"<span style='color:#888; font-size:12px;'>Country:</span><br><b>{p_country}</b>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("<h4 style='margin-top:0px;'>🛣️ Adressen</h4>", unsafe_allow_html=True)
+                    c_addr_left, c_addr_right = st.columns(2)
+                    
+                    with c_addr_left:
+                        st.markdown(f"<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 5px;'>FROM</div>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color:#888; font-size:12px;'>Street:</span><br><b>{p_addr}</b>", unsafe_allow_html=True)
+                        st.write("")
+                        st.markdown(f"<span style='color:#888; font-size:12px;'>Zip Code & City:</span><br><b>{p_zip} {p_city_display}</b>", unsafe_allow_html=True)
+                        st.write("")
+                        st.markdown(f"<span style='color:#888; font-size:12px;'>Country:</span><br><b>{p_country}</b>", unsafe_allow_html=True)
 
-                with c_addr_right:
-                    st.markdown(f"<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 5px;'>TO</div>", unsafe_allow_html=True)
-                    st.markdown(f"<span style='color:#888; font-size:12px;'>Street:</span><br><b>{d_addr}</b>", unsafe_allow_html=True)
-                    st.write("")
-                    st.markdown(f"<span style='color:#888; font-size:12px;'>Zip Code & City:</span><br><b>{d_zip} {d_city_display}</b>", unsafe_allow_html=True)
-                    st.write("")
-                    st.markdown(f"<span style='color:#888; font-size:12px;'>Country:</span><br><b>{d_country}</b>", unsafe_allow_html=True)
+                    with c_addr_right:
+                        st.markdown(f"<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 5px;'>TO</div>", unsafe_allow_html=True)
+                        st.markdown(f"<span style='color:#888; font-size:12px;'>Street:</span><br><b>{d_addr}</b>", unsafe_allow_html=True)
+                        st.write("")
+                        st.markdown(f"<span style='color:#888; font-size:12px;'>Zip Code & City:</span><br><b>{d_zip} {d_city_display}</b>", unsafe_allow_html=True)
+                        st.write("")
+                        st.markdown(f"<span style='color:#888; font-size:12px;'>Country:</span><br><b>{d_country}</b>", unsafe_allow_html=True)
 
             with c_info2:
-                st.markdown("#### 📦 Freight Details")
-                types_str = selected_order.get('types', '')
-                if types_str:
-                    st.write(f"**Types:** {types_str}")
-                info_notes = selected_order.get('info', '')
-                if info_notes:
-                    st.markdown(f"<div style='background-color:#262626; padding:10px; border-radius:6px; font-size:13px; color:#ddd;'>{info_notes}</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("<h4 style='margin-top:0px;'>📦 Freight Details</h4>", unsafe_allow_html=True)
+                    types_str = selected_order.get('types', '')
+                    if types_str:
+                        st.write(f"**Types:** {types_str}")
+                    info_notes = selected_order.get('info', '')
+                    if info_notes:
+                        st.markdown(f"<div style='background-color:#262626; padding:10px; border-radius:6px; font-size:13px; color:#ddd;'>{info_notes}</div>", unsafe_allow_html=True)
 
-                # --- DE INTERACTIEVE KAART VOOR DE PLANNER ---
-                st.write("")
-                st.markdown("#### 🗺️ Route Map")
-                
-                # Haal GPS coordinaten op met de functies bovenaan
-                p_coords = get_coordinates(p_addr, p_zip, p_city_display)
-                d_coords = get_coordinates(d_addr, d_zip, d_city_display)
-                
-                layers = []
-                if p_coords and d_coords:
-                    _, route_geom = get_route_data(p_coords, d_coords) 
-                    if route_geom:
-                        layers.append(pdk.Layer(
-                            "PathLayer", 
-                            data=[{"path": route_geom}], 
-                            get_path="path", 
-                            get_color=[137, 75, 157, 255], 
-                            width_scale=20, 
-                            width_min_pixels=4, 
-                            get_width=5
-                        ))
+                with st.container(border=True):
+                    st.markdown("<h4 style='margin-top:0px;'>🗺️ Route Map</h4>", unsafe_allow_html=True)
+                    
+                    p_coords = get_coordinates(p_addr, p_zip, p_city_display)
+                    d_coords = get_coordinates(d_addr, d_zip, d_city_display)
+                    
+                    layers = []
+                    if p_coords and d_coords:
+                        _, route_geom = get_route_data(p_coords, d_coords) 
+                        if route_geom:
+                            layers.append(pdk.Layer(
+                                "PathLayer", 
+                                data=[{"path": route_geom}], 
+                                get_path="path", 
+                                get_color=[137, 75, 157, 255], 
+                                width_scale=20, 
+                                width_min_pixels=4, 
+                                get_width=5
+                            ))
+                        else:
+                            route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
+                            layers.append(pdk.Layer(
+                                "PathLayer", 
+                                data=[{"path": route_geom}], 
+                                get_path="path", 
+                                get_color=[137, 75, 157, 255], 
+                                width_scale=20, 
+                                width_min_pixels=4, 
+                                get_width=5
+                            ))
+                        center_lat = (p_coords[0] + d_coords[0]) / 2
+                        center_lon = (p_coords[1] + d_coords[1]) / 2
+                        zoom = calculate_zoom(p_coords, d_coords)
+                        pitch = 20
+                    elif p_coords:
+                        center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
+                    elif d_coords:
+                        center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
                     else:
-                        route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
+                        center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
+
+                    points = []
+                    if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
+                    if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
+                    
+                    if points:
                         layers.append(pdk.Layer(
-                            "PathLayer", 
-                            data=[{"path": route_geom}], 
-                            get_path="path", 
-                            get_color=[137, 75, 157, 255], 
-                            width_scale=20, 
-                            width_min_pixels=4, 
-                            get_width=5
+                            "ScatterplotLayer", 
+                            data=points, 
+                            get_position="pos", 
+                            get_fill_color="color",
+                            get_line_color=[255, 255, 255, 255],
+                            stroked=True,
+                            filled=True,
+                            line_width_min_pixels=3,
+                            get_radius=200, 
+                            radius_min_pixels=6, 
+                            radius_max_pixels=14
                         ))
-                    center_lat = (p_coords[0] + d_coords[0]) / 2
-                    center_lon = (p_coords[1] + d_coords[1]) / 2
-                    zoom = calculate_zoom(p_coords, d_coords)
-                    pitch = 20
-                elif p_coords:
-                    center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
-                elif d_coords:
-                    center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
-                else:
-                    center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
 
-                points = []
-                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
-                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
-                
-                if points:
-                    layers.append(pdk.Layer(
-                        "ScatterplotLayer", 
-                        data=points, 
-                        get_position="pos", 
-                        get_fill_color="color",              # Donkerpaarse kern
-                        get_line_color=[255, 255, 255, 255], # Witte buitenrand
-                        stroked=True,
-                        filled=True,
-                        line_width_min_pixels=3,
-                        get_radius=200, 
-                        radius_min_pixels=6, 
-                        radius_max_pixels=14
-                    ))
-
-                st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+                    st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
 
             st.write("---")
             
@@ -449,7 +448,6 @@ with col_details:
             
             idx = status_options.index(current_status) if current_status in status_options else 0
             
-            # 3 Kolommen: Dropdown, Text Input, Save Button
             c_stat1, c_stat2, c_stat3 = st.columns([2, 2, 1.5])
             with c_stat1:
                 new_status = st.selectbox("Select New Status:", status_options, index=idx)
