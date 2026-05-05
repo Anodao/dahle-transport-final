@@ -147,6 +147,26 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 .st-container-header { margin-top: 0px; margin-bottom: 5px; font-weight: 600; color: white;}
 .st-hr-tight { margin-top: 0px; margin-bottom: 15px; border: 0; border-top: 1px solid #444; }
 
+/* HOVER TOOLTIP VOOR INFO ICON */
+span[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  background-color: #111;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  font-size: 12px;
+  font-weight: normal;
+  white-space: nowrap;
+  transform: translateY(-35px) translateX(-50%);
+  z-index: 999;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+/* RADIO BUTTONS (FACTURERING) */
+div[role="radiogroup"] { gap: 15px; }
+div[data-testid="stRadio"] label span { color: #ccc !important; font-weight: 500 !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -189,13 +209,13 @@ default_keys = {
     'cf_full': False, 'cf_full_qty': 0, 'cf_full_weight': 0.0,
     'cf_lc': False, 'cf_lc_qty': 0, 'cf_lc_weight': 0.0,
     'mdm_weight': 0.0, 'mdm_qty': 0,
-    'req_sameday': False, 'req_ferry': False, 'same_billing': True
+    'req_sameday': False, 'req_ferry': False, 'payer_type': 'Sender'
 }
 for k, v in default_keys.items():
     if k not in st.session_state: st.session_state[k] = v
 
 # =========================================================
-# 4. HET ORDER WOORDENBOEK
+# 4. HET ORDER WOORDENBOEK (Inclusief nieuwe Facturering & Disclaimers)
 # =========================================================
 translations = {
     "no": {
@@ -211,7 +231,7 @@ translations = {
         "w_item": "Vekt per stk. (kg)", "w_over": "Overdimensjonert (Lengde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Velg minst én)]", "lbl_qty": "Antall", "lbl_wgt": "Totalvekt (kg)", "lbl_pcs": "stk", "l_pal": "Pall", "l_full": "Full container/lastebil", "l_lc": "Stykkgods", 
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "Foretaksregister (valgfritt)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Etternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
-        "bill_t": "Faktureringsdetaljer", "bill_chk": "Fakturaadresse er den samme som firmaadressen", "b_comp": "Fakturamottaker (Firma) *", "b_em": "Faktura E-post *",
+        "bill_t": "Faktureringsdetaljer", "bill_who": "Hvem betaler frakten?", "b_opt1": "Avsender", "b_opt2": "Mottaker", "b_opt3": "Tredjepart (Annen fakturaadresse)", "b_comp": "Fakturamottaker (Firma) *", "b_em": "Faktura E-post *",
         "r_info": "Ruteinformasjon", "r_pick": "Hentested", "r_del": "Leveringssted", "r_str": "Gateadresse *", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "delivery_opts": "Leveringsalternativer", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kartet vises når du skriver inn en adresse...", "a_info": "Tilleggsinformasjon (valgfritt)", 
@@ -225,6 +245,7 @@ translations = {
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
         "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
         "w_reg": "Totalvekt", "qty_reg": "Registrert", "calc_note_pal": "Frakten er beregnet etter plass/antall.", "calc_note_we": "Frakten er beregnet etter totalvekt.",
+        "calc_disc": "Dette er kun et estimat. Endelig faktura kan avvike basert på faktisk vekt og dimensjoner.", "c_energy": "Energitillegg (5%)", "energy_tip": "Midlertidig tillegg grunnet uforutsette høye energi- og drivstoffkostnader.",
         "guest_msg": "Du bestiller for øyeblikket som gjest.", "guest_link": "Logg inn for å fylle ut automatisk."
     },
     "en": {
@@ -240,7 +261,7 @@ translations = {
         "w_item": "Weight per item (kg)", "w_over": "Oversized (Length > 3.5m)", "l_type": "Load Type", "l_err": " 🚨 :red[(Select at least one)]", "lbl_qty": "Quantity", "lbl_wgt": "Total weight (kg)", "lbl_pcs": "pcs", "l_pal": "Pallet", "l_full": "Full Container/Truck", "l_lc": "Loose Cargo", 
         "c_det": "Company & Contact Details", "c_name": "Company Name *", "c_reg": "Registration No. (optional)", "c_addr": "Company Address *", "c_zip": "Zip Code *", "c_city": "City *", "c_ctry": "Country *",
         "c_fn": "First Name *", "c_ln": "Last Name *", "c_em": "Work Email *", "c_ph": "Phone *",
-        "bill_t": "Billing Details", "bill_chk": "Billing address is the same as company address", "b_comp": "Billing Company *", "b_em": "Billing Email *",
+        "bill_t": "Billing Details", "bill_who": "Who pays the freight?", "b_opt1": "Sender", "b_opt2": "Receiver", "b_opt3": "Third Party (Other address)", "b_comp": "Billing Company *", "b_em": "Billing Email *",
         "r_info": "Route Information", "r_pick": "Pickup Location", "r_del": "Delivery Destination", "r_str": "Street Address *", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
         "delivery_opts": "Delivery Options", "chk_same": "Express / Same day delivery",
         "m_wait": "Map will appear when you enter an address...", "a_info": "Additional Information (optional)", 
@@ -254,6 +275,7 @@ translations = {
         "db_err": "⚠️ Error: Failed to send to database.", "s_succ": "Request sent successfully!", "s_sub": "We will get in touch shortly.", "b_new": "← Start a New Request",
         "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Toll", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
         "w_reg": "Total weight", "qty_reg": "Registered", "calc_note_pal": "Freight is calculated by space/quantity.", "calc_note_we": "Freight is calculated by total weight.",
+        "calc_disc": "This is an estimate only. Final invoice may differ based on actual weight and dimensions.", "c_energy": "Energy Surcharge (5%)", "energy_tip": "Temporary surcharge due to unforeseen high energy and fuel costs.",
         "guest_msg": "You are currently ordering as a guest.", "guest_link": "Log in to auto-fill your details."
     },
     "sv": {
@@ -269,7 +291,7 @@ translations = {
         "w_item": "Vikt per styck (kg)", "w_over": "Överdimensionerad (Längd > 3.5m)", "l_type": "Lasttyp", "l_err": " 🚨 :red[(Välj minst en)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvikt (kg)", "lbl_pcs": "st", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", 
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
         "c_fn": "Förnamn *", "c_ln": "Efternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
-        "bill_t": "Faktureringsuppgifter", "bill_chk": "Faktureringsadress är samma som företagsadress", "b_comp": "Fakturamottagare (Företag) *", "b_em": "Faktura E-post *",
+        "bill_t": "Faktureringsuppgifter", "bill_who": "Vem betalar frakten?", "b_opt1": "Avsändare", "b_opt2": "Mottagare", "b_opt3": "Tredje part (Annan adress)", "b_comp": "Fakturamottagare (Företag) *", "b_em": "Faktura E-post *",
         "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *", "r_name": "Kontaktperson/Företag", "r_ph": "Telefon",
         "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
@@ -283,6 +305,7 @@ translations = {
         "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
         "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
         "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats.", "calc_note_we": "Frakten beräknas efter totalvikt.",
+        "calc_disc": "Detta är endast en uppskattning. Slutfakturan kan variera beroende på faktisk vikt och mått.", "c_energy": "Energitillägg (5%)", "energy_tip": "Tillfälligt tillägg på grund av oförutsedda höga energi- och bränslekostnader.",
         "guest_msg": "Du beställer för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
     },
     "da": {
@@ -298,7 +321,7 @@ translations = {
         "w_item": "Vægt pr. stk. (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Vælg mindst én)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvægt (kg)", "lbl_pcs": "stk", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", 
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
-        "bill_t": "Faktureringsoplysninger", "bill_chk": "Faktureringsadresse er den samme som firmaadresse", "b_comp": "Fakturamodtager (Firma) *", "b_em": "Faktura E-mail *",
+        "bill_t": "Faktureringsoplysninger", "bill_who": "Hvem betaler fragten?", "b_opt1": "Afsender", "b_opt2": "Modtager", "b_opt3": "Tredjepart (Anden adresse)", "b_comp": "Fakturamodtager (Firma) *", "b_em": "Faktura E-mail *",
         "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *", "r_name": "Kontaktperson/Firma", "r_ph": "Telefon",
         "delivery_opts": "Leveringsmuligheder", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kortet vises, når du indtaster en adresse...", "a_info": "Yderligere information (valgfrit)", 
@@ -307,11 +330,12 @@ translations = {
         "e_wgt": "⚠️ Indtast venligst en gyldig vægt og mængde.",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
         "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt", "rev_b": "Fakturering",
-        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY", "l_bn": "FAKTURAMODTAGER",
+        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY", "l_bn": "FAKTURAMODTAGER",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
         "w_reg": "Totalvægt", "qty_reg": "Registreret", "calc_note_pal": "Fragten er beregnet efter plads/antal.", "calc_note_we": "Fragten er beregnet efter totalvægt.",
+        "calc_disc": "Dette er kun et estimat. Den endelige faktura kan variere baseret på den faktiske vægt og dimensioner.", "c_energy": "Energitillæg (5%)", "energy_tip": "Midlertidigt tillæg på grund af uforudsete høje energi- og brændstofomkostninger.",
         "guest_msg": "Du bestiller i øjeblikket som gæst.", "guest_link": "Log ind for at udfylde automatisk."
     }
 }
@@ -349,10 +373,29 @@ if st.session_state.get('last_seen_user_id') != current_user_id:
                 st.session_state.company_name = raw_prof.get("company_name", "")
                 st.session_state.role = str(raw_prof.get("roles", "customer")).strip().lower()
                 safe_profile = {
-                    'comp_name': str(raw_prof.get('company_name') or ''), 'cont_fn': name_parts[0] if name_parts else '', 'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
-                    'cont_email': st.session_state.user.email, 'cont_phone': str(raw_prof.get('phone') or ''), 'comp_addr': str(raw_prof.get('address') or ''), 'comp_pc': str(raw_prof.get('zip_code') or ''),
-                    'comp_city': str(raw_prof.get('city') or ''), 'p_addr': str(raw_prof.get('address') or ''), 'p_zip': str(raw_prof.get('zip_code') or ''), 'p_city': str(raw_prof.get('city') or ''),
-                    'd_addr': str(raw_prof.get('del_address') or ''), 'd_zip': str(raw_prof.get('del_zip') or ''), 'd_city': str(raw_prof.get('del_city') or '')
+                    'comp_name': str(raw_prof.get('company_name') or ''), 
+                    'cont_fn': name_parts[0] if name_parts else '', 
+                    'cont_ln': name_parts[1] if len(name_parts) > 1 else '',
+                    'cont_email': st.session_state.user.email, 
+                    'cont_phone': str(raw_prof.get('phone') or ''), 
+                    'comp_addr': str(raw_prof.get('address') or ''), 
+                    'comp_pc': str(raw_prof.get('zip_code') or ''),
+                    'comp_city': str(raw_prof.get('city') or ''), 
+                    'p_name': str(raw_prof.get('pickup_name') or ''), 
+                    'p_phone': str(raw_prof.get('pickup_phone') or ''),
+                    'p_addr': str(raw_prof.get('pickup_address') or str(raw_prof.get('address') or '')), 
+                    'p_zip': str(raw_prof.get('pickup_zip') or str(raw_prof.get('zip_code') or '')), 
+                    'p_city': str(raw_prof.get('pickup_city') or str(raw_prof.get('city') or '')),
+                    'd_name': str(raw_prof.get('delivery_name') or ''), 
+                    'd_phone': str(raw_prof.get('delivery_phone') or ''),
+                    'd_addr': str(raw_prof.get('del_address') or ''), 
+                    'd_zip': str(raw_prof.get('del_zip') or ''), 
+                    'd_city': str(raw_prof.get('del_city') or ''),
+                    'b_comp': str(raw_prof.get('billing_company') or ''),
+                    'b_email': str(raw_prof.get('billing_email') or ''),
+                    'b_addr': str(raw_prof.get('billing_address') or ''),
+                    'b_zip': str(raw_prof.get('billing_zip') or ''),
+                    'b_city': str(raw_prof.get('billing_city') or '')
                 }
         except: pass
     st.session_state['user_db_profile'] = safe_profile
@@ -541,6 +584,13 @@ def get_live_price():
     if check_if_ferry_needed(st.session_state.get('p_city', ''), st.session_state.get('d_city', '')):
         cost += 250; breakdown_lines.append((t['c_ferry'], 250))
         
+    # --- 5% ENERGY TAX ---
+    energy_tax = cost * 0.05
+    cost += energy_tax
+    energy_lbl = f"{t['c_energy']} <span title='{t['energy_tip']}' style='cursor:help;'>ℹ️</span>"
+    breakdown_lines.append((energy_lbl, energy_tax))
+    # ---------------------
+
     final_price = cost * 1.10
     profit = final_price - cost
     
@@ -725,12 +775,25 @@ else:
                     with c_code: st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
                     with c_phone: st.text_input("Phone", value=prof.get('cont_phone', ''), label_visibility="collapsed", key="cont_phone", max_chars=20)
 
-            # NIEUWE FACTURERING SECTIE
-            with st.container(border=True):
-                st.markdown(f"<h3 class='st-container-header'>{t['bill_t']}</h3><hr class='st-hr-tight'>", unsafe_allow_html=True)
-                st.checkbox(t['bill_chk'], key="same_billing")
+                # ==================================
+                # FACTURERING RADIO BUTTON
+                # ==================================
+                st.write("")
+                st.markdown("<hr style='border: 0; border-top: 1px dashed #444; margin-bottom: 15px;'>", unsafe_allow_html=True)
+                st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{t['bill_who']}</label>", unsafe_allow_html=True)
                 
-                if not st.session_state.same_billing:
+                payer_opts = [t['b_opt1'], t['b_opt2'], t['b_opt3']]
+                ptype = st.session_state.get('payer_type', 'Sender')
+                idx = 0 if ptype == 'Sender' else 1 if ptype == 'Receiver' else 2
+                
+                selected_payer = st.radio("Payer", payer_opts, index=idx, horizontal=True, label_visibility="collapsed")
+                
+                if selected_payer == t['b_opt1']: st.session_state.payer_type = 'Sender'
+                elif selected_payer == t['b_opt2']: st.session_state.payer_type = 'Receiver'
+                else: st.session_state.payer_type = 'Third'
+
+                if st.session_state.payer_type == 'Third':
+                    st.write("")
                     c_bill1, c_bill2 = st.columns(2, gap="large")
                     with c_bill1:
                         st.text_input(req_lbl("b_comp", t['b_comp']), key="b_comp", max_chars=100)
@@ -810,7 +873,7 @@ else:
             for rk in ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'comp_country', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
                 if not str(st.session_state.get(rk) or '').strip(): missing_fields = True; break
             
-            if not st.session_state.same_billing:
+            if st.session_state.payer_type == 'Third':
                 for bk in ['b_comp', 'b_email', 'b_addr', 'b_zip', 'b_city']:
                     if not str(st.session_state.get(bk) or '').strip(): missing_fields = True; break
                 
@@ -833,7 +896,7 @@ else:
 
             email_val = str(st.session_state.get('cont_email') or '').strip()
             invalid_email = bool(email_val and "@" not in email_val)
-            if not st.session_state.same_billing:
+            if st.session_state.payer_type == 'Third':
                 b_email_val = str(st.session_state.get('b_email') or '').strip()
                 if b_email_val and "@" not in b_email_val: invalid_email = True
 
@@ -871,6 +934,27 @@ else:
                     
                     calc_price, calc_cost, calc_profit, calc_breakdown, calc_note = get_live_price()
                     
+                    # LOGICA VOOR FACTURERING OVERNEMEN
+                    p_type = st.session_state.payer_type
+                    if p_type == 'Sender':
+                        bc = st.session_state.get('comp_name', '')
+                        be = st.session_state.get('cont_email', '')
+                        ba = st.session_state.get('comp_addr', '')
+                        bz = st.session_state.get('comp_pc', '')
+                        bci = st.session_state.get('comp_city', '')
+                    elif p_type == 'Receiver':
+                        bc = st.session_state.get('d_name', '')
+                        be = ""
+                        ba = st.session_state.get('d_addr', '')
+                        bz = st.session_state.get('d_zip', '')
+                        bci = st.session_state.get('d_city', '')
+                    else:
+                        bc = st.session_state.get('b_comp', '')
+                        be = st.session_state.get('b_email', '')
+                        ba = st.session_state.get('b_addr', '')
+                        bz = st.session_state.get('b_zip', '')
+                        bci = st.session_state.get('b_city', '')
+
                     st.session_state.temp_order = {
                         "company": st.session_state.get('comp_name', ''), "reg_no": st.session_state.get('comp_reg', ''),
                         "address": f"{st.session_state.get('comp_addr', '')}, {st.session_state.get('comp_pc', '')} {st.session_state.get('comp_city', '')}, {st.session_state.get('comp_country', '')}",
@@ -880,11 +964,7 @@ else:
                         "pickup_address": st.session_state.get('p_addr', ''), "pickup_zip": st.session_state.get('p_zip', ''), "pickup_city": st.session_state.get('p_city', ''),
                         "delivery_name": st.session_state.get('d_name', ''), "delivery_phone": st.session_state.get('d_phone', ''),
                         "delivery_address": st.session_state.get('d_addr', ''), "delivery_zip": st.session_state.get('d_zip', ''), "delivery_city": st.session_state.get('d_city', ''),
-                        "billing_company": st.session_state.get('comp_name', '') if st.session_state.same_billing else st.session_state.get('b_comp', ''),
-                        "billing_email": st.session_state.get('cont_email', '') if st.session_state.same_billing else st.session_state.get('b_email', ''),
-                        "billing_address": st.session_state.get('comp_addr', '') if st.session_state.same_billing else st.session_state.get('b_addr', ''),
-                        "billing_zip": st.session_state.get('comp_pc', '') if st.session_state.same_billing else st.session_state.get('b_zip', ''),
-                        "billing_city": st.session_state.get('comp_city', '') if st.session_state.same_billing else st.session_state.get('b_city', ''),
+                        "payer_type": p_type, "billing_company": bc, "billing_email": be, "billing_address": ba, "billing_zip": bz, "billing_city": bci,
                         "price": calc_price, "profit": calc_profit, "price_breakdown": calc_breakdown, "calc_note": calc_note
                     }
                     st.session_state.step = 3; st.rerun()
@@ -913,8 +993,12 @@ else:
             with st.container(border=True):
                 st.markdown(f"<h4 class='st-container-header'>{t['rev_b']}</h4><hr class='st-hr-tight'>", unsafe_allow_html=True)
                 col_b1, col_b2 = st.columns(2)
+                
+                # Vertaal de "Payer_type" netjes
+                payer_display = t['b_opt1'] if o['payer_type'] == 'Sender' else t['b_opt2'] if o['payer_type'] == 'Receiver' else t['b_opt3']
+                
                 with col_b1:
-                    st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_bn']}</span><br><b>{o['billing_company']}</b>", unsafe_allow_html=True)
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_bn']} ({payer_display})</span><br><b>{o['billing_company']}</b>", unsafe_allow_html=True)
                     st.write("")
                     st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_ad']}</span><br><b>{o['billing_address']}, {o['billing_zip']} {o['billing_city']}</b>", unsafe_allow_html=True)
                 with col_b2:
@@ -992,5 +1076,5 @@ else:
             else:
                 receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px; margin-top: 6px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
             
-        receipt_html = f"""<div class="receipt-card" style="background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">{t['calc_t']}</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">{t['c_tot']}</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">{t['c_vat']}</div><div style="font-size: 11px; color: #777; font-style: italic; margin-top: 15px; line-height: 1.4; border-top: 1px solid #333; padding-top: 10px;">{calc_note}</div></div>"""
+        receipt_html = f"""<div class="receipt-card" style="background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">{t['calc_t']}</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">{t['c_tot']}</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">{t['c_vat']}</div><div style="font-size: 11px; color: #777; font-style: italic; margin-top: 15px; line-height: 1.4; border-top: 1px solid #333; padding-top: 10px;">{calc_note}<br><br><b>Merk:</b> {t['calc_disc']}</div></div>"""
         st.markdown(receipt_html, unsafe_allow_html=True)
