@@ -142,6 +142,11 @@ div[data-baseweb="input"], div[data-baseweb="select"], div[data-baseweb="textare
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white; }
 label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
 div[data-baseweb="select"] div { color: white; background-color: #333;}
+
+/* STRAKKERE MARGES VOOR HEADERS BINNEN CONTAINERS */
+.st-container-header { margin-top: 0px; margin-bottom: 5px; font-weight: 600; color: white;}
+.st-hr-tight { margin-top: 0px; margin-bottom: 15px; border: 0; border-top: 1px solid #444; }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -184,7 +189,7 @@ default_keys = {
     'cf_full': False, 'cf_full_qty': 0, 'cf_full_weight': 0.0,
     'cf_lc': False, 'cf_lc_qty': 0, 'cf_lc_weight': 0.0,
     'mdm_weight': 0.0, 'mdm_qty': 0,
-    'req_sameday': False, 'req_ferry': False
+    'req_sameday': False, 'req_ferry': False, 'same_billing': True
 }
 for k, v in default_keys.items():
     if k not in st.session_state: st.session_state[k] = v
@@ -206,19 +211,20 @@ translations = {
         "w_item": "Vekt per stk. (kg)", "w_over": "Overdimensjonert (Lengde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Velg minst én)]", "lbl_qty": "Antall", "lbl_wgt": "Totalvekt (kg)", "lbl_pcs": "stk", "l_pal": "Pall", "l_full": "Full container/lastebil", "l_lc": "Stykkgods", 
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "Foretaksregister (valgfritt)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Etternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
-        "r_info": "Ruteinformasjon", "r_pick": "Hentested", "r_del": "Leveringssted", "r_str": "Gateadresse *",
+        "bill_t": "Faktureringsdetaljer", "bill_chk": "Fakturaadresse er den samme som firmaadressen", "b_comp": "Fakturamottaker (Firma) *", "b_em": "Faktura E-post *",
+        "r_info": "Ruteinformasjon", "r_pick": "Hentested", "r_del": "Leveringssted", "r_str": "Gateadresse *", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "delivery_opts": "Leveringsalternativer", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kartet vises når du skriver inn en adresse...", "a_info": "Tilleggsinformasjon (valgfritt)", 
         "a_ph": "F.eks spesielle krav ved levering...", 
         "e_req": "⚠️ Vennligst fyll ut alle obligatoriske felt (*) før du fortsetter.", "e_em": "⚠️ Ugyldig e-postadresse.",
         "e_wgt": "⚠️ Vennligst fyll inn vekt og antall (må være større enn 0).",
         "b_back": "← Gå tilbake", "b_cont": "Fortsett til neste steg →",
-        "rev_t": "Se over forespørselen din", "rev_s": "Vennligst sjekk at detaljene stemmer.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY",
+        "rev_t": "Se over forespørselen din", "rev_s": "Vennligst sjekk at detaljene stemmer.", "rev_c": "Firma & Kontakt", "rev_b": "Fakturering",
+        "l_cn": "FIRMANAVN", "l_rn": "ORG.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATEADRESSE", "l_zc": "POSTNR & BY", "l_bn": "FAKTURAMOTTAKER",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTATER", "b_edit": "← Rediger detaljer", "b_send": "BEKREFT & SEND",
         "db_err": "⚠️ Feil: Kunne ikke lagre i databasen.", "s_succ": "Din forespørsel er sendt!", "s_sub": "Vi tar kontakt snart.", "b_new": "← Start en ny forespørsel",
         "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
-        "w_reg": "Totalvekt", "qty_reg": "Registrert", "calc_note_pal": "Frakten er beregnet etter plass/antall, da dette gir høyeste fraktberegningsvekt.", "calc_note_we": "Frakten er beregnet etter totalvekt, da dette gir høyeste fraktberegningsvekt.",
+        "w_reg": "Totalvekt", "qty_reg": "Registrert", "calc_note_pal": "Frakten er beregnet etter plass/antall.", "calc_note_we": "Frakten er beregnet etter totalvekt.",
         "guest_msg": "Du bestiller for øyeblikket som gjest.", "guest_link": "Logg inn for å fylle ut automatisk."
     },
     "en": {
@@ -234,19 +240,20 @@ translations = {
         "w_item": "Weight per item (kg)", "w_over": "Oversized (Length > 3.5m)", "l_type": "Load Type", "l_err": " 🚨 :red[(Select at least one)]", "lbl_qty": "Quantity", "lbl_wgt": "Total weight (kg)", "lbl_pcs": "pcs", "l_pal": "Pallet", "l_full": "Full Container/Truck", "l_lc": "Loose Cargo", 
         "c_det": "Company & Contact Details", "c_name": "Company Name *", "c_reg": "Registration No. (optional)", "c_addr": "Company Address *", "c_zip": "Zip Code *", "c_city": "City *", "c_ctry": "Country *",
         "c_fn": "First Name *", "c_ln": "Last Name *", "c_em": "Work Email *", "c_ph": "Phone *",
-        "r_info": "Route Information", "r_pick": "Pickup Location", "r_del": "Delivery Destination", "r_str": "Street Address *",
+        "bill_t": "Billing Details", "bill_chk": "Billing address is the same as company address", "b_comp": "Billing Company *", "b_em": "Billing Email *",
+        "r_info": "Route Information", "r_pick": "Pickup Location", "r_del": "Delivery Destination", "r_str": "Street Address *", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
         "delivery_opts": "Delivery Options", "chk_same": "Express / Same day delivery",
         "m_wait": "Map will appear when you enter an address...", "a_info": "Additional Information (optional)", 
         "a_ph": "E.g. special requirements for delivery...", 
         "e_req": "⚠️ Please fill in all mandatory fields (*).", "e_em": "⚠️ Invalid email address.",
-        "e_wgt": "⚠️ Please enter a valid weight and quantity (greater than 0).",
+        "e_wgt": "⚠️ Please enter a valid weight and quantity.",
         "b_back": "← Go Back", "b_cont": "Continue to Review →",
-        "rev_t": "Review your request", "rev_s": "Please verify your details below.", "rev_c": "Company & Contact",
-        "l_cn": "COMPANY NAME", "l_rn": "REG. NO", "l_ad": "ADDRESS", "l_cp": "CONTACT PERSON", "l_em": "EMAIL", "l_ph": "PHONE", "l_str": "STREET ADDRESS", "l_zc": "ZIP & CITY",
+        "rev_t": "Review your request", "rev_s": "Please verify your details below.", "rev_c": "Company & Contact", "rev_b": "Billing",
+        "l_cn": "COMPANY NAME", "l_rn": "REG. NO", "l_ad": "ADDRESS", "l_cp": "CONTACT PERSON", "l_em": "EMAIL", "l_ph": "PHONE", "l_str": "STREET ADDRESS", "l_zc": "ZIP & CITY", "l_bn": "BILLING COMPANY",
         "rev_r": "Route", "rev_s": "Shipment", "l_no": "NOTES", "b_edit": "← Edit Details", "b_send": "CONFIRM & SEND",
         "db_err": "⚠️ Error: Failed to send to database.", "s_succ": "Request sent successfully!", "s_sub": "We will get in touch shortly.", "b_new": "← Start a New Request",
         "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Toll", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
-        "w_reg": "Total weight", "qty_reg": "Registered", "calc_note_pal": "Freight is calculated by space/quantity (yields highest calculation weight).", "calc_note_we": "Freight is calculated by total weight (yields highest calculation weight).",
+        "w_reg": "Total weight", "qty_reg": "Registered", "calc_note_pal": "Freight is calculated by space/quantity.", "calc_note_we": "Freight is calculated by total weight.",
         "guest_msg": "You are currently ordering as a guest.", "guest_link": "Log in to auto-fill your details."
     },
     "sv": {
@@ -262,19 +269,20 @@ translations = {
         "w_item": "Vikt per styck (kg)", "w_over": "Överdimensionerad (Längd > 3.5m)", "l_type": "Lasttyp", "l_err": " 🚨 :red[(Välj minst en)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvikt (kg)", "lbl_pcs": "st", "l_pal": "Pall", "l_full": "Full container/lastbil", "l_lc": "Styckgods", 
         "c_det": "Företags- & Kontaktdetaljer", "c_name": "Företagsnamn *", "c_reg": "Organisationsnummer (frivilligt)", "c_addr": "Företagsadress *", "c_zip": "Postnummer *", "c_city": "Stad *", "c_ctry": "Land *",
         "c_fn": "Förnamn *", "c_ln": "Efternavn *", "c_em": "Jobb-e-post *", "c_ph": "Telefon *",
-        "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *",
+        "bill_t": "Faktureringsuppgifter", "bill_chk": "Faktureringsadress är samma som företagsadress", "b_comp": "Fakturamottagare (Företag) *", "b_em": "Faktura E-post *",
+        "r_info": "Ruttinformation", "r_pick": "Upphämtningsplats", "r_del": "Leveransplats", "r_str": "Gatuadress *", "r_name": "Kontaktperson/Företag", "r_ph": "Telefon",
         "delivery_opts": "Leveransalternativ", "chk_same": "Express / Samma dag leverans",
         "m_wait": "Kartan visas när du skriver in en adress...", "a_info": "Ytterligare information (frivilligt)", 
         "a_ph": "T.ex. andra krav vid leverans...", 
         "e_req": "⚠️ Vänligen fyll i alla obligatoriska fält (*).", "e_em": "⚠️ Ogiltig e-postadress.",
-        "e_wgt": "⚠️ Vänligen ange en giltig vikt och antal (större än 0).",
+        "e_wgt": "⚠️ Vänligen ange en giltig vikt och antal.",
         "b_back": "← Gå tillbaka", "b_cont": "Fortsätt till granskning →",
-        "rev_t": "Granska din förfrågan", "rev_s": "Vänligen kontrollera dina uppgifter.", "rev_c": "Företag & Kontakt",
-        "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD",
+        "rev_t": "Granska din förfrågan", "rev_s": "Vänligen kontrollera dina uppgifter.", "rev_c": "Företag & Kontakt", "rev_b": "Fakturering",
+        "l_cn": "FÖRETAGSNAMN", "l_rn": "ORG.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-POST", "l_ph": "TELEFON", "l_str": "GATUADRESS", "l_zc": "POSTNR & STAD", "l_bn": "FAKTURAMOTTAGARE",
         "rev_r": "Rutt", "rev_s": "Försändelse", "l_no": "ANTECKNINGAR", "b_edit": "← Redigera detaljer", "b_send": "BEKRÄFTA & SKICKA",
         "db_err": "⚠️ Fel: Kunde inte spara i databasen.", "s_succ": "Din förfrågan har skickats!", "s_sub": "Vi återkommer inom kort.", "b_new": "← Starta en ny förfrågan",
         "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
-        "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats (ger högsta fraktberäkningsvikt).", "calc_note_we": "Frakten beräknas efter totalvikt (ger högsta fraktberäkningsvikt).",
+        "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats.", "calc_note_we": "Frakten beräknas efter totalvikt.",
         "guest_msg": "Du beställer för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
     },
     "da": {
@@ -290,19 +298,20 @@ translations = {
         "w_item": "Vægt pr. stk. (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Vælg mindst én)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvægt (kg)", "lbl_pcs": "stk", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", 
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
-        "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *",
+        "bill_t": "Faktureringsoplysninger", "bill_chk": "Faktureringsadresse er den samme som firmaadresse", "b_comp": "Fakturamodtager (Firma) *", "b_em": "Faktura E-mail *",
+        "r_info": "Ruteinformation", "r_pick": "Afhentningssted", "r_del": "Leveringssted", "r_str": "Gadeadresse *", "r_name": "Kontaktperson/Firma", "r_ph": "Telefon",
         "delivery_opts": "Leveringsmuligheder", "chk_same": "Express / Samme dag levering",
         "m_wait": "Kortet vises, når du indtaster en adresse...", "a_info": "Yderligere information (valgfrit)", 
         "a_ph": "F.eks. specielle krav ved levering...", 
         "e_req": "⚠️ Udfyld venligst alle obligatoriske felter (*).", "e_em": "⚠️ Ugyldig e-mailadresse.",
-        "e_wgt": "⚠️ Indtast venligst en gyldig vægt og mængde (større end 0).",
+        "e_wgt": "⚠️ Indtast venligst en gyldig vægt og mængde.",
         "b_back": "← Gå tilbage", "b_cont": "Fortsæt til gennemgang →",
-        "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt",
-        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESS", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY",
+        "rev_t": "Gennemgå din anmodning", "rev_s": "Tjek venligst at dine oplysninger er korrekte.", "rev_c": "Firma & Kontakt", "rev_b": "Fakturering",
+        "l_cn": "FIRMANAVN", "l_rn": "CVR.NR", "l_ad": "ADRESSE", "l_cp": "KONTAKTPERSON", "l_em": "E-MAIL", "l_ph": "TELEFON", "l_str": "GADEADRESSE", "l_zc": "POSTNR & BY", "l_bn": "FAKTURAMODTAGER",
         "rev_r": "Rute", "rev_s": "Forsendelse", "l_no": "NOTER", "b_edit": "← Rediger detaljer", "b_send": "BEKRÆFT & SEND",
         "db_err": "⚠️ Fejl: Kunne ikke gemme i databasen.", "s_succ": "Din anmodning er sendt!", "s_sub": "Vi vender tilbage snarest.", "b_new": "← Start en ny anmodning",
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
-        "w_reg": "Totalvægt", "qty_reg": "Registreret", "calc_note_pal": "Fragten er beregnet efter plads/antal (giver højeste fragtberegningsvægt).", "calc_note_we": "Fragten er beregnet efter totalvægt (giver højeste fragtberegningsvægt).",
+        "w_reg": "Totalvægt", "qty_reg": "Registreret", "calc_note_pal": "Fragten er beregnet efter plads/antal.", "calc_note_we": "Fragten er beregnet efter totalvægt.",
         "guest_msg": "Du bestiller i øjeblikket som gæst.", "guest_link": "Log ind for at udfylde automatisk."
     }
 }
@@ -365,7 +374,7 @@ def reset_form_state():
     st.session_state.step = 1; st.session_state.selected_types = []; st.session_state.temp_order = {}
     st.session_state.show_error = False; st.session_state.is_submitted = False; st.session_state.validate_step2 = False; st.session_state.scroll_up = False
     st.session_state['last_seen_user_id'] = None 
-    for k in ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
+    for k in ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city', 'p_name', 'p_phone', 'd_name', 'd_phone']:
         if k in st.session_state: del st.session_state[k]
 
 if "reset" in st.query_params:
@@ -396,21 +405,14 @@ html_navbar = f"""
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# ROUTING, KAART & DAHLE PRIJS LOGICA (ROBUUSTE VERSIE)
+# ROUTING, KAART & DAHLE PRIJS LOGICA
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
     if len(city) < 2: return None
     headers = {'User-Agent': 'DahleTransportMap/18.0'}
     url = "https://nominatim.openstreetmap.org/search"
-    
-    queries = [
-        f"{street}, {zip_code} {city}",
-        f"{street}, {city}",
-        f"{zip_code} {city}",
-        f"{city}"
-    ]
-    
+    queries = [f"{street}, {zip_code} {city}", f"{street}, {city}", f"{zip_code} {city}", f"{city}"]
     for q in queries:
         try:
             r = requests.get(url, params={'q': q, 'format': 'json', 'limit': 1}, headers=headers, timeout=2).json()
@@ -424,8 +426,7 @@ def get_route_data(coord1, coord2):
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
         resp = requests.get(url, timeout=3).json()
-        if resp.get("code") == "Ok":
-            return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
+        if resp.get("code") == "Ok": return resp["routes"][0]["distance"] / 1000.0, resp["routes"][0]["geometry"]["coordinates"]
     except: pass
     return None, None
 
@@ -434,7 +435,6 @@ def calculate_zoom(coord1, coord2):
     lat_diff = abs(coord1[0] - coord2[0])
     lon_diff = abs(coord1[1] - coord2[1])
     max_diff = max(lat_diff, lon_diff)
-    
     if max_diff < 0.02: return 13.5
     if max_diff < 0.1:  return 11.0
     if max_diff < 0.5:  return 9.0
@@ -451,23 +451,18 @@ def determine_zone(p_city, d_city):
     return 4 
 
 def check_if_ferry_needed(p_city, d_city):
-    p = str(p_city).lower().strip()
-    d = str(d_city).lower().strip()
+    p, d = str(p_city).lower().strip(), str(d_city).lower().strip()
     fosen_dests = ['roan', 'osen', 'bessaker', 'refsnes', 'stokkøy', 'stokkoy', 'linesøya', 'linesoya', 'bjugn', 'brekstad', 'vallersund', 'lysøysund', 'lysoysund', 'åfjord', 'afjord', 'stadsbygd', 'rissa', 'hasselvika', 'fevåg', 'fevag', 'husbysjøen', 'husbysjoen', 'råkvåg', 'rakvag', 'leksvik']
     if ('trondheim' in p and any(c in d for c in fosen_dests)) or ('trondheim' in d and any(c in p for c in fosen_dests)): return True
     return False
 
 def get_live_price():
-    total_weight = 0
-    oversized = False
-    reg_items = []
-    
+    total_weight = 0; oversized = False; reg_items = []
     if "Parcels & Documents" in st.session_state.selected_types:
         q = min(st.session_state.get('pd_qty', 0), 10000)
         w = min(st.session_state.get('pd_weight', 0.0), 35.0)
         if q > 0 and w > 0:
-            total_weight += (w * q)
-            reg_items.append(f"{q}x {t['b1_t']} ({w:g} kg)")
+            total_weight += (w * q); reg_items.append(f"{q}x {t['b1_t']} ({w:g} kg)")
             if st.session_state.get('pd_oversized', False): oversized = True
         
     cargo_units = 0
@@ -475,37 +470,24 @@ def get_live_price():
         if st.session_state.get('cf_pal'):
             pq = min(st.session_state.get('cf_pal_qty', 0), 33)
             pw = min(st.session_state.get('cf_pal_weight', 0.0), 1200.0)
-            if pq > 0 and pw > 0:
-                cargo_units += pq
-                total_weight += pw
-                reg_items.append(f"{pq}x {t['l_pal']} ({pw:g} kg)")
+            if pq > 0 and pw > 0: cargo_units += pq; total_weight += pw; reg_items.append(f"{pq}x {t['l_pal']} ({pw:g} kg)")
         if st.session_state.get('cf_full'):
             fq = min(st.session_state.get('cf_full_qty', 0), 10)
             fw = min(st.session_state.get('cf_full_weight', 0.0), 25000.0)
-            if fq > 0 and fw > 0:
-                cargo_units += fq * 33 
-                total_weight += fw
-                reg_items.append(f"{fq}x {t['l_full']} ({fw:g} kg)")
+            if fq > 0 and fw > 0: cargo_units += fq * 33; total_weight += fw; reg_items.append(f"{fq}x {t['l_full']} ({fw:g} kg)")
         if st.session_state.get('cf_lc'):
             lq = min(st.session_state.get('cf_lc_qty', 0), 1000)
             lw = min(st.session_state.get('cf_lc_weight', 0.0), 25000.0)
-            if lq > 0 and lw > 0:
-                cargo_units += lq
-                total_weight += lw
-                reg_items.append(f"{lq}x {t['l_lc']} ({lw:g} kg)")
+            if lq > 0 and lw > 0: cargo_units += lq; total_weight += lw; reg_items.append(f"{lq}x {t['l_lc']} ({lw:g} kg)")
             
     if "Mail & Direct Marketing" in st.session_state.selected_types:
         q = min(st.session_state.get('mdm_qty', 0), 100000)
         w = min(st.session_state.get('mdm_weight', 0.0), 2.0)
-        if q > 0 and w > 0:
-            total_weight += (w * q)
-            reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
+        if q > 0 and w > 0: total_weight += (w * q); reg_items.append(f"{q}x {t['b3_t']} ({w:g} kg)")
 
-    if total_weight <= 0 and cargo_units <= 0:
-        return 0, 0, 0, [(t['c_tr'], 0)], ""
+    if total_weight <= 0 and cargo_units <= 0: return 0, 0, 0, [(t['c_tr'], 0)], ""
 
     zone = determine_zone(st.session_state.get('p_city', ''), st.session_state.get('d_city', ''))
-    
     prices = {
         1: [(24, 342), (49, 456), (99, 570), (149, 682), (199, 791), (399, 918), (599, 1225), (799, 1377), (999, 1530)],
         2: [(24, 362), (49, 478), (99, 588), (149, 716), (199, 825), (399, 963), (599, 1283), (799, 1443), (999, 1605)],
@@ -513,8 +495,7 @@ def get_live_price():
         4: [(24, 275), (49, 364), (99, 457), (149, 580), (199, 641), (399, 734), (599, 979), (799, 1100), (999, 1225)]
     }
     
-    weight_cost = 0
-    tier_lbl = ""
+    weight_cost = 0; tier_lbl = ""
     if total_weight > 999:
         extra_weight = total_weight - 999
         steps = int((extra_weight - 0.001) / 100) + 1
@@ -524,15 +505,7 @@ def get_live_price():
         for max_w, price in prices[zone]:
             if total_weight <= max_w:
                 weight_cost = price
-                if max_w == 24: tier_lbl = "0-24 kg"
-                elif max_w == 49: tier_lbl = "25-49 kg"
-                elif max_w == 99: tier_lbl = "50-99 kg"
-                elif max_w == 149: tier_lbl = "100-149 kg"
-                elif max_w == 199: tier_lbl = "150-199 kg"
-                elif max_w == 399: tier_lbl = "200-399 kg"
-                elif max_w == 599: tier_lbl = "400-599 kg"
-                elif max_w == 799: tier_lbl = "600-799 kg"
-                elif max_w == 999: tier_lbl = "800-999 kg"
+                tier_lbl = f"{max_w-24 if max_w>24 else 0}-{max_w} kg" if max_w != 24 else "0-24 kg"
                 break
         if weight_cost == 0: weight_cost = prices[zone][-1][1]; tier_lbl = "800-999 kg"
 
@@ -562,14 +535,11 @@ def get_live_price():
     
     if oversized:
         surcharge = cost * 0.25
-        cost += surcharge
-        breakdown_lines.append((t['c_over'], surcharge))
+        cost += surcharge; breakdown_lines.append((t['c_over'], surcharge))
     if st.session_state.get('req_sameday'):
-        cost += 250
-        breakdown_lines.append((t['c_sameday'], 250))
+        cost += 250; breakdown_lines.append((t['c_sameday'], 250))
     if check_if_ferry_needed(st.session_state.get('p_city', ''), st.session_state.get('d_city', '')):
-        cost += 250
-        breakdown_lines.append((t['c_ferry'], 250))
+        cost += 250; breakdown_lines.append((t['c_ferry'], 250))
         
     final_price = cost * 1.10
     profit = final_price - cost
@@ -659,10 +629,9 @@ else:
         if st.session_state.validate_step2 and float(st.session_state.get(key) or 0) <= 0: return f"{base_text} 🚨 <span style='color:#ff4b4b;'>(> 0)</span>"
         return base_text
         
-    def email_lbl():
-        base = t['c_em']
+    def email_lbl(key, base):
         if st.session_state.validate_step2:
-            val = str(st.session_state.get('cont_email') or "")
+            val = str(st.session_state.get(key) or "")
             if not val.strip() or "@" not in val: return f"{base} 🚨 :red[(Required)]"
         return base
 
@@ -678,7 +647,7 @@ else:
                     c_title, c_close = st.columns([12, 1])
                     
                     disp_title = t['b1_t'] if sel=="Parcels & Documents" else t['b2_t'] if sel=="Cargo & Freight" else t['b3_t']
-                    with c_title: st.markdown(f"<h4 style='margin-top: 0px; margin-bottom: 10px;'>{disp_title}</h4>", unsafe_allow_html=True)
+                    with c_title: st.markdown(f"<h4 class='st-container-header'>{disp_title}</h4>", unsafe_allow_html=True)
                     with c_close:
                         if st.button("✖", key=f"btn_close_{sel}", type="tertiary"):
                             st.session_state.selected_types.remove(sel)
@@ -722,31 +691,18 @@ else:
                         with c_m2: st.markdown(f"<label>{wgt_lbl('mdm_weight', t['lbl_wgt'])}</label>", unsafe_allow_html=True); st.number_input("mw", min_value=0.0, max_value=2.0, step=0.1, key="mdm_weight", label_visibility="collapsed")
                         
             st.markdown("</div>", unsafe_allow_html=True)
-            st.write("")
             
             with st.container(border=True):
-                st.markdown(f"<h3 style='margin-top: 0px;'>{t['delivery_opts']}</h3>", unsafe_allow_html=True)
-                st.write("---")
+                st.markdown(f"<h3 class='st-container-header'>{t['delivery_opts']}</h3><hr class='st-hr-tight'>", unsafe_allow_html=True)
                 st.checkbox(t['chk_same'], key="req_sameday")
                 
-            st.write("")
-            
             with st.container(border=True):
-                st.markdown(f"<h3 style='margin-top: 0px;'>{t['c_det']}</h3>", unsafe_allow_html=True)
-                st.write("---")
+                st.markdown(f"<h3 class='st-container-header'>{t['c_det']}</h3><hr class='st-hr-tight'>", unsafe_allow_html=True)
                 
-                # --- GAST CHECK ---
                 if current_user_id == "guest":
-                    st.markdown(f"""
-                    <div style="background-color: #1a1a2e; border-left: 4px solid #b070c6; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-                        <span style="color: #ccc; font-size: 13px;">👤 {t['guest_msg']}</span>
-                        <a href="/Login?lang={lang}" target="_self" style="color: #b070c6; font-size: 13px; font-weight: 600; text-decoration: none;">{t['guest_link']} →</a>
-                    </div>
-                    """, unsafe_allow_html=True)
-                # -----------------
+                    st.markdown(f"""<div style="background-color: #1a1a2e; border-left: 4px solid #b070c6; padding: 12px 16px; border-radius: 4px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;"><span style="color: #ccc; font-size: 13px;">👤 {t['guest_msg']}</span><a href="/Login?lang={lang}" target="_self" style="color: #b070c6; font-size: 13px; font-weight: 600; text-decoration: none;">{t['guest_link']} →</a></div>""", unsafe_allow_html=True)
                 
                 c_form_left, c_form_right = st.columns(2, gap="large")
-                
                 with c_form_left:
                     st.text_input(req_lbl("comp_name", t['c_name']), value=prof.get('comp_name', ''), key="comp_name", max_chars=100)
                     st.text_input(t['c_reg'], key="comp_reg", max_chars=50)
@@ -760,7 +716,7 @@ else:
                     c_fn, c_ln = st.columns(2)
                     with c_fn: st.text_input(req_lbl("cont_fn", t['c_fn']), value=prof.get('cont_fn', ''), key="cont_fn", max_chars=50)
                     with c_ln: st.text_input(req_lbl("cont_ln", t['c_ln']), value=prof.get('cont_ln', ''), key="cont_ln", max_chars=50)
-                    st.text_input(email_lbl(), value=prof.get('cont_email', ''), key="cont_email", max_chars=150)
+                    st.text_input(email_lbl("cont_email", t['c_em']), value=prof.get('cont_email', ''), key="cont_email", max_chars=150)
                     
                     phone_lbl = t['c_ph']
                     if st.session_state.validate_step2 and not str(st.session_state.get('cont_phone') or '').strip(): phone_lbl += " 🚨 <span style='color:#ff4b4b;'>(Required)</span>"
@@ -768,104 +724,83 @@ else:
                     c_code, c_phone = st.columns([1, 3])
                     with c_code: st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
                     with c_phone: st.text_input("Phone", value=prof.get('cont_phone', ''), label_visibility="collapsed", key="cont_phone", max_chars=20)
-    
-            st.write("")
-            st.markdown(f"<h3 style='margin-top: 20px;'>{t['r_info']}</h3>", unsafe_allow_html=True)
-            st.write("---")
-            
-            c_route_left, c_route_right = st.columns(2, gap="large")
-            with c_route_left:
-                st.markdown(f"**{t['r_pick']}**")
-                st.text_input(req_lbl("p_addr", t['r_str']), value=prof.get('p_addr', ''), key="p_addr", max_chars=150)
-                c_p_zip, c_p_city = st.columns(2)
-                with c_p_zip: st.text_input(req_lbl("p_zip", t['c_zip']), value=prof.get('p_zip', ''), key="p_zip", max_chars=20)
-                with c_p_city: st.text_input(req_lbl("p_city", t['c_city']), value=prof.get('p_city', ''), key="p_city", max_chars=100)
-            with c_route_right:
-                st.markdown(f"**{t['r_del']}**")
-                st.text_input(req_lbl("d_addr", t['r_str']), value=prof.get('d_addr', ''), key="d_addr", max_chars=150)
-                c_d_zip, c_d_city = st.columns(2)
-                with c_d_zip: st.text_input(req_lbl("d_zip", t['c_zip']), value=prof.get('d_zip', ''), key="d_zip", max_chars=20)
-                with c_d_city: st.text_input(req_lbl("d_city", t['c_city']), value=prof.get('d_city', ''), key="d_city", max_chars=100)
+
+            # NIEUWE FACTURERING SECTIE
+            with st.container(border=True):
+                st.markdown(f"<h3 class='st-container-header'>{t['bill_t']}</h3><hr class='st-hr-tight'>", unsafe_allow_html=True)
+                st.checkbox(t['bill_chk'], key="same_billing")
                 
-            st.write("")
-            
-            # ========================================================
-            # MAP LOGICA
-            # ========================================================
-            p_addr_map = str(st.session_state.get('p_addr') or '').strip()
-            p_zip_map = str(st.session_state.get('p_zip') or '').strip()
-            p_city_map = str(st.session_state.get('p_city') or '').strip()
-            
-            d_addr_map = str(st.session_state.get('d_addr') or '').strip()
-            d_zip_map = str(st.session_state.get('d_zip') or '').strip()
-            d_city_map = str(st.session_state.get('d_city') or '').strip()
-            
-            p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
-            d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
-            
-            layers = []
-            
-            if p_coords and d_coords:
-                _, route_geom = get_route_data(p_coords, d_coords) 
-                if route_geom:
-                    layers.append(pdk.Layer(
-                        "PathLayer", 
-                        data=[{"path": route_geom}], 
-                        get_path="path", 
-                        get_color=[137, 75, 157, 255], 
-                        width_scale=20, 
-                        width_min_pixels=4, 
-                        get_width=5
-                    ))
-                else:
-                    route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
-                    layers.append(pdk.Layer(
-                        "PathLayer", 
-                        data=[{"path": route_geom}], 
-                        get_path="path", 
-                        get_color=[137, 75, 157, 255], 
-                        width_scale=20, 
-                        width_min_pixels=4, 
-                        get_width=5
-                    ))
+                if not st.session_state.same_billing:
+                    c_bill1, c_bill2 = st.columns(2, gap="large")
+                    with c_bill1:
+                        st.text_input(req_lbl("b_comp", t['b_comp']), key="b_comp", max_chars=100)
+                        st.text_input(email_lbl("b_email", t['b_em']), key="b_email", max_chars=100)
+                        st.text_input(req_lbl("b_addr", t['c_addr']), key="b_addr", max_chars=150)
+                    with c_bill2:
+                        c_bpc, c_bcity = st.columns(2)
+                        with c_bpc: st.text_input(req_lbl("b_zip", t['c_zip']), key="b_zip", max_chars=20)
+                        with c_bcity: st.text_input(req_lbl("b_city", t['c_city']), key="b_city", max_chars=100)
+
+            with st.container(border=True):
+                st.markdown(f"<h3 class='st-container-header'>{t['r_info']}</h3><hr class='st-hr-tight'>", unsafe_allow_html=True)
+                c_route_left, c_route_right = st.columns(2, gap="large")
+                with c_route_left:
+                    st.markdown(f"**{t['r_pick']}**")
+                    st.text_input(t['r_name'], key="p_name", max_chars=100)
+                    st.text_input(t['r_ph'], key="p_phone", max_chars=50)
+                    st.text_input(req_lbl("p_addr", t['r_str']), value=prof.get('p_addr', ''), key="p_addr", max_chars=150)
+                    c_p_zip, c_p_city = st.columns(2)
+                    with c_p_zip: st.text_input(req_lbl("p_zip", t['c_zip']), value=prof.get('p_zip', ''), key="p_zip", max_chars=20)
+                    with c_p_city: st.text_input(req_lbl("p_city", t['c_city']), value=prof.get('p_city', ''), key="p_city", max_chars=100)
+                with c_route_right:
+                    st.markdown(f"**{t['r_del']}**")
+                    st.text_input(t['r_name'], key="d_name", max_chars=100)
+                    st.text_input(t['r_ph'], key="d_phone", max_chars=50)
+                    st.text_input(req_lbl("d_addr", t['r_str']), value=prof.get('d_addr', ''), key="d_addr", max_chars=150)
+                    c_d_zip, c_d_city = st.columns(2)
+                    with c_d_zip: st.text_input(req_lbl("d_zip", t['c_zip']), value=prof.get('d_zip', ''), key="d_zip", max_chars=20)
+                    with c_d_city: st.text_input(req_lbl("d_city", t['c_city']), value=prof.get('d_city', ''), key="d_city", max_chars=100)
                 
-                center_lat = (p_coords[0] + d_coords[0]) / 2
-                center_lon = (p_coords[1] + d_coords[1]) / 2
-                zoom = calculate_zoom(p_coords, d_coords)
-                pitch = 20
-            elif p_coords:
-                center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
-            elif d_coords:
-                center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
-            else:
-                center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
+                # ========================================================
+                # MAP LOGICA
+                # ========================================================
+                p_addr_map = str(st.session_state.get('p_addr') or '').strip()
+                p_zip_map = str(st.session_state.get('p_zip') or '').strip()
+                p_city_map = str(st.session_state.get('p_city') or '').strip()
+                
+                d_addr_map = str(st.session_state.get('d_addr') or '').strip()
+                d_zip_map = str(st.session_state.get('d_zip') or '').strip()
+                d_city_map = str(st.session_state.get('d_city') or '').strip()
+                
+                p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
+                d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
+                
+                layers = []
+                if p_coords and d_coords:
+                    _, route_geom = get_route_data(p_coords, d_coords) 
+                    if route_geom: layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 255], width_scale=20, width_min_pixels=4, get_width=5))
+                    else:
+                        route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
+                        layers.append(pdk.Layer("PathLayer", data=[{"path": route_geom}], get_path="path", get_color=[137, 75, 157, 255], width_scale=20, width_min_pixels=4, get_width=5))
+                    center_lat, center_lon = (p_coords[0] + d_coords[0]) / 2, (p_coords[1] + d_coords[1]) / 2
+                    zoom, pitch = calculate_zoom(p_coords, d_coords), 20
+                elif p_coords: center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
+                elif d_coords: center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
+                else: center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
 
-            points = []
-            if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
-            if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
-            
-            if points:
-                layers.append(pdk.Layer(
-                    "ScatterplotLayer", 
-                    data=points, 
-                    get_position="pos", 
-                    get_fill_color="color",              # Donkerpaarse kern
-                    get_line_color=[255, 255, 255, 255], # Witte buitenrand
-                    stroked=True,                        # Zet de rand aan
-                    filled=True,                         # Zet de opvulling aan
-                    line_width_min_pixels=3,             # Dikte van de witte rand
-                    get_radius=200, 
-                    radius_min_pixels=6, 
-                    radius_max_pixels=14
-                ))
+                points = []
+                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
+                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
+                
+                if points:
+                    layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color="color", get_line_color=[255, 255, 255, 255], stroked=True, filled=True, line_width_min_pixels=3, get_radius=200, radius_min_pixels=6, radius_max_pixels=14))
 
-            st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+                st.markdown("<br>", unsafe_allow_html=True)
+                st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
             
-            st.write("---")
-            st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
+            with st.container(border=True):
+                st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
 
-            st.write("")
-            
             error_container = st.empty()
             
             # VALIDATIE CHECK
@@ -874,10 +809,13 @@ else:
             
             for rk in ['comp_name', 'comp_addr', 'comp_pc', 'comp_city', 'cont_fn', 'cont_ln', 'cont_email', 'cont_phone', 'comp_country', 'p_addr', 'p_zip', 'p_city', 'd_addr', 'd_zip', 'd_city']:
                 if not str(st.session_state.get(rk) or '').strip(): missing_fields = True; break
+            
+            if not st.session_state.same_billing:
+                for bk in ['b_comp', 'b_email', 'b_addr', 'b_zip', 'b_city']:
+                    if not str(st.session_state.get(bk) or '').strip(): missing_fields = True; break
                 
             if "Parcels & Documents" in st.session_state.selected_types:
                 if st.session_state.get('pd_qty', 0) <= 0 or st.session_state.get('pd_weight', 0.0) <= 0: invalid_wgt = True
-            
             if "Cargo & Freight" in st.session_state.selected_types:
                 has_cf = False
                 if st.session_state.get('cf_pal'):
@@ -890,12 +828,14 @@ else:
                     has_cf = True
                     if st.session_state.get('cf_lc_qty', 0) <= 0 or st.session_state.get('cf_lc_weight', 0.0) <= 0: invalid_wgt = True
                 if not has_cf: missing_fields = True
-                
             if "Mail & Direct Marketing" in st.session_state.selected_types:
                 if st.session_state.get('mdm_qty', 0) <= 0 or st.session_state.get('mdm_weight', 0.0) <= 0: invalid_wgt = True
 
             email_val = str(st.session_state.get('cont_email') or '').strip()
             invalid_email = bool(email_val and "@" not in email_val)
+            if not st.session_state.same_billing:
+                b_email_val = str(st.session_state.get('b_email') or '').strip()
+                if b_email_val and "@" not in b_email_val: invalid_email = True
 
             if st.session_state.validate_step2:
                 if missing_fields: error_container.error(t['e_req'])
@@ -917,14 +857,12 @@ else:
                     if "Parcels & Documents" in st.session_state.selected_types:
                         sz = "Oversized" if st.session_state.get('pd_oversized') else "Standard"
                         specs_list.append(f"📦 {st.session_state.get('pd_qty', 1)}x {t['b1_t']} ({st.session_state.get('pd_weight', 1)}kg) - {sz}")
-                    
                     if "Cargo & Freight" in st.session_state.selected_types:
                         loads = []
                         if st.session_state.get('cf_pal'): loads.append(f"{st.session_state.get('cf_pal_qty', 1)}x {t['l_pal']} ({st.session_state.get('cf_pal_weight', 0.0)}kg)")
                         if st.session_state.get('cf_full'): loads.append(f"{st.session_state.get('cf_full_qty', 1)}x {t['l_full']} ({st.session_state.get('cf_full_weight', 0.0)}kg)")
                         if st.session_state.get('cf_lc'): loads.append(f"{st.session_state.get('cf_lc_qty', 1)}x {t['l_lc']} ({st.session_state.get('cf_lc_weight', 0.0)}kg)")
                         specs_list.append(f"🚛 {t['b2_t']}: {', '.join(loads)}")
-                    
                     if "Mail & Direct Marketing" in st.session_state.selected_types:
                         specs_list.append(f"📭 {st.session_state.get('mdm_qty', 1)}x {t['b3_t']} ({st.session_state.get('mdm_weight', 0.5)}kg)")
                     
@@ -938,8 +876,15 @@ else:
                         "address": f"{st.session_state.get('comp_addr', '')}, {st.session_state.get('comp_pc', '')} {st.session_state.get('comp_city', '')}, {st.session_state.get('comp_country', '')}",
                         "contact_name": f"{st.session_state.get('cont_fn', '')} {st.session_state.get('cont_ln', '')}", "email": st.session_state.get('cont_email', ''), "phone": f"{st.session_state.get('cont_code', '')} {st.session_state.get('cont_phone', '')}",
                         "info_notes": str(st.session_state.get('cont_info', '')).strip(), "specs_list": specs_list, "db_info": db_info, "types": st.session_state.selected_types,
+                        "pickup_name": st.session_state.get('p_name', ''), "pickup_phone": st.session_state.get('p_phone', ''),
                         "pickup_address": st.session_state.get('p_addr', ''), "pickup_zip": st.session_state.get('p_zip', ''), "pickup_city": st.session_state.get('p_city', ''),
+                        "delivery_name": st.session_state.get('d_name', ''), "delivery_phone": st.session_state.get('d_phone', ''),
                         "delivery_address": st.session_state.get('d_addr', ''), "delivery_zip": st.session_state.get('d_zip', ''), "delivery_city": st.session_state.get('d_city', ''),
+                        "billing_company": st.session_state.get('comp_name', '') if st.session_state.same_billing else st.session_state.get('b_comp', ''),
+                        "billing_email": st.session_state.get('cont_email', '') if st.session_state.same_billing else st.session_state.get('b_email', ''),
+                        "billing_address": st.session_state.get('comp_addr', '') if st.session_state.same_billing else st.session_state.get('b_addr', ''),
+                        "billing_zip": st.session_state.get('comp_pc', '') if st.session_state.same_billing else st.session_state.get('b_zip', ''),
+                        "billing_city": st.session_state.get('comp_city', '') if st.session_state.same_billing else st.session_state.get('b_city', ''),
                         "price": calc_price, "profit": calc_profit, "price_breakdown": calc_breakdown, "calc_note": calc_note
                     }
                     st.session_state.step = 3; st.rerun()
@@ -950,8 +895,7 @@ else:
             st.markdown(f"<p style='color: #888; font-size: 14px; margin-bottom: 20px;'>{t['rev_s']}</p>", unsafe_allow_html=True)
             
             with st.container(border=True):
-                st.markdown(f"#### {t['rev_c']}")
-                st.write("---")
+                st.markdown(f"<h4 class='st-container-header'>{t['rev_c']}</h4><hr class='st-hr-tight'>", unsafe_allow_html=True)
                 col_s1, col_s2 = st.columns(2)
                 with col_s1:
                     st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_cn']}</span><br><b>{o['company']}</b>", unsafe_allow_html=True)
@@ -967,23 +911,33 @@ else:
                     st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_ph']}</span><br><b>{o['phone']}</b>", unsafe_allow_html=True)
             
             with st.container(border=True):
-                st.markdown(f"#### {t['rev_r']}")
-                st.write("---")
+                st.markdown(f"<h4 class='st-container-header'>{t['rev_b']}</h4><hr class='st-hr-tight'>", unsafe_allow_html=True)
+                col_b1, col_b2 = st.columns(2)
+                with col_b1:
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_bn']}</span><br><b>{o['billing_company']}</b>", unsafe_allow_html=True)
+                    st.write("")
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_ad']}</span><br><b>{o['billing_address']}, {o['billing_zip']} {o['billing_city']}</b>", unsafe_allow_html=True)
+                with col_b2:
+                    st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_em']}</span><br><b>{o['billing_email']}</b>", unsafe_allow_html=True)
+
+            with st.container(border=True):
+                st.markdown(f"<h4 class='st-container-header'>{t['rev_r']}</h4><hr class='st-hr-tight'>", unsafe_allow_html=True)
                 col_s3, col_s4 = st.columns(2)
                 with col_s3:
                     st.markdown(f"<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 10px;'>{t['r_pick'].upper()}</div>", unsafe_allow_html=True)
+                    if o.get('pickup_name'): st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_cp']}</span><br><b>{o['pickup_name']} ({o['pickup_phone']})</b><br><br>", unsafe_allow_html=True)
                     st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_str']}</span><br><b>{o.get('pickup_address', '-')}</b>", unsafe_allow_html=True)
                     st.write("")
                     st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_zc']}</span><br><b>{o.get('pickup_zip', '-')} {o.get('pickup_city', '-')}</b>", unsafe_allow_html=True)
                 with col_s4:
                     st.markdown(f"<div style='color:#b070c6; font-size:14px; font-weight:bold; margin-bottom: 10px;'>{t['r_del'].upper()}</div>", unsafe_allow_html=True)
+                    if o.get('delivery_name'): st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_cp']}</span><br><b>{o['delivery_name']} ({o['delivery_phone']})</b><br><br>", unsafe_allow_html=True)
                     st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_str']}</span><br><b>{o.get('delivery_address', '-')}</b>", unsafe_allow_html=True)
                     st.write("")
                     st.markdown(f"<span style='color:#888; font-size:12px;'>{t['l_zc']}</span><br><b>{o.get('delivery_zip', '-')} {o.get('delivery_city', '-')}</b>", unsafe_allow_html=True)
             
             with st.container(border=True):
-                st.markdown(f"#### {t['rev_s']}")
-                st.write("---")
+                st.markdown(f"<h4 class='st-container-header'>{t['rev_s']}</h4><hr class='st-hr-tight'>", unsafe_allow_html=True)
                 for spec in o['specs_list']: st.markdown(spec)
                 if o['info_notes']:
                     st.write("")
@@ -1000,17 +954,18 @@ else:
                         db_order = {
                             "company": o['company'], "reg_no": o['reg_no'], "address": o['address'], "contact_name": o['contact_name'], "email": o['email'], "phone": o['phone'],
                             "info": o['db_info'], "types": ", ".join(o['types']), "status": "New", "received_date": datetime.now().strftime("%Y-%m-%d %H:%M"),
+                            "pickup_name": o.get('pickup_name', ''), "pickup_phone": o.get('pickup_phone', ''),
                             "pickup_address": o.get('pickup_address', ''), "pickup_zip": o.get('pickup_zip', ''), "pickup_city": o.get('pickup_city', ''),
+                            "delivery_name": o.get('delivery_name', ''), "delivery_phone": o.get('delivery_phone', ''),
                             "delivery_address": o.get('delivery_address', ''), "delivery_zip": o.get('delivery_zip', ''), "delivery_city": o.get('delivery_city', ''),
+                            "billing_company": o.get('billing_company', ''), "billing_email": o.get('billing_email', ''),
+                            "billing_address": o.get('billing_address', ''), "billing_zip": o.get('billing_zip', ''), "billing_city": o.get('billing_city', ''),
                             "price": o.get('price', 0), "profit": o.get('profit', 0)
                         }
                         if st.session_state.get('user'): db_order["user_id"] = st.session_state.user.id
                         try:
-                            # 1. Verstuur naar de database en ontvang het nieuwe ID
                             res = supabase.table("orders").insert(db_order).execute()
                             nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
-                            
-                            # 2. VERSTUUR E-MAIL VIA OUTLOOK
                             stuur_bevestigings_email(o['email'], o, nieuw_order_id)
                             
                             st.balloons()
