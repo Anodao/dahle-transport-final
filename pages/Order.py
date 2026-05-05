@@ -15,7 +15,7 @@ from email.mime.multipart import MIMEMultipart
 st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. EMAIL FUNCTIE (OUTLOOK / OFFICE 365)
+# 1. EMAIL FUNCTIE (OUTLOOK / OFFICE 365) - MET DEBUGGING
 # =========================================================
 def stuur_bevestigings_email(naar_email, order_data, order_id):
     try:
@@ -63,8 +63,7 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
         server.quit()
         return True
     except Exception as e:
-        print(f"Fout bij versturen email: {e}")
-        return False
+        return str(e) # Stuurt de foutmelding terug voor debugging!
 
 # =========================================================
 # 2. DIRECTE CSS INJECTIE 
@@ -306,7 +305,7 @@ translations = {
         "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
         "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats.", "calc_note_we": "Frakten beräknas efter totalvikt.",
         "calc_disc": "Detta är endast en uppskattning. Slutfakturan kan variera beroende på faktisk vikt och mått.", "c_energy": "Energitillägg (5%)", "energy_tip": "Tillfälligt tillägg på grund av oförutsedda höga energi- och bränslekostnader.",
-        "note_lbl": "Obs:", "guest_msg": "Du beställer för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
+        "note_lbl": "Obs:", "guest_msg": "Du bestiller för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -587,7 +586,6 @@ def get_live_price():
     # --- 5% ENERGY TAX ---
     energy_tax = cost * 0.05
     cost += energy_tax
-    # Gebruik een schone, minimalistische SVG (grijze cirkel) voor de Info knop
     info_svg = f"""<span title="{t['energy_tip']}" style="cursor:help; display:inline-block; margin-left:4px; vertical-align:-2px;"><svg style="width:14px; height:14px; fill:#888;" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg></span>"""
     energy_lbl = f"{t['c_energy']} {info_svg}"
     breakdown_lines.append((energy_lbl, energy_tax))
@@ -1043,11 +1041,13 @@ else:
                             "billing_address": o.get('billing_address', ''), "billing_zip": o.get('billing_zip', ''), "billing_city": o.get('billing_city', ''),
                             "price": o.get('price', 0), "profit": o.get('profit', 0)
                         }
-try:
+                        if st.session_state.get('user'): db_order["user_id"] = st.session_state.user.id
+                        try:
+                            # 1. ORDER OPSLAAN
                             res = supabase.table("orders").insert(db_order).execute()
                             nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
                             
-                            # Vang het resultaat van de mail op
+                            # 2. EMAIL VERSTUREN (MET DEBUG)
                             mail_status = stuur_bevestigings_email(o['email'], o, nieuw_order_id)
                             
                             if mail_status is True:
@@ -1055,10 +1055,10 @@ try:
                                 st.session_state.is_submitted = True
                                 st.rerun()
                             else:
-                                st.error(f"Order opgeslagen, maar E-MAIL MISLUKT! Foutmelding: {mail_status}")
-                                
+                                st.error(f"Order lagret, men E-POST FEILET! / Order saved, but EMAIL FAILED! Error details: {mail_status}")
+
                         except Exception as e:
-                            st.error(f"{t['db_err']} Details: {e}")
+                            st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. Details: {e}")
             else:
                 st.success(t['s_succ']); st.info(t['s_sub'])
                 if st.button(t['b_new'], type="primary", use_container_width=True): reset_form_state(); st.rerun()
