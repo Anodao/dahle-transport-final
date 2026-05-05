@@ -134,6 +134,7 @@ translations = {
         "tab_myship": "Mine sendinger", "tab_neworder": "Ny bestilling", "tab_prof": "Profilinnstillinger",
         "no_orders": "Du har ikke lagt inn noen bestillinger ennå. Gå til 'Ny bestilling' for å starte!",
         "status": "Status", "pickup": "Hentested", "delivery": "Leveringssted", "addr": "Adresse", "zip": "Postnummer", "city": "By",
+        "track_trace": "Sporing (Track & Trace)",
         "services": "Forespurte tjenester", "add_info": "Tilleggsinfo", "btn_cancel": "Avbryt denne bestillingen",
         "msg_cancel_succ": "Bestillingen er avbrutt.", "msg_cancel_fail": "Klarte ikke å avbryte bestillingen.",
         "prof_title": "Administrer profilen din", "prof_sub": "Oppdater firma- og kontaktinformasjon her.",
@@ -156,6 +157,7 @@ translations = {
         "tab_myship": "My Shipments", "tab_neworder": "New Order", "tab_prof": "Profile Settings",
         "no_orders": "You haven't placed any orders with this account yet. Go to 'New Order' to get started!",
         "status": "Status", "pickup": "Pickup Location", "delivery": "Delivery Destination", "addr": "Address", "zip": "Zip Code", "city": "City",
+        "track_trace": "Track & Trace",
         "services": "Services Requested", "add_info": "Additional Info", "btn_cancel": "Cancel This Order",
         "msg_cancel_succ": "Your order has been cancelled successfully.", "msg_cancel_fail": "Failed to cancel order.",
         "prof_title": "Manage Your Profile", "prof_sub": "Update your company and contact information here.",
@@ -172,12 +174,13 @@ translations = {
         "lbl_email": "E-postadress", "lbl_pass": "Lösenord", "btn_login": "Logga in",
         "msg_logging_in": "Loggar in...", "msg_login_succ": "Inloggningen lyckades! Omdirigerar...", "msg_login_fail": "Fel e-post eller lösenord.", "msg_fill_both": "Vänligen fyll i båda fälten.",
         "lbl_comp": "Företagsnamn *", "lbl_fn": "Förnamn *", "lbl_ln": "Efternamn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-post (Detta blir din inloggning) *", "lbl_pass_reg": "Välj lösenord *", "btn_reg": "Skapa konto",
-        "msg_creating": "Skapar konto...", "msg_reg_succ": "Kontot har skapats! Du kan nu logga in via fliken 'Logga in'.", "msg_reg_fail": "Ett fel uppstod, eller e-posten finns redan.", "msg_fill_req": "Vänligen fyll i alla obligatoriska fält (*).",
+        "msg_creating": "Skapar konto...", "msg_reg_succ": "Kontot har skapats! Du kan nu logga in via fliken 'Logga in'.", "msg_reg_fail": "Ett fel uppstod, eller e-posten finns redan.", "msg_fill_req": "Vänligen fyll i alla obligatoriske fält (*).",
         "welcome": "Välkommen tillbaka", "logged_in_as": "Inloggad som", "btn_logout": "Logga ut",
         "hist_title": "Din frakthistorik", "tot_ship": "Totala försändelser", "pend_appr": "Väntar på godkännande", "processed": "Behandlade",
         "tab_myship": "Mina försändelser", "tab_neworder": "Ny beställning", "tab_prof": "Profilinställningar",
         "no_orders": "Du har inte gjort några beställningar än. Gå till 'Ny beställning' för att komma igång!",
         "status": "Status", "pickup": "Upphämtningsplats", "delivery": "Leveransdestination", "addr": "Adress", "zip": "Postnummer", "city": "Stad",
+        "track_trace": "Spårning (Track & Trace)",
         "services": "Begärda tjänster", "add_info": "Ytterligare info", "btn_cancel": "Avbryt denna beställning",
         "msg_cancel_succ": "Beställningen har avbrutits.", "msg_cancel_fail": "Kunde inte avbryta beställningen.",
         "prof_title": "Hantera din profil", "prof_sub": "Uppdatera ditt företags- och kontaktinformation här.",
@@ -200,6 +203,7 @@ translations = {
         "tab_myship": "Mine forsendelser", "tab_neworder": "Ny bestilling", "tab_prof": "Profilindstillinger",
         "no_orders": "Du har ikke foretaget nogen bestillinger endnu. Gå til 'Ny bestilling' for at komme i gang!",
         "status": "Status", "pickup": "Afhentningssted", "delivery": "Leveringssted", "addr": "Adresse", "zip": "Postnummer", "city": "By",
+        "track_trace": "Sporing (Track & Trace)",
         "services": "Anmodede tjenester", "add_info": "Yderligere info", "btn_cancel": "Annuller denne bestilling",
         "msg_cancel_succ": "Bestillingen er annulleret.", "msg_cancel_fail": "Kunne ikke annullere bestillingen.",
         "prof_title": "Administrer din profil", "prof_sub": "Opdater dit firma- og kontaktoplysninger her.",
@@ -460,7 +464,7 @@ else:
             st.info(t['no_orders'])
         else:
             for o in user_orders:
-                # Hier houd ik de statusicoontjes wel in, omdat dat belangrijke visuele feedback is for the order status
+                # Hier houd ik de statusicoontjes wel in, fordi dat belangrijke visuele feedback is for the order status
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']})"):
                     st.markdown("<br>", unsafe_allow_html=True)
@@ -475,7 +479,20 @@ else:
                         st.write(f"**{t['addr']}:** {o.get('delivery_address', '-')}")
                         st.write(f"**{t['zip']}:** {o.get('delivery_zip', '-')}")
                         st.write(f"**{t['city']}:** {o.get('delivery_city', '-')}")
+                        
                     with c_det2:
+                        # --- HIER IS HET NIEUWE TRACK & TRACE BLOK ---
+                        tracking_code = o.get('tracking_code')
+                        if tracking_code and str(tracking_code).strip():
+                            st.markdown(f"#### 📦 {t['track_trace']}")
+                            st.markdown(f"""
+                            <div style='background-color: #262626; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #b070c6; margin-bottom: 20px;'>
+                                <span style='color: #bbb; font-size: 13px;'>Code: </span>
+                                <span style='color: #fff; font-size: 15px; font-weight: bold;'>{tracking_code}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        # ---------------------------------------------
+                        
                         st.markdown(f"#### {t['services']}")
                         st.write(f"{o.get('types', '-')}")
                         st.write("")
