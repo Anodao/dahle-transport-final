@@ -116,7 +116,7 @@ lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk"
 current_lang_display = lang_displays.get(lang, "Norsk")
 
 # =========================================================
-# 3. WOORDENBOEK (Zonder Emojis voor strakke look)
+# 3. WOORDENBOEK
 # =========================================================
 translations = {
     "no": {
@@ -134,7 +134,7 @@ translations = {
         "tab_myship": "Mine sendinger", "tab_neworder": "Ny bestilling", "tab_prof": "Profilinnstillinger",
         "no_orders": "Du har ikke lagt inn noen bestillinger ennå. Gå til 'Ny bestilling' for å starte!",
         "status": "Status", "pickup": "Hentested", "delivery": "Leveringssted", "addr": "Adresse", "zip": "Postnummer", "city": "By",
-        "track_trace": "Sporing (Track & Trace)",
+        "track_trace": "Sporing (Track & Trace)", "track_pending": "Venter på tildeling...",
         "services": "Forespurte tjenester", "add_info": "Tilleggsinfo", "btn_cancel": "Avbryt denne bestillingen",
         "msg_cancel_succ": "Bestillingen er avbrutt.", "msg_cancel_fail": "Klarte ikke å avbryte bestillingen.",
         "prof_title": "Administrer profilen din", "prof_sub": "Oppdater firma- og kontaktinformasjon her.",
@@ -157,7 +157,7 @@ translations = {
         "tab_myship": "My Shipments", "tab_neworder": "New Order", "tab_prof": "Profile Settings",
         "no_orders": "You haven't placed any orders with this account yet. Go to 'New Order' to get started!",
         "status": "Status", "pickup": "Pickup Location", "delivery": "Delivery Destination", "addr": "Address", "zip": "Zip Code", "city": "City",
-        "track_trace": "Track & Trace",
+        "track_trace": "Track & Trace", "track_pending": "Pending assignment...",
         "services": "Services Requested", "add_info": "Additional Info", "btn_cancel": "Cancel This Order",
         "msg_cancel_succ": "Your order has been cancelled successfully.", "msg_cancel_fail": "Failed to cancel order.",
         "prof_title": "Manage Your Profile", "prof_sub": "Update your company and contact information here.",
@@ -180,7 +180,7 @@ translations = {
         "tab_myship": "Mina försändelser", "tab_neworder": "Ny beställning", "tab_prof": "Profilinställningar",
         "no_orders": "Du har inte gjort några beställningar än. Gå till 'Ny beställning' för att komma igång!",
         "status": "Status", "pickup": "Upphämtningsplats", "delivery": "Leveransdestination", "addr": "Adress", "zip": "Postnummer", "city": "Stad",
-        "track_trace": "Spårning (Track & Trace)",
+        "track_trace": "Spårning (Track & Trace)", "track_pending": "Väntar på tilldelning...",
         "services": "Begärda tjänster", "add_info": "Ytterligare info", "btn_cancel": "Avbryt denna beställning",
         "msg_cancel_succ": "Beställningen har avbrutits.", "msg_cancel_fail": "Kunde inte avbryta beställningen.",
         "prof_title": "Hantera din profil", "prof_sub": "Uppdatera ditt företags- och kontaktinformation här.",
@@ -203,7 +203,7 @@ translations = {
         "tab_myship": "Mine forsendelser", "tab_neworder": "Ny bestilling", "tab_prof": "Profilindstillinger",
         "no_orders": "Du har ikke foretaget nogen bestillinger endnu. Gå til 'Ny bestilling' for at komme i gang!",
         "status": "Status", "pickup": "Afhentningssted", "delivery": "Leveringssted", "addr": "Adresse", "zip": "Postnummer", "city": "By",
-        "track_trace": "Sporing (Track & Trace)",
+        "track_trace": "Sporing (Track & Trace)", "track_pending": "Afventer tildeling...",
         "services": "Anmodede tjenester", "add_info": "Yderligere info", "btn_cancel": "Annuller denne bestilling",
         "msg_cancel_succ": "Bestillingen er annulleret.", "msg_cancel_fail": "Kunne ikke annullere bestillingen.",
         "prof_title": "Administrer din profil", "prof_sub": "Opdater dit firma- og kontaktoplysninger her.",
@@ -262,7 +262,7 @@ if st.session_state.get('user'):
 is_employee = st.session_state.get('role') in ['admin', 'employee']
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN (Platte string, Menu zonder Login, Zonder Emojis)
+# 5. NAVBAR SAMENSTELLEN
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -270,7 +270,6 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = t['nav_portal']
 
-# Menu plat opbouwen ZONDER EMOJI'S
 dropdown_links = f'<a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a>'
 if is_employee:
     dropdown_links += f'<a href="/Dashboard?lang={lang}" target="_self">{t["menu_dash"]}</a><a href="/Planner?lang={lang}" target="_self">{t["menu_plan"]}</a>'
@@ -464,7 +463,6 @@ else:
             st.info(t['no_orders'])
         else:
             for o in user_orders:
-                # Hier houd ik de statusicoontjes wel in, fordi dat belangrijke visuele feedback is for the order status
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']})"):
                     st.markdown("<br>", unsafe_allow_html=True)
@@ -481,14 +479,20 @@ else:
                         st.write(f"**{t['city']}:** {o.get('delivery_city', '-')}")
                         
                     with c_det2:
-                        # --- HIER IS HET NIEUWE TRACK & TRACE BLOK ---
+                        # --- HIER IS HET VERBETERDE TRACK & TRACE BLOK ---
                         tracking_code = o.get('tracking_code')
+                        st.markdown(f"#### 📦 {t['track_trace']}")
                         if tracking_code and str(tracking_code).strip():
-                            st.markdown(f"#### 📦 {t['track_trace']}")
                             st.markdown(f"""
                             <div style='background-color: #262626; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #b070c6; margin-bottom: 20px;'>
                                 <span style='color: #bbb; font-size: 13px;'>Code: </span>
                                 <span style='color: #fff; font-size: 15px; font-weight: bold;'>{tracking_code}</span>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        else:
+                            st.markdown(f"""
+                            <div style='background-color: #1e1e1e; padding: 10px 14px; border-radius: 6px; border-left: 4px solid #555; margin-bottom: 20px;'>
+                                <span style='color: #888; font-size: 13px; font-style: italic;'>{t['track_pending']}</span>
                             </div>
                             """, unsafe_allow_html=True)
                         # ---------------------------------------------
