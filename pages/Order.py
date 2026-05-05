@@ -15,7 +15,59 @@ from email.mime.multipart import MIMEMultipart
 st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. DIRECTE CSS INJECTIE 
+# 1. EMAIL FUNCTIE (OUTLOOK / OFFICE 365)
+# =========================================================
+def stuur_bevestigings_email(naar_email, order_data, order_id):
+    try:
+        zender_email = st.secrets["email"]["address"]
+        zender_wachtwoord = st.secrets["email"]["password"]
+
+        msg = MIMEMultipart()
+        msg['From'] = f"Dahle Transport <{zender_email}>"
+        msg['To'] = naar_email
+        msg['Subject'] = f"Ordre Godkjent / Order Confirmation #{order_id}"
+
+        html_body = f"""
+        <html>
+        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+                <div style="background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%); padding: 25px; text-align: center;">
+                    <h2 style="color: white; margin: 0; font-size: 24px;">Dahle Transport</h2>
+                </div>
+                <div style="padding: 30px; background-color: #ffffff;">
+                    <h3 style="color: #111; margin-top: 0;">Hei {order_data.get('contact_name', 'Kunde')}!</h3>
+                    <p>Takk for din bestilling. Vi har mottatt din transportforespørsel og vil behandle den så snart som mulig.</p>
+                    
+                    <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #894b9d; margin: 20px 0;">
+                        <p style="margin: 0 0 10px 0;"><b>📦 Order ID:</b> #{order_id}</p>
+                        <p style="margin: 0 0 10px 0;"><b>📍 Fra:</b> {order_data.get('pickup_city', 'Ikke angitt')} ({order_data.get('pickup_zip', '')})</p>
+                        <p style="margin: 0;"><b>🏁 Til:</b> {order_data.get('delivery_city', 'Ikke angitt')} ({order_data.get('delivery_zip', '')})</p>
+                    </div>
+                    
+                    <p>Du kan følge statusen på forsendelsen din i Kundeportalen.</p>
+                    <p>Med vennlig hilsen,<br><b>Team Dahle Transport</b></p>
+                    
+                    <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
+                    <p style="font-size: 11px; color: #888; text-align: center;">Dette er en automatisk e-post. Vennligst ikke svar på denne.</p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        msg.attach(MIMEText(html_body, 'html'))
+
+        server = smtplib.SMTP('smtp.office365.com', 587)
+        server.starttls()
+        server.login(zender_email, zender_wachtwoord)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Fout bij versturen email: {e}")
+        return False
+
+# =========================================================
+# 2. DIRECTE CSS INJECTIE 
 # =========================================================
 st.markdown("""
 <style>
@@ -94,7 +146,7 @@ div[data-baseweb="select"] div { color: white; background-color: #333;}
 """, unsafe_allow_html=True)
 
 # =========================================================
-# 2. INIT COOKIE MANAGER & STATE DEFAULTS
+# 3. INIT COOKIE MANAGER & STATE DEFAULTS
 # =========================================================
 cookie_manager = stx.CookieManager()
 
@@ -138,7 +190,7 @@ for k, v in default_keys.items():
     if k not in st.session_state: st.session_state[k] = v
 
 # =========================================================
-# 3. HET ORDER WOORDENBOEK
+# 4. HET ORDER WOORDENBOEK
 # =========================================================
 translations = {
     "no": {
@@ -257,7 +309,7 @@ translations = {
 t = translations[lang]
 
 # =========================================================
-# 4. DATABASE & AUTHENTICATIE
+# 5. DATABASE & AUTHENTICATIE
 # =========================================================
 def init_connection():
     return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
@@ -322,7 +374,7 @@ if "reset" in st.query_params:
     st.rerun()
 
 # =========================================================
-# 5. NAVBAR SAMENSTELLEN 
+# 6. NAVBAR SAMENSTELLEN 
 # =========================================================
 if st.session_state.get('user') is not None and 'company_name' in st.session_state:
     icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
@@ -348,7 +400,6 @@ st.markdown(html_navbar, unsafe_allow_html=True)
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
-    """Vindt GPS coördinaten. Wereldwijde zoekopdracht (Zonder hardcoded Norway)."""
     if len(city) < 2: return None
     headers = {'User-Agent': 'DahleTransportMap/18.0'}
     url = "https://nominatim.openstreetmap.org/search"
@@ -369,7 +420,6 @@ def get_coordinates(street, zip_code, city):
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
-    """Haalt de blauwe routelijn op van de server (met HTTPS)."""
     if not coord1 or not coord2: return None, None
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
@@ -380,7 +430,6 @@ def get_route_data(coord1, coord2):
     return None, None
 
 def calculate_zoom(coord1, coord2):
-    """Berekent het ideale zoomniveau op basis van de afstand tussen twee punten."""
     if not coord1 or not coord2: return 4.0
     lat_diff = abs(coord1[0] - coord2[0])
     lon_diff = abs(coord1[1] - coord2[1])
@@ -720,108 +769,106 @@ else:
                     with c_code: st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
                     with c_phone: st.text_input("Phone", value=prof.get('cont_phone', ''), label_visibility="collapsed", key="cont_phone", max_chars=20)
     
-                st.write("")
-                st.markdown(f"<h3 style='margin-top: 20px;'>{t['r_info']}</h3>", unsafe_allow_html=True)
-                st.write("---")
+            st.write("")
+            st.markdown(f"<h3 style='margin-top: 20px;'>{t['r_info']}</h3>", unsafe_allow_html=True)
+            st.write("---")
+            
+            c_route_left, c_route_right = st.columns(2, gap="large")
+            with c_route_left:
+                st.markdown(f"**{t['r_pick']}**")
+                st.text_input(req_lbl("p_addr", t['r_str']), value=prof.get('p_addr', ''), key="p_addr", max_chars=150)
+                c_p_zip, c_p_city = st.columns(2)
+                with c_p_zip: st.text_input(req_lbl("p_zip", t['c_zip']), value=prof.get('p_zip', ''), key="p_zip", max_chars=20)
+                with c_p_city: st.text_input(req_lbl("p_city", t['c_city']), value=prof.get('p_city', ''), key="p_city", max_chars=100)
+            with c_route_right:
+                st.markdown(f"**{t['r_del']}**")
+                st.text_input(req_lbl("d_addr", t['r_str']), value=prof.get('d_addr', ''), key="d_addr", max_chars=150)
+                c_d_zip, c_d_city = st.columns(2)
+                with c_d_zip: st.text_input(req_lbl("d_zip", t['c_zip']), value=prof.get('d_zip', ''), key="d_zip", max_chars=20)
+                with c_d_city: st.text_input(req_lbl("d_city", t['c_city']), value=prof.get('d_city', ''), key="d_city", max_chars=100)
                 
-                c_route_left, c_route_right = st.columns(2, gap="large")
-                with c_route_left:
-                    st.markdown(f"**{t['r_pick']}**")
-                    st.text_input(req_lbl("p_addr", t['r_str']), value=prof.get('p_addr', ''), key="p_addr", max_chars=150)
-                    c_p_zip, c_p_city = st.columns(2)
-                    with c_p_zip: st.text_input(req_lbl("p_zip", t['c_zip']), value=prof.get('p_zip', ''), key="p_zip", max_chars=20)
-                    with c_p_city: st.text_input(req_lbl("p_city", t['c_city']), value=prof.get('p_city', ''), key="p_city", max_chars=100)
-                with c_route_right:
-                    st.markdown(f"**{t['r_del']}**")
-                    st.text_input(req_lbl("d_addr", t['r_str']), value=prof.get('d_addr', ''), key="d_addr", max_chars=150)
-                    c_d_zip, c_d_city = st.columns(2)
-                    with c_d_zip: st.text_input(req_lbl("d_zip", t['c_zip']), value=prof.get('d_zip', ''), key="d_zip", max_chars=20)
-                    with c_d_city: st.text_input(req_lbl("d_city", t['c_city']), value=prof.get('d_city', ''), key="d_city", max_chars=100)
-                    
-                st.write("")
-                
-                # ========================================================
-                # MAP LOGICA: LIJN ONDEROP, DONKER PAARSE HOLLE CIRKELS BOVENOP
-                # ========================================================
-                p_addr_map = str(st.session_state.get('p_addr') or '').strip()
-                p_zip_map = str(st.session_state.get('p_zip') or '').strip()
-                p_city_map = str(st.session_state.get('p_city') or '').strip()
-                
-                d_addr_map = str(st.session_state.get('d_addr') or '').strip()
-                d_zip_map = str(st.session_state.get('d_zip') or '').strip()
-                d_city_map = str(st.session_state.get('d_city') or '').strip()
-                
-                p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
-                d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
-                
-                layers = []
-                
-                # 1. TEKEN DE LIJN ALS EERSTE (Onderste laag)
-                if p_coords and d_coords:
-                    _, route_geom = get_route_data(p_coords, d_coords) 
-                    if route_geom:
-                        layers.append(pdk.Layer(
-                            "PathLayer", 
-                            data=[{"path": route_geom}], 
-                            get_path="path", 
-                            get_color=[137, 75, 157, 255], 
-                            width_scale=20, 
-                            width_min_pixels=4, 
-                            get_width=5
-                        ))
-                    else:
-                        route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
-                        layers.append(pdk.Layer(
-                            "PathLayer", 
-                            data=[{"path": route_geom}], 
-                            get_path="path", 
-                            get_color=[137, 75, 157, 255], 
-                            width_scale=20, 
-                            width_min_pixels=4, 
-                            get_width=5
-                        ))
-                    
-                    center_lat = (p_coords[0] + d_coords[0]) / 2
-                    center_lon = (p_coords[1] + d_coords[1]) / 2
-                    zoom = calculate_zoom(p_coords, d_coords)
-                    pitch = 20
-                elif p_coords:
-                    center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
-                elif d_coords:
-                    center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
-                else:
-                    center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
-
-                # 2. TEKEN DE CIRKELS ALS TWEEDE (Bovenste laag)
-                points = []
-                if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
-                if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
-                
-                if points:
+            st.write("")
+            
+            # ========================================================
+            # MAP LOGICA
+            # ========================================================
+            p_addr_map = str(st.session_state.get('p_addr') or '').strip()
+            p_zip_map = str(st.session_state.get('p_zip') or '').strip()
+            p_city_map = str(st.session_state.get('p_city') or '').strip()
+            
+            d_addr_map = str(st.session_state.get('d_addr') or '').strip()
+            d_zip_map = str(st.session_state.get('d_zip') or '').strip()
+            d_city_map = str(st.session_state.get('d_city') or '').strip()
+            
+            p_coords = get_coordinates(p_addr_map, p_zip_map, p_city_map)
+            d_coords = get_coordinates(d_addr_map, d_zip_map, d_city_map)
+            
+            layers = []
+            
+            if p_coords and d_coords:
+                _, route_geom = get_route_data(p_coords, d_coords) 
+                if route_geom:
                     layers.append(pdk.Layer(
-                        "ScatterplotLayer", 
-                        data=points, 
-                        get_position="pos", 
-                        get_fill_color="color",              # Donkerpaarse kern
-                        get_line_color=[255, 255, 255, 255], # Witte buitenrand
-                        stroked=True,                        # Zet de rand aan
-                        filled=True,                         # Zet de opvulling aan
-                        line_width_min_pixels=3,             # Dikte van de witte rand
-                        get_radius=200, 
-                        radius_min_pixels=6, 
-                        radius_max_pixels=14
+                        "PathLayer", 
+                        data=[{"path": route_geom}], 
+                        get_path="path", 
+                        get_color=[137, 75, 157, 255], 
+                        width_scale=20, 
+                        width_min_pixels=4, 
+                        get_width=5
                     ))
-
-                st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+                else:
+                    route_geom = [[p_coords[1], p_coords[0]], [d_coords[1], d_coords[0]]]
+                    layers.append(pdk.Layer(
+                        "PathLayer", 
+                        data=[{"path": route_geom}], 
+                        get_path="path", 
+                        get_color=[137, 75, 157, 255], 
+                        width_scale=20, 
+                        width_min_pixels=4, 
+                        get_width=5
+                    ))
                 
-                st.write("---")
-                st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
+                center_lat = (p_coords[0] + d_coords[0]) / 2
+                center_lon = (p_coords[1] + d_coords[1]) / 2
+                zoom = calculate_zoom(p_coords, d_coords)
+                pitch = 20
+            elif p_coords:
+                center_lat, center_lon, zoom, pitch = p_coords[0], p_coords[1], 11, 0
+            elif d_coords:
+                center_lat, center_lon, zoom, pitch = d_coords[0], d_coords[1], 11, 0
+            else:
+                center_lat, center_lon, zoom, pitch = 64.0, 10.0, 3.5, 0
+
+            points = []
+            if p_coords: points.append({"pos": [p_coords[1], p_coords[0]], "name": "Pickup", "color": [55, 30, 65, 255]})
+            if d_coords: points.append({"pos": [d_coords[1], d_coords[0]], "name": "Delivery", "color": [55, 30, 65, 255]})
+            
+            if points:
+                layers.append(pdk.Layer(
+                    "ScatterplotLayer", 
+                    data=points, 
+                    get_position="pos", 
+                    get_fill_color="color",              # Donkerpaarse kern
+                    get_line_color=[255, 255, 255, 255], # Witte buitenrand
+                    stroked=True,                        # Zet de rand aan
+                    filled=True,                         # Zet de opvulling aan
+                    line_width_min_pixels=3,             # Dikte van de witte rand
+                    get_radius=200, 
+                    radius_min_pixels=6, 
+                    radius_max_pixels=14
+                ))
+
+            st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+            
+            st.write("---")
+            st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
 
             st.write("")
             
             error_container = st.empty()
             
-            # VALIDATIE CHECK (GEWICHT & VELDEN)
+            # VALIDATIE CHECK
             missing_fields = False
             invalid_wgt = False
             
@@ -959,12 +1006,18 @@ else:
                         }
                         if st.session_state.get('user'): db_order["user_id"] = st.session_state.user.id
                         try:
-                            supabase.table("orders").insert(db_order).execute()
+                            # 1. Verstuur naar de database en ontvang het nieuwe ID
+                            res = supabase.table("orders").insert(db_order).execute()
+                            nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
+                            
+                            # 2. VERSTUUR E-MAIL VIA OUTLOOK
+                            stuur_bevestigings_email(o['email'], o, nieuw_order_id)
+                            
                             st.balloons()
                             st.session_state.is_submitted = True
                             st.rerun()
                         except Exception as e:
-                            st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. (Zorg dat 'price', 'profit', 'pickup_address' etc. erin staan). Details: {e}")
+                            st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. Details: {e}")
             else:
                 st.success(t['s_succ']); st.info(t['s_sub'])
                 if st.button(t['b_new'], type="primary", use_container_width=True): reset_form_state(); st.rerun()
