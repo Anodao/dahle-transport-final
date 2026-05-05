@@ -1043,17 +1043,22 @@ else:
                             "billing_address": o.get('billing_address', ''), "billing_zip": o.get('billing_zip', ''), "billing_city": o.get('billing_city', ''),
                             "price": o.get('price', 0), "profit": o.get('profit', 0)
                         }
-                        if st.session_state.get('user'): db_order["user_id"] = st.session_state.user.id
-                        try:
+try:
                             res = supabase.table("orders").insert(db_order).execute()
                             nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
-                            stuur_bevestigings_email(o['email'], o, nieuw_order_id)
                             
-                            st.balloons()
-                            st.session_state.is_submitted = True
-                            st.rerun()
+                            # Vang het resultaat van de mail op
+                            mail_status = stuur_bevestigings_email(o['email'], o, nieuw_order_id)
+                            
+                            if mail_status is True:
+                                st.balloons()
+                                st.session_state.is_submitted = True
+                                st.rerun()
+                            else:
+                                st.error(f"Order opgeslagen, maar E-MAIL MISLUKT! Foutmelding: {mail_status}")
+                                
                         except Exception as e:
-                            st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. Details: {e}")
+                            st.error(f"{t['db_err']} Details: {e}")
             else:
                 st.success(t['s_succ']); st.info(t['s_sub'])
                 if st.button(t['b_new'], type="primary", use_container_width=True): reset_form_state(); st.rerun()
