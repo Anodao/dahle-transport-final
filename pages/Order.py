@@ -7,6 +7,9 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 import math
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_sidebar_state="collapsed")
