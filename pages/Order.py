@@ -215,7 +215,7 @@ for k, v in default_keys.items():
     if k not in st.session_state: st.session_state[k] = v
 
 # =========================================================
-# 4. HET ORDER WOORDENBOEK (Inclusief nieuwe Facturering & Disclaimers)
+# 4. HET ORDER WOORDENBOEK
 # =========================================================
 translations = {
     "no": {
@@ -246,7 +246,7 @@ translations = {
         "calc_t": "Estimert Kostnad", "c_tr": "Transport", "c_admin": "Administrasjon", "c_over": "Overdimensjonert (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenger", "c_tot": "Total", "c_vat": "Ekskl. MVA (VAT)",
         "w_reg": "Totalvekt", "qty_reg": "Registrert", "calc_note_pal": "Frakten er beregnet etter plass/antall.", "calc_note_we": "Frakten er beregnet etter totalvekt.",
         "calc_disc": "Dette er kun et estimat. Endelig faktura kan avvike basert på faktisk vekt og dimensjoner.", "c_energy": "Energitillegg (5%)", "energy_tip": "Midlertidig tillegg grunnet uforutsette høye energi- og drivstoffkostnader.",
-        "guest_msg": "Du bestiller for øyeblikket som gjest.", "guest_link": "Logg inn for å fylle ut automatisk."
+        "note_lbl": "Merk:", "guest_msg": "Du bestiller for øyeblikket som gjest.", "guest_link": "Logg inn for å fylle ut automatisk."
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -276,7 +276,7 @@ translations = {
         "calc_t": "Estimated Cost", "c_tr": "Freight", "c_admin": "Administration", "c_over": "Oversized (+25%)", "c_sameday": "Express Delivery", "c_ferry": "Toll", "c_tot": "Total", "c_vat": "Excl. MVA (VAT)",
         "w_reg": "Total weight", "qty_reg": "Registered", "calc_note_pal": "Freight is calculated by space/quantity.", "calc_note_we": "Freight is calculated by total weight.",
         "calc_disc": "This is an estimate only. Final invoice may differ based on actual weight and dimensions.", "c_energy": "Energy Surcharge (5%)", "energy_tip": "Temporary surcharge due to unforeseen high energy and fuel costs.",
-        "guest_msg": "You are currently ordering as a guest.", "guest_link": "Log in to auto-fill your details."
+        "note_lbl": "Note:", "guest_msg": "You are currently ordering as a guest.", "guest_link": "Log in to auto-fill your details."
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -306,7 +306,7 @@ translations = {
         "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
         "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats.", "calc_note_we": "Frakten beräknas efter totalvikt.",
         "calc_disc": "Detta är endast en uppskattning. Slutfakturan kan variera beroende på faktisk vikt och mått.", "c_energy": "Energitillägg (5%)", "energy_tip": "Tillfälligt tillägg på grund av oförutsedda höga energi- och bränslekostnader.",
-        "guest_msg": "Du beställer för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
+        "note_lbl": "Obs:", "guest_msg": "Du beställer för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -336,10 +336,10 @@ translations = {
         "calc_t": "Estimeret Pris", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Overdimensioneret (+25%)", "c_sameday": "Express levering", "c_ferry": "Bompenge", "c_tot": "Total", "c_vat": "Ekskl. Moms (VAT)",
         "w_reg": "Totalvægt", "qty_reg": "Registreret", "calc_note_pal": "Fragten er beregnet efter plads/antal.", "calc_note_we": "Fragten er beregnet efter totalvægt.",
         "calc_disc": "Dette er kun et estimat. Den endelige faktura kan variere baseret på den faktiske vægt og dimensioner.", "c_energy": "Energitillæg (5%)", "energy_tip": "Midlertidigt tillæg på grund af uforudsete høje energi- og brændstofomkostninger.",
-        "guest_msg": "Du bestiller i øjeblikket som gæst.", "guest_link": "Log ind for at udfylde automatisk."
+        "note_lbl": "Bemærk:", "guest_msg": "Du bestiller i øjeblikket som gæst.", "guest_link": "Log ind for at udfylde automatisk."
     }
 }
-t = translations[lang]
+t = translations.get(lang, translations["en"])
 
 # =========================================================
 # 5. DATABASE & AUTHENTICATIE
@@ -587,7 +587,9 @@ def get_live_price():
     # --- 5% ENERGY TAX ---
     energy_tax = cost * 0.05
     cost += energy_tax
-    energy_lbl = f"{t['c_energy']} <span title='{t['energy_tip']}' style='cursor:help;'>ℹ️</span>"
+    # Gebruik een schone, minimalistische SVG (grijze cirkel) voor de Info knop
+    info_svg = f"""<span title="{t['energy_tip']}" style="cursor:help; display:inline-block; margin-left:4px; vertical-align:-2px;"><svg style="width:14px; height:14px; fill:#888;" viewBox="0 0 512 512"><path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/></svg></span>"""
+    energy_lbl = f"{t['c_energy']} {info_svg}"
     breakdown_lines.append((energy_lbl, energy_tax))
     # ---------------------
 
@@ -775,9 +777,6 @@ else:
                     with c_code: st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed", key="cont_code")
                     with c_phone: st.text_input("Phone", value=prof.get('cont_phone', ''), label_visibility="collapsed", key="cont_phone", max_chars=20)
 
-                # ==================================
-                # FACTURERING RADIO BUTTON
-                # ==================================
                 st.write("")
                 st.markdown("<hr style='border: 0; border-top: 1px dashed #444; margin-bottom: 15px;'>", unsafe_allow_html=True)
                 st.markdown(f"<label style='font-size: 14px; font-weight: 600; color: #ccc;'>{t['bill_who']}</label>", unsafe_allow_html=True)
@@ -934,7 +933,6 @@ else:
                     
                     calc_price, calc_cost, calc_profit, calc_breakdown, calc_note = get_live_price()
                     
-                    # LOGICA VOOR FACTURERING OVERNEMEN
                     p_type = st.session_state.payer_type
                     if p_type == 'Sender':
                         bc = st.session_state.get('comp_name', '')
@@ -994,7 +992,6 @@ else:
                 st.markdown(f"<h4 class='st-container-header'>{t['rev_b']}</h4><hr class='st-hr-tight'>", unsafe_allow_html=True)
                 col_b1, col_b2 = st.columns(2)
                 
-                # Vertaal de "Payer_type" netjes
                 payer_display = t['b_opt1'] if o['payer_type'] == 'Sender' else t['b_opt2'] if o['payer_type'] == 'Receiver' else t['b_opt3']
                 
                 with col_b1:
@@ -1076,5 +1073,5 @@ else:
             else:
                 receipt_items_html += f"""<div style="display: flex; justify-content: space-between; font-size: 13px; color: #bbb; margin-bottom: 8px; margin-top: 6px;"><span>{name}</span><span>{price:,.0f}</span></div>"""
             
-        receipt_html = f"""<div class="receipt-card" style="background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">{t['calc_t']}</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">{t['c_tot']}</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">{t['c_vat']}</div><div style="font-size: 11px; color: #777; font-style: italic; margin-top: 15px; line-height: 1.4; border-top: 1px solid #333; padding-top: 10px;">{calc_note}<br><br><b>Merk:</b> {t['calc_disc']}</div></div>"""
+        receipt_html = f"""<div class="receipt-card" style="background: #1a1a1c; border: 1px solid #333; border-radius: 12px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);"><div style="color: #ffffff; font-size: 15px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid #333; padding-bottom: 12px; margin-bottom: 20px;">{t['calc_t']}</div>{receipt_items_html}<div style="border-bottom: 1px dashed #444; margin: 15px 0;"></div><div style="display: flex; justify-content: space-between; align-items: center;"><span style="font-size: 14px; font-weight: 600; color: #fff;">{t['c_tot']}</span><span style="font-size: 26px; font-weight: 700; color: #b070c6;">{current_price:,.0f} <span style="font-size:16px;">NOK</span></span></div><div style="text-align: right; font-size: 11px; color: #666; margin-top: 2px;">{t['c_vat']}</div><div style="font-size: 11px; color: #777; font-style: italic; margin-top: 15px; line-height: 1.4; border-top: 1px solid #333; padding-top: 10px;">{calc_note}<br><br><b>{t['note_lbl']}</b> {t['calc_disc']}</div></div>"""
         st.markdown(receipt_html, unsafe_allow_html=True)
