@@ -60,7 +60,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .opening-box p { margin: 0; font-size: 15px; font-weight: 600; }
 .opening-box small { color: #666; font-size: 12px; font-style: italic; }
 
-/* HERO IMAGE (Mooie curve zoals in screenshot) */
+/* HERO IMAGE */
 .hero-image-container { position: absolute; top: 0; right: 0; width: 60%; height: 100%; background: url('https://cloud-1de12d.becdn.net/media/original/eb55018659f77f59796e6d1e49b814a0/scania-dahle-transport-fosen-trondheim-v-re-tjenester-1.webp') center/cover no-view; clip-path: polygon(25% 0%, 100% 0%, 100% 100%, 0% 100%); z-index: 5; }
 
 /* TAAL DROPDOWN */
@@ -78,7 +78,6 @@ div[class^="viewerBadge"] { display: none !important; }
 # =========================================================
 cookie_manager = stx.CookieManager()
 
-# Kleine hack om cookies direct te laden
 if 'cookie_retry' not in st.session_state:
     st.session_state.cookie_retry = True
     time.sleep(0.1)
@@ -86,7 +85,6 @@ if 'cookie_retry' not in st.session_state:
 
 saved_lang = cookie_manager.get('dahle_lang')
 
-# Check of taal in URL staat (?lang=en)
 if "lang" in st.query_params:
     url_lang = st.query_params["lang"]
     if url_lang in ["no", "en", "sv", "da"]:
@@ -128,7 +126,6 @@ t = translations.get(lang, translations["en"])
 # =========================================================
 # 4. NAVBAR SAMENSTELLEN
 # =========================================================
-# Dropdown links
 dropdown_links = f"""
 <a href="/Order?lang={lang}" target="_self">{t['menu_order']}</a>
 <a href="/Request?lang={lang}" target="_self">{t['menu_request']}</a>
@@ -137,35 +134,35 @@ dropdown_links = f"""
 
 html_navbar = f"""
 <div class="navbar">
-    <div class="nav-logo">
-        <a href="/?lang={lang}" target="_self">
-            <img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp">
-        </a>
-    </div>
-    <div class="nav-links">
-        <a href="/?lang={lang}" target="_self"><span>{t['nav_home']}</span></a>
-        <span>{t['nav_about']}</span>
-        <span>{t['nav_services']}</span>
-        <span>{t['nav_gallery']}</span>
-        <span>{t['nav_contact']}</span>
-        <div class="nav-text-dropdown">
-            <button class="nav-text-dropbtn">{t['menu_title']}</button>
-            <div class="nav-text-dropdown-content">{dropdown_links}</div>
-        </div>
-    </div>
-    <div class="nav-cta">
-        <div class="lang-dropdown">
-            <button class="lang-dropbtn">{current_lang_display} ⌄</button>
-            <div class="lang-dropdown-content">
-                <a href="?lang=en" target="_self">English</a>
-                <a href="?lang=no" target="_self">Norsk</a>
-                <a href="?lang=sv" target="_self">Svenska</a>
-                <a href="?lang=da" target="_self">Dansk</a>
-            </div>
-        </div>
-        <a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{t['nav_portal']}</a>
-        <a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
-    </div>
+<div class="nav-logo">
+<a href="/?lang={lang}" target="_self">
+<img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp">
+</a>
+</div>
+<div class="nav-links">
+<a href="/?lang={lang}" target="_self"><span>{t['nav_home']}</span></a>
+<span>{t['nav_about']}</span>
+<span>{t['nav_services']}</span>
+<span>{t['nav_gallery']}</span>
+<span>{t['nav_contact']}</span>
+<div class="nav-text-dropdown">
+<button class="nav-text-dropbtn">{t['menu_title']}</button>
+<div class="nav-text-dropdown-content">{dropdown_links}</div>
+</div>
+</div>
+<div class="nav-cta">
+<div class="lang-dropdown">
+<button class="lang-dropbtn">{current_lang_display} ⌄</button>
+<div class="lang-dropdown-content">
+<a href="?lang=en" target="_self">English</a>
+<a href="?lang=no" target="_self">Norsk</a>
+<a href="?lang=sv" target="_self">Svenska</a>
+<a href="?lang=da" target="_self">Dansk</a>
+</div>
+</div>
+<a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{t['nav_portal']}</a>
+<a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a>
+</div>
 </div>
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
@@ -175,23 +172,23 @@ st.markdown(html_navbar, unsafe_allow_html=True)
 # =========================================================
 html_hero = f"""
 <div class="hero-section">
-    <div class="hero-content">
-        <h1 class="hero-title">{t['hero_t']}</h1>
-        <p class="hero-subtitle">{t['hero_s']}</p>
-        
-        <div class="opening-box">
-            <h4>{t['open_t']}</h4>
-            <p>{t['open_d']}</p>
-            <small>{t['open_note']}</small>
-        </div>
-        
-        <div style="display: flex; gap: 15px;">
-            <a href="/Order?lang={lang}" target="_self" class="cta-btn-purple" style="padding: 18px 45px; font-size: 15px;">{t['btn_order']}</a>
-            <a href="/Request?lang={lang}" target="_self" class="cta-btn-outline" style="padding: 18px 35px; font-size: 15px; border-width: 2px;">{t['btn_request']}</a>
-            <a href="/?lang={lang}" target="_self" class="cta-btn-purple" style="padding: 18px 35px; font-size: 15px; background: transparent !important; border: 2px solid white !important;">{t['btn_contact']}</a>
-        </div>
-    </div>
-    <div class="hero-image-container"></div>
+<div class="hero-content">
+<h1 class="hero-title">{t['hero_t']}</h1>
+<p class="hero-subtitle">{t['hero_s']}</p>
+
+<div class="opening-box">
+<h4>{t['open_t']}</h4>
+<p>{t['open_d']}</p>
+<small>{t['open_note']}</small>
+</div>
+
+<div style="display: flex; gap: 15px;">
+<a href="/Order?lang={lang}" target="_self" class="cta-btn-purple" style="padding: 18px 45px; font-size: 15px;">{t['btn_order']}</a>
+<a href="/Request?lang={lang}" target="_self" class="cta-btn-outline" style="padding: 18px 35px; font-size: 15px; border-width: 2px;">{t['btn_request']}</a>
+<a href="/?lang={lang}" target="_self" class="cta-btn-purple" style="padding: 18px 35px; font-size: 15px; background: transparent !important; border: 2px solid white !important;">{t['btn_contact']}</a>
+</div>
+</div>
+<div class="hero-image-container"></div>
 </div>
 """
 st.markdown(html_hero, unsafe_allow_html=True)
