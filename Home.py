@@ -65,7 +65,7 @@ div[class^="viewerBadge"] { display: none !important; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
 
-/* HERO SECTION */
+/* HERO SECTION - JOUW ORIGINELE DESIGN */
 .hero-container { display: flex; flex-direction: row; width: 100%; min-height: calc(100vh - 90px); background-color: #1a1c1e; overflow: hidden; }
 .hero-left { flex: 1; padding: 10% 5% 5% 15%; display: flex; flex-direction: column; justify-content: center; align-items: flex-start; }
 .hero-title { font-family: 'Caveat', cursive; font-size: 80px; color: #ffffff; margin: 0 0 20px 0; letter-spacing: 2px; transform: rotate(-2deg); }
@@ -103,6 +103,7 @@ if "lang" in st.query_params:
 
 lang = st.session_state.language
 
+# Vlaggetjes verwijderd voor een strakkere look
 lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk" }
 current_lang_display = lang_displays.get(lang, "Norsk")
 
@@ -114,25 +115,25 @@ translations = {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner", "menu_request": "Kundehenvendelse",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "hero_title": "D ÅRNE SÆ!", "hero_subtitle": "Rask og sikker transport, uansett distanse.", 
-        "open_title": "Åpningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åpningstidene kan avvike ved spesielle høytider.", "btn_order": "BESTILL", "btn_request": "FORESPØRSEL"
+        "open_title": "Åpningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åpningstidene kan avvike ved spesielle høytider.", "btn_order": "BESTILL", "btn_request": "FORESPØRSEL" 
     },
     "en": { 
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
         "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "menu_plan": "Internal Planner", "menu_request": "Quick Request",
         "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "hero_title": "WE'VE GOT IT!", "hero_subtitle": "Fast and secure transport, regardless of distance.", 
-        "open_title": "Opening Hours:", "open_days": "Monday-Friday: 07:00-16:00", "open_note": "Opening hours may vary during public holidays.", "btn_order": "ORDER NOW", "btn_request": "REQUEST QUOTE"
+        "open_title": "Opening Hours:", "open_days": "Monday-Friday: 07:00-16:00", "open_note": "Opening hours may vary during public holidays.", "btn_order": "ORDER NOW", "btn_request": "REQUEST QUOTE" 
     },
     "sv": { 
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "menu_plan": "Intern Planner", "menu_request": "Snabb Förfrågan",
         "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", 
-        "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL", "btn_request": "FÖRFRÅGAN"
+        "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL", "btn_request": "FÖRFRÅGAN" 
     },
     "da": { 
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner", "menu_request": "Hurtig Forespørgsel",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", 
-        "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL", "btn_request": "FORESPØRGSEL"
+        "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL", "btn_request": "FORESPØRGSEL" 
     }
 }
 t = translations.get(lang, translations["no"])
@@ -187,7 +188,7 @@ if st.session_state.get('user') is not None and 'company_name' in st.session_sta
 else:
     knop_tekst = t['nav_portal']
 
-# Platte string opbouwen ZONDER emoji's, inclusief Request!
+# Platte string opbouwen ZONDER emoji's
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a><a href="/Request?lang={lang}" target="_self">{t["menu_request"]}</a>'
 
 if is_employee:
