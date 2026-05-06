@@ -7,26 +7,20 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 import math
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import resend
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. EMAIL FUNCTIE (OUTLOOK / OFFICE 365) - MET DEBUGGING
+# 1. EMAIL FUNCTIE (VIA RESEND API)
 # =========================================================
 def stuur_bevestigings_email(naar_email, order_data, order_id):
     try:
-        zender_email = st.secrets["email"]["address"]
-        zender_wachtwoord = st.secrets["email"]["password"]
+        # Haal de API key uit je secrets
+        resend.api_key = st.secrets["resend"]["api_key"]
 
-        msg = MIMEMultipart()
-        msg['From'] = f"Dahle Transport <{zender_email}>"
-        msg['To'] = naar_email
-        msg['Subject'] = f"Ordre Godkjent / Order Confirmation #{order_id}"
-
+        # De HTML template
         html_body = f"""
         <html>
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6;">
@@ -54,16 +48,21 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
         </body>
         </html>
         """
-        msg.attach(MIMEText(html_body, 'html'))
 
-        server = smtplib.SMTP('smtp.office365.com', 587)
-        server.starttls()
-        server.login(zender_email, zender_wachtwoord)
-        server.send_message(msg)
-        server.quit()
+        # Verstuur de mail via de API
+        # LET OP: Zolang je in de testfase zit, moet je verzenden vanaf dit 'onboarding' adres:
+        params = {
+            "from": "Dahle Transport <onboarding@resend.dev>",
+            "to": [naar_email],
+            "subject": f"Ordre Godkjent / Order Confirmation #{order_id}",
+            "html": html_body
+        }
+
+        email_response = resend.Emails.send(params)
         return True
+        
     except Exception as e:
-        return str(e) # Stuurt de foutmelding terug voor debugging!
+        return str(e) # Foutmelding terugsturen voor debugging op het scherm
 
 # =========================================================
 # 2. DIRECTE CSS INJECTIE 
@@ -305,7 +304,7 @@ translations = {
         "calc_t": "Uppskattad Kostnad", "c_tr": "Transport", "c_admin": "Administration", "c_over": "Överdimensionerad (+25%)", "c_sameday": "Expressleverans", "c_ferry": "Vägavgift", "c_tot": "Totalt", "c_vat": "Exkl. Moms (VAT)",
         "w_reg": "Totalvikt", "qty_reg": "Registrerad", "calc_note_pal": "Frakten beräknas efter antal/plats.", "calc_note_we": "Frakten beräknas efter totalvikt.",
         "calc_disc": "Detta är endast en uppskattning. Slutfakturan kan variera beroende på faktisk vikt och mått.", "c_energy": "Energitillägg (5%)", "energy_tip": "Tillfälligt tillägg på grund av oförutsedda höga energi- och bränslekostnader.",
-        "note_lbl": "Obs:", "guest_msg": "Du bestiller för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
+        "note_lbl": "Obs:", "guest_msg": "Du beställer för närvarande som gäst.", "guest_link": "Logga in för att fylla i automatiskt."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -1047,7 +1046,7 @@ else:
                             res = supabase.table("orders").insert(db_order).execute()
                             nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
                             
-                            # 2. EMAIL VERSTUREN (MET DEBUG)
+                            # 2. EMAIL VERSTUREN MET RESEND
                             mail_status = stuur_bevestigings_email(o['email'], o, nieuw_order_id)
                             
                             if mail_status is True:
