@@ -133,7 +133,7 @@ translations = {
         "services": "Forespurte tjenester", "add_info": "Tilleggsinfo", "btn_cancel": "Avbryt denne bestillingen",
         "prof_title": "Administrer profilen din", "prof_sub": "Oppdater firma- og kontaktinformasjon her.",
         "gen_info": "Generell info", "cont_pers": "Kontaktperson", "email_id": "E-postadresse (Innloggings-ID)",
-        "bill_t": "Faktureringsdetaljer", "bill_same": "Bruk firma og e-post fra Generell Info", "b_comp": "Fakturamottaker (Firma)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
+        "bill_t": "Faktureringsdetaljer", "bill_same": "Bruk firma og adresse fra Generell Info", "b_comp": "Fakturamottaker (Firma)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "def_pickup": "Standard hentested", "def_del": "Standard leveringssted", "speed_up": "Vi bruker dette for å gjøre bestillingen raskere.",
         "street": "Gateadresse", "btn_save": "Lagre endringer", "msg_saving": "Oppdaterer profil...", "msg_save_succ": "Profil oppdatert!", "msg_save_fail": "Klarte ikke å oppdatere profil:"
     },
@@ -156,7 +156,7 @@ translations = {
         "services": "Services Requested", "add_info": "Additional Info", "btn_cancel": "Cancel This Order",
         "prof_title": "Manage Your Profile", "prof_sub": "Update your company and contact information here.",
         "gen_info": "General Info", "cont_pers": "Contact Person", "email_id": "Email Address (Login ID)",
-        "bill_t": "Billing Details", "bill_same": "Use General Info for Company & Email", "b_comp": "Billing Company", "b_em": "Billing Email", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
+        "bill_t": "Billing Details", "bill_same": "Use Company and Address from General Info", "b_comp": "Billing Company", "b_em": "Billing Email", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
         "def_pickup": "Default Pickup Location", "def_del": "Default Delivery Destination", "speed_up": "We use this to speed up your orders.",
         "street": "Street Address", "btn_save": "Save Changes", "msg_saving": "Updating profile...", "msg_save_succ": "Profile updated successfully!", "msg_save_fail": "Could not update profile:"
     },
@@ -168,7 +168,7 @@ translations = {
         "tab_login": "Logga in", "tab_reg": "Skapa konto",
         "lbl_email": "E-postadress", "lbl_pass": "Lösenord", "btn_login": "Logga in",
         "msg_logging_in": "Loggar in...", "msg_login_succ": "Inloggad! Omdirigerar...", "msg_login_fail": "Fel e-post eller lösenord.", "msg_fill_both": "Vänligen fyll i båda fälten.",
-        "lbl_comp": "Företagsnamn *", "lbl_fn": "Förnamn *", "lbl_ln": "Efternamn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-post (Detta blir din inloggning) *", "lbl_pass_reg": "Välj lösenord *", "btn_reg": "Skapa konto",
+        "lbl_comp": "Företagsnamn *", "lbl_fn": "Förnamn *", "lbl_ln": "Efternavn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-post (Detta blir din inloggning) *", "lbl_pass_reg": "Välj lösenord *", "btn_reg": "Skapa konto",
         "msg_creating": "Skapar konto...", "msg_reg_succ": "Konto skapat! Du kan nu logga in via 'Logga in'-fliken.", "msg_reg_fail": "Ett fel uppstod.", "msg_fill_req": "Vänligen fyll i alla obligatoriska fält (*).",
         "welcome": "Välkommen tillbaka", "logged_in_as": "Inloggad som", "btn_logout": "Logga ut",
         "hist_title": "Din sändningshistorik", "tot_ship": "Totala försändelser", "pend_appr": "Väntar på godkännande", "processed": "Behandlad",
@@ -179,7 +179,7 @@ translations = {
         "services": "Begärda tjänster", "add_info": "Ytterligare info", "btn_cancel": "Avbryt denna beställning",
         "prof_title": "Hantera din profil", "prof_sub": "Uppdatera dina företags- och kontaktuppgifter här.",
         "gen_info": "Allmän info", "cont_pers": "Kontaktperson", "email_id": "E-postadress (Inloggnings-ID)",
-        "bill_t": "Faktureringsuppgifter", "bill_same": "Använd företag och e-post från Allmän Info", "b_comp": "Fakturamottagare (Företag)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Namn/Företag)", "r_ph": "Telefon",
+        "bill_t": "Faktureringsuppgifter", "bill_same": "Använd företag och adress från Allmän Info", "b_comp": "Fakturamottagare (Företag)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Namn/Företag)", "r_ph": "Telefon",
         "def_pickup": "Standard upphämtningsplats", "def_del": "Standard leveransplats", "speed_up": "Vi använder detta för att påskynda din beställning.",
         "street": "Gatuadress", "btn_save": "Spara ändringar", "msg_saving": "Uppdaterar profil...", "msg_save_succ": "Profil uppdaterad!", "msg_save_fail": "Kunde inte uppdatera profil:"
     },
@@ -202,7 +202,7 @@ translations = {
         "services": "Anmodede tjenester", "add_info": "Yderligere info", "btn_cancel": "Annuller denne bestilling",
         "prof_title": "Administrer din profil", "prof_sub": "Opdater dine firma- og kontaktoplysninger her.",
         "gen_info": "Generel info", "cont_pers": "Kontaktperson", "email_id": "E-mailadresse (Login-ID)",
-        "bill_t": "Faktureringsoplysninger", "bill_same": "Brug firma og e-mail fra Generel Info", "b_comp": "Fakturamodtager (Firma)", "b_em": "Faktura E-mail", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
+        "bill_t": "Faktureringsoplysninger", "bill_same": "Brug firma og adresse fra Generel Info", "b_comp": "Fakturamodtager (Firma)", "b_em": "Faktura E-mail", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "def_pickup": "Standard afhentningssted", "def_del": "Standard leveringssted", "speed_up": "Vi bruger dette til at fremskynde din bestilling.",
         "street": "Gadeadresse", "btn_save": "Gem ændringer", "msg_saving": "Opdaterer profil...", "msg_save_succ": "Profil opdateret!", "msg_save_fail": "Kunne ikke opdatere profil:"
     }
@@ -428,31 +428,39 @@ else:
             upd_phone = st.text_input(t['lbl_phone'], value=phone_nr, key="upd_phone")
             st.text_input(t['email_id'], value=email_addr, disabled=True, key="upd_email")
             
+            # NIEUW: Hoofdadres van het bedrijf
+            upd_main_addr = st.text_input(t['street'], value=profile.get("address", ""), key="upd_main_addr")
+            c_mz, c_mc = st.columns(2)
+            with c_mz: upd_main_zip = st.text_input(t['zip'], value=profile.get("zip_code", ""), key="upd_main_zip")
+            with c_mc: upd_main_city = st.text_input(t['city'], value=profile.get("city", ""), key="upd_main_city")
+            
             st.write("---")
             st.markdown(f"#### {t['bill_t']}")
             
-            # Bepaal of we het vinkje standaard aan moeten zetten (als het factuuradres leeg is óf precies gelijk is aan bedrijfsnaam)
+            # Bepaal of we het vinkje standaard aan moeten zetten
             heeft_afwijkende_billing = bool(profile.get("billing_company") and profile.get("billing_company") != company_name)
-            
-            # De checkbox
             same_billing_prof = st.checkbox(t.get('bill_same'), value=not heeft_afwijkende_billing, key="prof_same_bill")
             
             c_b1, c_b2 = st.columns(2)
             with c_b1:
-                # Als het vinkje AAN staat: vul in en disable de velden
                 if same_billing_prof:
                     upd_b_comp = st.text_input(t['b_comp'], value=upd_company, disabled=True, key="upd_b_comp_dis")
                     upd_b_email = st.text_input(t['b_em'], value=email_addr, disabled=True, key="upd_b_email_dis")
-                # Als het vinkje UIT staat: laat klant zelf typen
                 else:
                     upd_b_comp = st.text_input(t['b_comp'], value=profile.get("billing_company", ""), key="upd_b_comp")
                     upd_b_email = st.text_input(t['b_em'], value=profile.get("billing_email", ""), key="upd_b_email")
                     
             with c_b2:
-                upd_b_addr = st.text_input(t['street'], value=profile.get("billing_address", ""), key="upd_b_addr")
-                c_bz, c_bc = st.columns(2)
-                with c_bz: upd_b_zip = st.text_input(t['zip'], value=profile.get("billing_zip", ""), key="upd_b_zip")
-                with c_bc: upd_b_city = st.text_input(t['city'], value=profile.get("billing_city", ""), key="upd_b_city")
+                if same_billing_prof:
+                    upd_b_addr = st.text_input(t['street'], value=upd_main_addr, disabled=True, key="upd_b_addr_dis")
+                    c_bz, c_bc = st.columns(2)
+                    with c_bz: upd_b_zip = st.text_input(t['zip'], value=upd_main_zip, disabled=True, key="upd_b_zip_dis")
+                    with c_bc: upd_b_city = st.text_input(t['city'], value=upd_main_city, disabled=True, key="upd_b_city_dis")
+                else:
+                    upd_b_addr = st.text_input(t['street'], value=profile.get("billing_address", ""), key="upd_b_addr")
+                    c_bz, c_bc = st.columns(2)
+                    with c_bz: upd_b_zip = st.text_input(t['zip'], value=profile.get("billing_zip", ""), key="upd_b_zip")
+                    with c_bc: upd_b_city = st.text_input(t['city'], value=profile.get("billing_city", ""), key="upd_b_city")
             
             st.write("---")
             st.markdown(f"#### {t['def_pickup']}")
@@ -460,10 +468,10 @@ else:
             c_pn, c_pp = st.columns(2)
             with c_pn: upd_p_name = st.text_input(t['r_name'] + " (Pickup)", value=profile.get("pickup_name", ""), key="upd_p_name")
             with c_pp: upd_p_phone = st.text_input(t['r_ph'] + " (Pickup)", value=profile.get("pickup_phone", ""), key="upd_p_phone")
-            upd_address = st.text_input(t['street'], value=profile.get("pickup_address", profile.get("address", "")), key="upd_addr")
+            upd_address = st.text_input(t['street'] + " ", value=profile.get("pickup_address", ""), key="upd_addr")
             col_zip, col_city = st.columns(2)
-            with col_zip: upd_zip = st.text_input(t['zip'], value=profile.get("pickup_zip", profile.get("zip_code", "")), key="upd_zip")
-            with col_city: upd_city = st.text_input(t['city'], value=profile.get("pickup_city", profile.get("city", "")), key="upd_city")
+            with col_zip: upd_zip = st.text_input(t['zip'] + " ", value=profile.get("pickup_zip", ""), key="upd_zip")
+            with col_city: upd_city = st.text_input(t['city'] + " ", value=profile.get("pickup_city", ""), key="upd_city")
             
             st.write("---")
             st.markdown(f"#### {t['def_del']}")
@@ -471,10 +479,10 @@ else:
             c_dn, c_dp = st.columns(2)
             with c_dn: upd_d_name = st.text_input(t['r_name'] + " (Delivery)", value=profile.get("delivery_name", ""), key="upd_d_name")
             with c_dp: upd_d_phone = st.text_input(t['r_ph'] + " (Delivery)", value=profile.get("delivery_phone", ""), key="upd_d_phone")
-            upd_del_address = st.text_input(t['street'] + " ", value=profile.get("del_address", ""), key="upd_del_addr")
+            upd_del_address = st.text_input(t['street'] + "  ", value=profile.get("del_address", ""), key="upd_del_addr")
             col_d_zip, col_d_city = st.columns(2)
-            with col_d_zip: upd_del_zip = st.text_input(t['zip'] + " ", value=profile.get("del_zip", ""), key="upd_del_zip")
-            with col_d_city: upd_del_city = st.text_input(t['city'] + " ", value=profile.get("del_city", ""), key="upd_del_city")
+            with col_d_zip: upd_del_zip = st.text_input(t['zip'] + "  ", value=profile.get("del_zip", ""), key="upd_del_zip")
+            with col_d_city: upd_del_city = st.text_input(t['city'] + "  ", value=profile.get("del_city", ""), key="upd_del_city")
             
             st.write("")
             if st.button(t['btn_save'], type="primary"):
@@ -482,6 +490,10 @@ else:
                     "company_name": upd_company,
                     "contact_name": upd_contact,
                     "phone": upd_phone,
+                    
+                    "address": upd_main_addr,
+                    "zip_code": upd_main_zip,
+                    "city": upd_main_city,
                     
                     "billing_company": upd_b_comp,
                     "billing_email": upd_b_email,
@@ -491,11 +503,8 @@ else:
 
                     "pickup_name": upd_p_name,
                     "pickup_phone": upd_p_phone,
-                    "address": upd_address, # Houden we in sync om oude fouten te voorkomen
                     "pickup_address": upd_address,
-                    "zip_code": upd_zip,
                     "pickup_zip": upd_zip,
-                    "city": upd_city,
                     "pickup_city": upd_city,
                     
                     "delivery_name": upd_d_name,
