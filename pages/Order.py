@@ -12,12 +12,46 @@ import math
 st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. EMAIL FUNCTIE (DIRECTE API CALL VIA REQUESTS)
+# 1. EMAIL FUNCTIE (NU MET MEERTALIGHEID!)
 # =========================================================
-def stuur_bevestigings_email(naar_email, order_data, order_id):
+def stuur_bevestigings_email(naar_email, order_data, order_id, order_lang="no"):
     try:
         # Haal de API key uit je secrets
         api_key = st.secrets["resend"]["api_key"]
+
+        # Vertalingen specifiek voor de e-mail
+        email_t = {
+            "no": {
+                "sub": "Ordrebekreftelse", "hi": "Hei", 
+                "thanks": "Takk for din bestilling. Vi har mottatt din transportforespørsel og vil behandle den så snart som mulig.",
+                "from": "Fra", "to": "Til", "not_set": "Ikke angitt",
+                "track": "Du kan følge statusen på forsendelsen din i Kundeportalen.",
+                "regards": "Med vennlig hilsen,", "footer": "Dette er en automatisk e-post. Vennligst ikke svar på denne."
+            },
+            "en": {
+                "sub": "Order Confirmation", "hi": "Hi", 
+                "thanks": "Thank you for your order. We have received your transport request and will process it as soon as possible.",
+                "from": "From", "to": "To", "not_set": "Not specified",
+                "track": "You can track the status of your shipment in the Customer Portal.",
+                "regards": "Best regards,", "footer": "This is an automated email. Please do not reply to it."
+            },
+            "sv": {
+                "sub": "Orderbekräftelse", "hi": "Hej", 
+                "thanks": "Tack för din beställning. Vi har mottagit din transportförfrågan och kommer att behandla den så snart som möjligt.",
+                "from": "Från", "to": "Till", "not_set": "Ej angivet",
+                "track": "Du kan följa statusen på din försändelse i Kundportalen.",
+                "regards": "Med vänliga hälsningar,", "footer": "Detta är ett automatiskt e-postmeddelande. Vänligen svara inte på detta."
+            },
+            "da": {
+                "sub": "Ordrebekræftelse", "hi": "Hej", 
+                "thanks": "Tak for din bestilling. Vi har modtaget din transportanmodning og vil behandle den hurtigst muligt.",
+                "from": "Fra", "to": "Til", "not_set": "Ikke angivet",
+                "track": "Du kan følge status på din forsendelse i Kundeportalen.",
+                "regards": "Med venlig hilsen,", "footer": "Dette er en automatisk e-mail. Svar venligst ikke på denne."
+            }
+        }
+        # Kies de juiste taal, val terug op Engels als backup
+        et = email_t.get(order_lang, email_t["en"])
 
         # De HTML template
         html_body = f"""
@@ -28,20 +62,20 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
                     <h2 style="color: white; margin: 0; font-size: 24px;">Dahle Transport</h2>
                 </div>
                 <div style="padding: 30px; background-color: #ffffff;">
-                    <h3 style="color: #111; margin-top: 0;">Hei {order_data.get('contact_name', 'Kunde')}!</h3>
-                    <p>Takk for din bestilling. Vi har mottatt din transportforespørsel og vil behandle den så snart som mulig.</p>
+                    <h3 style="color: #111; margin-top: 0;">{et['hi']} {order_data.get('contact_name', 'Kunde')}!</h3>
+                    <p>{et['thanks']}</p>
                     
                     <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #894b9d; margin: 20px 0;">
                         <p style="margin: 0 0 10px 0;"><b>📦 Order ID:</b> #{order_id}</p>
-                        <p style="margin: 0 0 10px 0;"><b>📍 Fra:</b> {order_data.get('pickup_city', 'Ikke angitt')} ({order_data.get('pickup_zip', '')})</p>
-                        <p style="margin: 0;"><b>🏁 Til:</b> {order_data.get('delivery_city', 'Ikke angitt')} ({order_data.get('delivery_zip', '')})</p>
+                        <p style="margin: 0 0 10px 0;"><b>📍 {et['from']}:</b> {order_data.get('pickup_city', et['not_set'])} ({order_data.get('pickup_zip', '')})</p>
+                        <p style="margin: 0;"><b>🏁 {et['to']}:</b> {order_data.get('delivery_city', et['not_set'])} ({order_data.get('delivery_zip', '')})</p>
                     </div>
                     
-                    <p>Du kan følge statusen på forsendelsen din i Kundeportalen.</p>
-                    <p>Med vennlig hilsen,<br><b>Team Dahle Transport</b></p>
+                    <p>{et['track']}</p>
+                    <p>{et['regards']}<br><b>Team Dahle Transport</b></p>
                     
                     <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
-                    <p style="font-size: 11px; color: #888; text-align: center;">Dette er en automatisk e-post. Vennligst ikke svar på denne.</p>
+                    <p style="font-size: 11px; color: #888; text-align: center;">{et['footer']}</p>
                 </div>
             </div>
         </body>
@@ -54,18 +88,16 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
             "Content-Type": "application/json"
         }
         
-        # HIER GEBRUIKEN WE NU JOUW EIGEN DOMEIN!
         payload = {
             "from": "Dahle Transport <info@dahletransport.nl>",
             "to": [naar_email],
-            "subject": f"Ordre Godkjent / Order Confirmation #{order_id}",
+            "subject": f"{et['sub']} #{order_id}",
             "html": html_body
         }
 
         # Stuur het verzoek
         response = requests.post("https://api.resend.com/emails", json=payload, headers=headers)
         
-        # Check de status code (200 of 201 is succes!)
         if response.status_code in [200, 201]:
             return True
         else:
@@ -1065,8 +1097,8 @@ else:
                             res = supabase.table("orders").insert(db_order).execute()
                             nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
                             
-                            # 2. EMAIL VERSTUREN (DIRECT VIA REQUESTS)
-                            mail_status = stuur_bevestigings_email(o['email'], o, nieuw_order_id)
+                            # 2. EMAIL VERSTUREN IN DE JUISTE TAAL
+                            mail_status = stuur_bevestigings_email(o['email'], o, nieuw_order_id, lang)
                             
                             if mail_status is True:
                                 st.balloons()
