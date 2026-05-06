@@ -244,7 +244,7 @@ st.markdown(f"""
 </div>
 <div style="display: flex; gap: 15px; flex-wrap: wrap;">
 <a href="/Order?lang={lang}" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_order']}</a>
-<a href="/Request?lang={lang}" target="_self" class="cta-btn-outline" style="font-size: 16px; padding: 12px 30px; border: 2px solid #894b9d; color: #ffffff !important;">{t['btn_request']}</a>
+<a href="/Request?lang={lang}" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px;">{t['btn_request']}</a>
 <a href="#" target="_self" class="cta-btn-purple" style="font-size: 16px; padding: 12px 30px; background-color: transparent !important; border: 2px solid white !important;">{t['nav_contact_btn']}</a>
 </div>
 <a href="#more" class="circle-btn">
