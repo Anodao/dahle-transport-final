@@ -5,10 +5,10 @@ import datetime
 import extra_streamlit_components as stx
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Dahle Transport - Rentals & Requests", layout="wide", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Dahle Transport - Quick Request", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. DIRECTE CSS INJECTIE (Booking Bar Design)
+# 1. DIRECTE CSS INJECTIE (Booking Bar Design in Dahle Thema)
 # =========================================================
 st.markdown("""
 <style>
@@ -53,29 +53,29 @@ st.markdown("""
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
 
-/* RADIO BUTTONS ALS PILLS (Zoals in je afbeelding) */
-div[data-testid="stRadio"] > div { display: flex; gap: 12px; flex-direction: row; margin-bottom: 10px; }
+/* RADIO BUTTONS ALS PILLS */
+div[data-testid="stRadio"] > div { display: flex; gap: 12px; flex-direction: row; margin-bottom: 10px; flex-wrap: wrap; }
 div[data-testid="stRadio"] > div > label {
     background-color: #262626 !important; border: 1px solid #444 !important; padding: 12px 24px !important; border-radius: 30px !important; cursor: pointer !important; transition: 0.3s !important; display: flex !important; align-items: center !important; justify-content: center !important;
 }
-div[data-testid="stRadio"] > div > label:hover { background-color: #333 !important; }
+div[data-testid="stRadio"] > div > label:hover { background-color: #333 !important; border-color: #894b9d !important; }
 div[data-testid="stRadio"] > div > label[data-checked="true"] { background-color: #ffffff !important; border-color: #ffffff !important; }
 div[data-testid="stRadio"] > div > label[data-checked="true"] p { color: #111111 !important; font-weight: 700 !important; }
-div[data-testid="stRadio"] label p { color: #cccccc !important; font-weight: 600; margin: 0; font-size: 15px !important;}
-div[data-testid="stRadio"] div[role="radio"] { display: none !important; } /* Verberg het standaard rondje */
+div[data-testid="stRadio"] label p { color: #cccccc !important; font-weight: 600; margin: 0; font-size: 14px !important;}
+div[data-testid="stRadio"] div[role="radio"] { display: none !important; } 
 
 /* INPUT VELDEN (BOOKING BAR STYLE) */
 div[data-baseweb="input"] > div, div[data-baseweb="textarea"] { background-color: #ffffff !important; border-radius: 8px !important; border: 1px solid #ddd !important; padding: 2px 5px !important;}
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: #111 !important; font-weight: 500 !important; }
-div[data-baseweb="input"] input::placeholder { color: #999 !important; }
+div[data-baseweb="input"] input::placeholder, div[data-baseweb="textarea"] textarea::placeholder { color: #999 !important; }
 label[data-testid="stWidgetLabel"] p { color: #aaa !important; font-weight: 600 !important; font-size: 13px !important; margin-bottom: 2px !important;}
 
 /* CONTAINER STYLING */
 div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #262626 !important; border: 1px solid #333 !important; border-radius: 12px !important; padding: 30px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.4) !important;}
 
-/* SEND BUTTON */
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #ff6a00 0%, #ff4b00 100%) !important; color: #ffffff !important; border: none !important; border-radius: 8px !important; padding: 18px 24px !important; font-weight: 700 !important; font-size: 16px !important; width: 100% !important; box-shadow: 0 4px 15px rgba(255, 106, 0, 0.4) !important; transition: all 0.3s ease !important; margin-top: 15px !important;}
-div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(255, 106, 0, 0.6) !important; }
+/* SEND BUTTON (DAHLE PURPLE) */
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 8px !important; padding: 18px 24px !important; font-weight: 700 !important; font-size: 16px !important; width: 100% !important; box-shadow: 0 4px 15px rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; margin-top: 15px !important;}
+div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 20px rgba(137, 75, 157, 0.6) !important; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -100,47 +100,51 @@ lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk"
 current_lang_display = lang_displays.get(lang, "Norsk")
 
 # =========================================================
-# 3. WOORDENBOEK
+# 3. WOORDENBOEK (Algemene Aanvraag)
 # =========================================================
 translations = {
     "no": {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
-        "t_title": "Leie & Spesialtransport", "t_sub": "Ingen konto nødvendig. Rask og enkel forespørsel.",
-        "type_1": "🚗 Biler & Varebiler", "type_2": "🚛 Lastebiler",
-        "lbl_loc": "Hente- & Leveringssted", "ph_loc": "Flyplass, by eller adresse",
-        "lbl_p_date": "Hentedato", "lbl_r_date": "Leveringsdato",
-        "lbl_name": "Navn / Firma *", "lbl_email": "E-postadresse *", "lbl_phone": "Telefonnummer", "lbl_specs": "Tilleggsinformasjon / Krav",
+        "t_title": "Generell Forespørsel", "t_sub": "Rask og enkel henvendelse for alle typer oppdrag. Ingen konto kreves.",
+        "type_1": "📦 Standard Transport", "type_2": "🚛 Spesialtransport", "type_3": "❓ Annet",
+        "lbl_from": "Fra (Hentested)", "ph_from": "By, postnr eller adresse",
+        "lbl_to": "Til (Leveringssted)", "ph_to": "By, postnr eller adresse",
+        "lbl_date": "Ønsket dato",
+        "lbl_name": "Navn / Firma *", "lbl_email": "E-postadresse *", "lbl_phone": "Telefonnummer", "lbl_specs": "Beskriv behovet ditt...",
         "btn_send": "Send Forespørsel", "msg_succ": "Forespørselen din er sendt! Vi tar kontakt snart.", "msg_err": "Fyll ut alle obligatoriske felt (*)."
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
         "menu_title": "Pages ⌄", "menu_login": "Customer Portal", "menu_order": "Ship Now", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US",
-        "t_title": "Rentals & Special Requests", "t_sub": "No account required. Quick and easy inquiries.",
-        "type_1": "🚗 Cars & Vans", "type_2": "🚛 Trucks",
-        "lbl_loc": "Pickup & return", "ph_loc": "Airport, city or address",
-        "lbl_p_date": "Pickup date", "lbl_r_date": "Return date",
-        "lbl_name": "Name / Company *", "lbl_email": "Email Address *", "lbl_phone": "Phone Number", "lbl_specs": "Additional Information / Requirements",
+        "t_title": "General Inquiry", "t_sub": "Quick and easy request for all types of assignments. No account required.",
+        "type_1": "📦 Standard Transport", "type_2": "🚛 Special Transport", "type_3": "❓ Other",
+        "lbl_from": "From (Pickup)", "ph_from": "City, zip or address",
+        "lbl_to": "To (Delivery)", "ph_to": "City, zip or address",
+        "lbl_date": "Desired Date",
+        "lbl_name": "Name / Company *", "lbl_email": "Email Address *", "lbl_phone": "Phone Number", "lbl_specs": "Describe your needs...",
         "btn_send": "Send Request", "msg_succ": "Your request has been sent! We will contact you shortly.", "msg_err": "Please fill in all mandatory fields (*)."
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sidor ⌄", "menu_login": "Kundportal", "menu_order": "Ny beställning", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
-        "t_title": "Hyra & Specialtransport", "t_sub": "Inget konto krävs. Snabb och enkel förfrågan.",
-        "type_1": "🚗 Bilar & Skåpbilar", "type_2": "🚛 Lastbilar",
-        "lbl_loc": "Upphämtning & Retur", "ph_loc": "Flygplats, stad eller adress",
-        "lbl_p_date": "Hämtningsdatum", "lbl_r_date": "Returdatum",
-        "lbl_name": "Namn / Företag *", "lbl_email": "E-postadress *", "lbl_phone": "Telefonnummer", "lbl_specs": "Ytterligare Information / Krav",
+        "t_title": "Allmän Förfrågan", "t_sub": "Snabb och enkel förfrågan för alla typer av uppdrag. Inget konto krävs.",
+        "type_1": "📦 Standardtransport", "type_2": "🚛 Specialtransport", "type_3": "❓ Annat",
+        "lbl_from": "Från (Upphämtning)", "ph_from": "Stad, postnr eller adress",
+        "lbl_to": "Till (Leverans)", "ph_to": "Stad, postnr eller adress",
+        "lbl_date": "Önskat datum",
+        "lbl_name": "Namn / Företag *", "lbl_email": "E-postadress *", "lbl_phone": "Telefonnummer", "lbl_specs": "Beskriv ditt behov...",
         "btn_send": "Skicka Förfrågan", "msg_succ": "Din förfrågan har skickats! Vi återkommer snart.", "msg_err": "Vänligen fyll i alla obligatoriska fält (*)."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
-        "t_title": "Udlejning & Specialtransport", "t_sub": "Ingen konto nødvendig. Hurtig og nem forespørgsel.",
-        "type_1": "🚗 Biler & Varevogne", "type_2": "🚛 Lastbiler",
-        "lbl_loc": "Afhentning & Levering", "ph_loc": "Lufthavn, by eller adresse",
-        "lbl_p_date": "Afhentningsdato", "lbl_r_date": "Leveringsdato",
-        "lbl_name": "Navn / Firma *", "lbl_email": "E-mailadresse *", "lbl_phone": "Telefonnummer", "lbl_specs": "Yderligere Information / Krav",
+        "t_title": "Generel Forespørgsel", "t_sub": "Hurtig og nem henvendelse for alle typer opgaver. Ingen konto nødvendig.",
+        "type_1": "📦 Standard Transport", "type_2": "🚛 Specialtransport", "type_3": "❓ Andet",
+        "lbl_from": "Fra (Afhentning)", "ph_from": "By, postnr eller adresse",
+        "lbl_to": "Til (Levering)", "ph_to": "By, postnr eller adresse",
+        "lbl_date": "Ønsket dato",
+        "lbl_name": "Navn / Firma *", "lbl_email": "E-mailadresse *", "lbl_phone": "Telefonnummer", "lbl_specs": "Beskriv dit behov...",
         "btn_send": "Send Forespørgsel", "msg_succ": "Din forespørgsel er sendt! Vi vender tilbage snarest.", "msg_err": "Udfyld venligst alle obligatoriske felter (*)."
     }
 }
@@ -166,19 +170,19 @@ st.markdown(f"<h2 style='text-align: center; color: #ffffff; margin-bottom: 0px;
 st.markdown(f"<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>{t['t_sub']}</p>", unsafe_allow_html=True)
 
 with st.container(border=True):
-    # DEEL 1: TYPE VOERTUIG (PILLS)
-    req_type = st.radio("Type", [t['type_1'], t['type_2']], horizontal=True, label_visibility="collapsed")
+    # DEEL 1: TYPE AANVRAAG (PILLS)
+    req_type = st.radio("Type", [t['type_1'], t['type_2'], t['type_3']], horizontal=True, label_visibility="collapsed")
     
     st.write("")
     
-    # DEEL 2: BOOKING BAR (Locatie & Datums op één rij)
-    c1, c2, c3 = st.columns([2, 1, 1])
+    # DEEL 2: BOOKING BAR (Van, Tot & Datum op één rij)
+    c1, c2, c3 = st.columns([2, 2, 1])
     with c1: 
-        req_loc = st.text_input(t['lbl_loc'], placeholder=t['ph_loc'])
+        req_from = st.text_input(t['lbl_from'], placeholder=t['ph_from'])
     with c2: 
-        req_pdate = st.date_input(t['lbl_p_date'], datetime.date.today())
+        req_to = st.text_input(t['lbl_to'], placeholder=t['ph_to'])
     with c3: 
-        req_rdate = st.date_input(t['lbl_r_date'], datetime.date.today() + datetime.timedelta(days=1))
+        req_date = st.date_input(t['lbl_date'], datetime.date.today())
         
     st.markdown("<hr style='border: 1px dashed #444; margin: 20px 0;'>", unsafe_allow_html=True)
     
@@ -188,24 +192,25 @@ with st.container(border=True):
     with c5: req_email = st.text_input(t['lbl_email'])
     with c6: req_phone = st.text_input(t['lbl_phone'])
     
-    req_specs = st.text_area(t['lbl_specs'], height=80, placeholder="E.g. moving boxes, need a large van for 3 days...")
+    req_specs = st.text_area(t['lbl_specs'], height=80, placeholder="...")
     
     if st.button(t['btn_send'], type="primary", use_container_width=True):
-        if req_name and req_email and req_loc:
+        if req_name and req_email and req_from:
             try:
                 api_key = st.secrets["resend"]["api_key"]
                 headers = { "Authorization": f"Bearer {api_key}", "Content-Type": "application/json" }
                 
                 # E-mail naar Dahle Transport (Interne inbox)
                 internal_html = f"""
-                <h3>Ny Spesialforespørsel / Leieforespørsel!</h3>
+                <h3>Ny Generell Forespørsel!</h3>
                 <p><b>Kategori:</b> {req_type}</p>
                 <p><b>Navn/Firma:</b> {req_name}</p>
                 <p><b>E-post:</b> {req_email}</p>
                 <p><b>Telefon:</b> {req_phone}</p>
-                <p><b>Sted:</b> {req_loc}</p>
-                <p><b>Periode:</b> {req_pdate} - {req_rdate}</p>
-                <p><b>Spesifikasjoner:</b><br>{req_specs}</p>
+                <p><b>Fra:</b> {req_from}</p>
+                <p><b>Til:</b> {req_to}</p>
+                <p><b>Ønsket dato:</b> {req_date}</p>
+                <p><b>Spesifikasjoner / Behov:</b><br>{req_specs}</p>
                 """
                 
                 requests.post("https://api.resend.com/emails", json={
@@ -218,7 +223,7 @@ with st.container(border=True):
                 # Bevestiging naar de klant
                 subject_t = {
                     "no": "Vi har mottatt din forespørsel",
-                    "en": "We received your special request",
+                    "en": "We received your inquiry",
                     "sv": "Vi har tagit emot din förfrågan",
                     "da": "Vi har modtaget din forespørgsel"
                 }
@@ -229,7 +234,7 @@ with st.container(border=True):
                     <p>Hei {req_name},</p>
                     <p>{t['msg_succ']}</p>
                     <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-                    <p style="font-size: 14px; color: #666;"><b>Din henvendelse:</b> {req_type} ({req_pdate} til {req_rdate})</p>
+                    <p style="font-size: 14px; color: #666;"><b>Din henvendelse:</b> {req_type} ({req_date})</p>
                     <p style="font-size: 14px; color: #666;">Mvh,<br>Dahle Transport Team</p>
                 </div>
                 """
