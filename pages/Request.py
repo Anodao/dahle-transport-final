@@ -18,6 +18,7 @@ st.markdown("""
 /* VERBERG STREAMLIT BRANDING */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"], footer, [data-testid="stToolbar"] { display: none !important; }
 .block-container { padding-top: 110px; max-width: 800px; }
+.stApp { background-color: #1e1e20 !important; }
 
 /* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
@@ -58,7 +59,8 @@ div.stButton > button[kind="primary"]:hover { background: #ffffff !important; co
 
 /* INPUTS & SELECTBOX DONKER MAKEN */
 div[data-baseweb="input"] > div, div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #262626 !important; border-radius: 8px !important; border: 1px solid #444 !important; }
-div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="select"] div { color: white !important; }
+div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: white !important; }
+div[data-baseweb="select"] span { color: white !important; }
 label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
 div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1c !important; border: 1px solid #333 !important; border-radius: 12px !important; padding: 25px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.3) !important;}
 </style>
@@ -91,7 +93,7 @@ translations = {
     "no": {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
-        "t_title": "Forespørsel", "t_sub": "Gjør en forespørsel, så gir vi deg en tilbakemelding så fort som mulig. Ingen konto kreves.",
+        "t_title": "Forespørsel", "t_sub": "Gjør en forespørsel, så gir vi deg en tilbakemelding så fort som mulig.",
         "lbl_name": "Navn / Firma *", "lbl_email": "E-postadresse *", "lbl_phone": "Telefonnummer",
         "lbl_from": "Fra (Hentested)", "lbl_to": "Til (Leveringssted)", 
         "lbl_start": "Startdato", "lbl_end": "Sluttdato / Retur",
@@ -101,7 +103,7 @@ translations = {
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
         "menu_title": "Pages ⌄", "menu_login": "Customer Portal", "menu_order": "Ship Now", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US",
-        "t_title": "Request", "t_sub": "Make a request and we will get back to you as soon as possible. No account required.",
+        "t_title": "Request", "t_sub": "Make a request and we will get back to you as soon as possible.",
         "lbl_name": "Name / Company *", "lbl_email": "Email Address *", "lbl_phone": "Phone Number",
         "lbl_from": "From (Pickup)", "lbl_to": "To (Delivery)", 
         "lbl_start": "Start Date", "lbl_end": "End Date / Return",
@@ -111,7 +113,7 @@ translations = {
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sidor ⌄", "menu_login": "Kundportal", "menu_order": "Ny beställning", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
-        "t_title": "Förfrågan", "t_sub": "Gör en förfrågan så återkommer vi till dig så snart som möjligt. Inget konto krävs.",
+        "t_title": "Förfrågan", "t_sub": "Gör en förfrågan så återkommer vi till dig så snart som möjligt.",
         "lbl_name": "Namn / Företag *", "lbl_email": "E-postadress *", "lbl_phone": "Telefonnummer",
         "lbl_from": "Från (Upphämtning)", "lbl_to": "Till (Leverans)", 
         "lbl_start": "Startdatum", "lbl_end": "Slutdatum / Retur",
@@ -121,7 +123,7 @@ translations = {
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
-        "t_title": "Forespørgsel", "t_sub": "Lav en forespørgsel, så vender vi tilbage til dig hurtigst muligt. Ingen konto nødvendig.",
+        "t_title": "Forespørgsel", "t_sub": "Lav en forespørgsel, så vender vi tilbage til dig hurtigst muligt.",
         "lbl_name": "Navn / Firma *", "lbl_email": "E-mailadresse *", "lbl_phone": "Telefonnummer",
         "lbl_from": "Fra (Afhentning)", "lbl_to": "Til (Levering)", 
         "lbl_start": "Startdato", "lbl_end": "Slutdato / Retur",
@@ -152,14 +154,15 @@ st.markdown(f"<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;
 
 with st.container(border=True):
     # RIJ 1: Contactgegevens
-    c1, c2, c3 = st.columns(3)
+    c1, c2, c3 = st.columns([1, 1, 1.25])
     with c1: req_name = st.text_input(t['lbl_name'])
     with c2: req_email = st.text_input(t['lbl_email'])
     with c3: 
-        st.markdown(f"<label style='color: #ccc !important; font-weight: 600; font-size: 14px !important; margin-bottom: 4px; display: block;'>{t['lbl_phone']}</label>", unsafe_allow_html=True)
-        col_code, col_num = st.columns([1, 2])
-        with col_code: req_phone_code = st.selectbox("Code", ["+47", "+46", "+45", "+31", "+44"], label_visibility="collapsed")
-        with col_num: req_phone_num = st.text_input("Phone", label_visibility="collapsed")
+        col_code, col_num = st.columns([1.2, 2])
+        # Door een native label aan de linkerkant te geven, blijven de velden perfect uitgelijnd
+        with col_code: req_phone_code = st.selectbox(t['lbl_phone'], ["+47", "+46", "+45", "+31", "+44"])
+        # Verberg de label aan de rechterkant (zodat hij niet omhoog springt)
+        with col_num: req_phone_num = st.text_input("Phone", label_visibility="hidden")
     
     st.write("")
     
