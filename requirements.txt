@@ -4,3 +4,4 @@ supabase
 plotly
 extra-streamlit-components
 extra-streamlit-components
+resend
