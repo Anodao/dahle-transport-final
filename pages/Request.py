@@ -17,7 +17,9 @@ st.markdown("""
 
 /* VERBERG STREAMLIT BRANDING */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"], footer, [data-testid="stToolbar"] { display: none !important; }
-.block-container { padding-top: 110px; max-width: 800px; }
+
+/* HIER IS DE BOX BREDER GEMAAKT (950px in plaats van 800px) */
+.block-container { padding-top: 110px; max-width: 950px; }
 
 /* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
@@ -53,8 +55,10 @@ st.markdown("""
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
 
 /* FORMULIER STYLING */
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; width: 100% !important; }
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; width: 100% !important; margin-top: 10px !important;}
 div.stButton > button[kind="primary"]:hover { background: #ffffff !important; color: #894b9d !important; border: 2px solid #894b9d !important; transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
+
+/* INPUTS & SELECTBOX DONKER MAKEN */
 div[data-baseweb="input"] > div, div[data-baseweb="textarea"], div[data-baseweb="select"] > div { background-color: #262626 !important; border-radius: 8px !important; border: 1px solid #444 !important; }
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea, div[data-baseweb="select"] div { color: white !important; }
 label { color: #ccc !important; font-weight: 600; font-size: 14px !important;}
@@ -95,7 +99,7 @@ translations = {
         "lbl_from": "Fra (Hentested)", "lbl_to": "Til (Leveringssted)", 
         "lbl_start": "Startdato", "lbl_end": "Sluttdato",
         "lbl_specs": "Hva gjelder det? (F.eks. leie av varebil i 3 dager, flytting, etc.) *",
-        "btn_send": "Send Forespørsel", "msg_succ": "Takk! Forespørselen din er sendt. Vi tar kontakt snart.", "msg_err": "Vennligst fyll ut alle obligatoriske felt (*)."
+        "btn_send": "Send Forespørsel", "msg_succ": "Takk! Forespørselen din er sendt. Vi tar kontakt snart.", "msg_err": "Vennligst fyll out alle obligatoriske felt (*)."
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -105,7 +109,7 @@ translations = {
         "lbl_name": "Name / Company *", "lbl_email": "Email Address *", "lbl_code": "Code", "lbl_phone": "Phone Number",
         "lbl_from": "From (Pickup)", "lbl_to": "To (Delivery)", 
         "lbl_start": "Start Date", "lbl_end": "End Date",
-        "lbl_specs": "What do you need? (E.g. rent a van for 3 days, moving, etc.) *",
+        "lbl_specs": "What do you need? (Describe your request) *",
         "btn_send": "Send Request", "msg_succ": "Thank you! Your request has been sent. We will contact you shortly.", "msg_err": "Please fill in all mandatory fields (*)."
     },
     "sv": {
@@ -116,7 +120,7 @@ translations = {
         "lbl_name": "Namn / Företag *", "lbl_email": "E-postadress *", "lbl_code": "Kod", "lbl_phone": "Telefonnummer",
         "lbl_from": "Från (Upphämtning)", "lbl_to": "Till (Leverans)", 
         "lbl_start": "Startdatum", "lbl_end": "Slutdatum",
-        "lbl_specs": "Vad gäller det? (T.ex. hyra av skåpbil i 3 dagar, flytt, etc.) *",
+        "lbl_specs": "Vad gäller det? (Beskriv ditt behov) *",
         "btn_send": "Skicka Förfrågan", "msg_succ": "Tack! Din förfrågan har skickats. Vi återkommer snart.", "msg_err": "Vänligen fyll i alla obligatoriska fält (*)."
     },
     "da": {
@@ -127,7 +131,7 @@ translations = {
         "lbl_name": "Navn / Firma *", "lbl_email": "E-mailadresse *", "lbl_code": "Kode", "lbl_phone": "Telefonnummer",
         "lbl_from": "Fra (Afhentning)", "lbl_to": "Til (Levering)", 
         "lbl_start": "Startdato", "lbl_end": "Slutdato",
-        "lbl_specs": "Hvad drejer det sig om? (F.eks. leje af varevogn i 3 dage, flytning, etc.) *",
+        "lbl_specs": "Hvad drejer det sig om? (Beskriv dit behov) *",
         "btn_send": "Send Forespørgsel", "msg_succ": "Tak! Din forespørgsel er sendt. Vi vender tilbage snarest.", "msg_err": "Udfyld venligst alle obligatoriske felter (*)."
     }
 }
@@ -153,8 +157,8 @@ st.markdown(f"<h2 style='text-align: center; color: #b070c6;'>{t['t_title']}</h2
 st.markdown(f"<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>{t['t_sub']}</p>", unsafe_allow_html=True)
 
 with st.container(border=True):
-    # RIJ 1: Naam, Email, Landcode, Telefoonnummer (Strak uitgelijnd in 4 kolommen)
-    c1, c2, c3, c4 = st.columns([3, 3, 1.2, 2.8])
+    # RIJ 1: De kolomverhoudingen zijn geüpdatet zodat 'Code' meer ademruimte heeft.
+    c1, c2, c3, c4 = st.columns([3, 3, 1.5, 3])
     with c1: 
         req_name = st.text_input(t['lbl_name'])
     with c2: 
