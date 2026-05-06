@@ -119,19 +119,19 @@ translations = {
     },
     "en": { 
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
-        "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "menu_plan": "Internal Planner", "menu_request": "Quick Request",
+        "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "menu_plan": "Internal Planner", "menu_request": "Special Request",
         "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "hero_title": "WE'VE GOT IT!", "hero_subtitle": "Fast and secure transport, regardless of distance.", 
-        "open_title": "Opening Hours:", "open_days": "Monday-Friday: 07:00-16:00", "open_note": "Opening hours may vary during public holidays.", "btn_order": "ORDER NOW", "btn_request": "REQUEST QUOTE" 
+        "open_title": "Opening Hours:", "open_days": "Monday-Friday: 07:00-16:00", "open_note": "Opening hours may vary during public holidays.", "btn_order": "SHIP NOW", "btn_request": "SPECIAL REQUEST" 
     },
     "sv": { 
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "menu_plan": "Intern Planner", "menu_request": "Snabb Förfrågan",
+        "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundportal", "menu_order": "Ny beställning", "menu_plan": "Intern Planner", "menu_request": "Specialförfrågan",
         "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS", "hero_title": "VI LÖSER DET!", "hero_subtitle": "Snabb och säker transport, oavsett avstånd.", 
         "open_title": "Öppettider:", "open_days": "Måndag-fredag: 07:00-16:00", "open_note": "Öppettiderna kan variera under helgdagar.", "btn_order": "BESTÄLL", "btn_request": "FÖRFRÅGAN" 
     },
     "da": { 
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner", "menu_request": "Hurtig Forespørgsel",
+        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "menu_plan": "Intern Planner", "menu_request": "Specialforespørgsel",
         "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS", "hero_title": "VI KLARER DEN!", "hero_subtitle": "Hurtig og sikker transport, uanset afstand.", 
         "open_title": "Åbningstider:", "open_days": "Mandag-fredag: 07:00-16:00", "open_note": "Åbningstiderne kan afvige på helligdage.", "btn_order": "BESTIL", "btn_request": "FORESPØRGSEL" 
     }
