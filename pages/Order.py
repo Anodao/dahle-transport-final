@@ -7,18 +7,19 @@ from datetime import datetime
 from supabase import create_client
 import extra_streamlit_components as stx
 import math
-import resend
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. EMAIL FUNCTIE (VIA RESEND API)
+# 1. EMAIL FUNCTIE (DIRECTE API CALL VIA REQUESTS)
 # =========================================================
 def stuur_bevestigings_email(naar_email, order_data, order_id):
     try:
-        resend.api_key = st.secrets["resend"]["api_key"]
+        # Haal de API key uit je secrets
+        api_key = st.secrets["resend"]["api_key"]
 
+        # De HTML template
         html_body = f"""
         <html>
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6;">
@@ -47,18 +48,30 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
         </html>
         """
 
-        params = {
+        # Direct communiceren met de Resend Servers
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
             "from": "Dahle Transport <onboarding@resend.dev>",
             "to": [naar_email],
             "subject": f"Ordre Godkjent / Order Confirmation #{order_id}",
             "html": html_body
         }
 
-        email_response = resend.Emails.send(params)
-        return True
+        # Stuur het verzoek
+        response = requests.post("https://api.resend.com/emails", json=payload, headers=headers)
         
+        # Check de status code (200 of 201 is succes!)
+        if response.status_code in [200, 201]:
+            return True
+        else:
+            return f"Resend API Error (Status {response.status_code}): {response.text}"
+            
     except Exception as e:
-        return str(e)
+        return f"Python Code Fout: {str(e)}"
 
 # =========================================================
 # 2. DIRECTE CSS INJECTIE 
@@ -1047,13 +1060,20 @@ else:
                         }
                         if st.session_state.get('user'): db_order["user_id"] = st.session_state.user.id
                         try:
+                            # 1. ORDER OPSLAAN
                             res = supabase.table("orders").insert(db_order).execute()
                             nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
-                            stuur_bevestigings_email(o['email'], o, nieuw_order_id)
                             
-                            st.balloons()
-                            st.session_state.is_submitted = True
-                            st.rerun()
+                            # 2. EMAIL VERSTUREN (DIRECT VIA REQUESTS)
+                            mail_status = stuur_bevestigings_email(o['email'], o, nieuw_order_id)
+                            
+                            if mail_status is True:
+                                st.balloons()
+                                st.session_state.is_submitted = True
+                                st.rerun()
+                            else:
+                                st.error(f"Order lagret, men E-POST FEILET! / Order saved, but EMAIL FAILED! Error details: {mail_status}")
+
                         except Exception as e:
                             st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. Details: {e}")
             else:
