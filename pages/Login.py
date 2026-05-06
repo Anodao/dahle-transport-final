@@ -133,7 +133,7 @@ translations = {
         "services": "Forespurte tjenester", "add_info": "Tilleggsinfo", "btn_cancel": "Avbryt denne bestillingen",
         "prof_title": "Administrer profilen din", "prof_sub": "Oppdater firma- og kontaktinformasjon her.",
         "gen_info": "Generell info", "cont_pers": "Kontaktperson", "email_id": "E-postadresse (Innloggings-ID)",
-        "bill_t": "Faktureringsdetaljer", "b_comp": "Fakturamottaker (Firma)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
+        "bill_t": "Faktureringsdetaljer", "bill_same": "Bruk firma og e-post fra Generell Info", "b_comp": "Fakturamottaker (Firma)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "def_pickup": "Standard hentested", "def_del": "Standard leveringssted", "speed_up": "Vi bruker dette for å gjøre bestillingen raskere.",
         "street": "Gateadresse", "btn_save": "Lagre endringer", "msg_saving": "Oppdaterer profil...", "msg_save_succ": "Profil oppdatert!", "msg_save_fail": "Klarte ikke å oppdatere profil:"
     },
@@ -156,12 +156,58 @@ translations = {
         "services": "Services Requested", "add_info": "Additional Info", "btn_cancel": "Cancel This Order",
         "prof_title": "Manage Your Profile", "prof_sub": "Update your company and contact information here.",
         "gen_info": "General Info", "cont_pers": "Contact Person", "email_id": "Email Address (Login ID)",
-        "bill_t": "Billing Details", "b_comp": "Billing Company", "b_em": "Billing Email", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
+        "bill_t": "Billing Details", "bill_same": "Use General Info for Company & Email", "b_comp": "Billing Company", "b_em": "Billing Email", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
         "def_pickup": "Default Pickup Location", "def_del": "Default Delivery Destination", "speed_up": "We use this to speed up your orders.",
         "street": "Street Address", "btn_save": "Save Changes", "msg_saving": "Updating profile...", "msg_save_succ": "Profile updated successfully!", "msg_save_fail": "Could not update profile:"
+    },
+    "sv": {
+        "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
+        "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
+        "menu_order": "Ny beställning", "menu_login": "Kundportal",
+        "portal_title": "Kundportal", "portal_sub": "Logga in för att hantera dina försändelser och uppgifter.",
+        "tab_login": "Logga in", "tab_reg": "Skapa konto",
+        "lbl_email": "E-postadress", "lbl_pass": "Lösenord", "btn_login": "Logga in",
+        "msg_logging_in": "Loggar in...", "msg_login_succ": "Inloggad! Omdirigerar...", "msg_login_fail": "Fel e-post eller lösenord.", "msg_fill_both": "Vänligen fyll i båda fälten.",
+        "lbl_comp": "Företagsnamn *", "lbl_fn": "Förnamn *", "lbl_ln": "Efternamn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-post (Detta blir din inloggning) *", "lbl_pass_reg": "Välj lösenord *", "btn_reg": "Skapa konto",
+        "msg_creating": "Skapar konto...", "msg_reg_succ": "Konto skapat! Du kan nu logga in via 'Logga in'-fliken.", "msg_reg_fail": "Ett fel uppstod.", "msg_fill_req": "Vänligen fyll i alla obligatoriska fält (*).",
+        "welcome": "Välkommen tillbaka", "logged_in_as": "Inloggad som", "btn_logout": "Logga ut",
+        "hist_title": "Din sändningshistorik", "tot_ship": "Totala försändelser", "pend_appr": "Väntar på godkännande", "processed": "Behandlad",
+        "tab_myship": "Mina försändelser", "tab_neworder": "Ny beställning", "tab_prof": "Profilinställningar",
+        "no_orders": "Du har inte lagt några beställningar ännu. Gå till 'Ny beställning' för att börja!",
+        "status": "Status", "pickup": "Upphämtningsplats", "delivery": "Leveransplats", "addr": "Adress", "zip": "Postnr", "city": "Stad",
+        "track_trace": "Spårning (Track & Trace)", "track_pending": "Väntar på tilldelning...",
+        "services": "Begärda tjänster", "add_info": "Ytterligare info", "btn_cancel": "Avbryt denna beställning",
+        "prof_title": "Hantera din profil", "prof_sub": "Uppdatera dina företags- och kontaktuppgifter här.",
+        "gen_info": "Allmän info", "cont_pers": "Kontaktperson", "email_id": "E-postadress (Inloggnings-ID)",
+        "bill_t": "Faktureringsuppgifter", "bill_same": "Använd företag och e-post från Allmän Info", "b_comp": "Fakturamottagare (Företag)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Namn/Företag)", "r_ph": "Telefon",
+        "def_pickup": "Standard upphämtningsplats", "def_del": "Standard leveransplats", "speed_up": "Vi använder detta för att påskynda din beställning.",
+        "street": "Gatuadress", "btn_save": "Spara ändringar", "msg_saving": "Uppdaterar profil...", "msg_save_succ": "Profil uppdaterad!", "msg_save_fail": "Kunde inte uppdatera profil:"
+    },
+    "da": {
+        "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
+        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
+        "menu_order": "Ny bestilling", "menu_login": "Kundeportal",
+        "portal_title": "Kundeportal", "portal_sub": "Log ind for at administrere dine forsendelser og oplysninger.",
+        "tab_login": "Log ind", "tab_reg": "Opret konto",
+        "lbl_email": "E-mailadresse", "lbl_pass": "Adgangskode", "btn_login": "Log ind",
+        "msg_logging_in": "Logger ind...", "msg_login_succ": "Login succesfuldt! Omdirigerer...", "msg_login_fail": "Forkert e-mail eller adgangskode.", "msg_fill_both": "Udfyld venligst begge felter.",
+        "lbl_comp": "Firmanavn *", "lbl_fn": "Fornavn *", "lbl_ln": "Efternavn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-mail (Dette bliver dit login) *", "lbl_pass_reg": "Vælg adgangskode *", "btn_reg": "Opret konto",
+        "msg_creating": "Opretter konto...", "msg_reg_succ": "Konto oprettet! Du kan nu logge ind via 'Log ind'-fanen.", "msg_reg_fail": "Der opstod en fejl.", "msg_fill_req": "Udfyld venligst alle obligatoriske felter (*).",
+        "welcome": "Velkommen tilbage", "logged_in_as": "Logget ind som", "btn_logout": "Log ud",
+        "hist_title": "Din forsendelseshistorik", "tot_ship": "Samlede forsendelser", "pend_appr": "Afventer godkendelse", "processed": "Behandlet",
+        "tab_myship": "Mine forsendelser", "tab_neworder": "Ny bestilling", "tab_prof": "Profilindstillinger",
+        "no_orders": "Du har endnu ikke foretaget nogen bestillinger. Gå til 'Ny bestilling' for at starte!",
+        "status": "Status", "pickup": "Afhentningssted", "delivery": "Leveringssted", "addr": "Adresse", "zip": "Postnr", "city": "By",
+        "track_trace": "Sporing (Track & Trace)", "track_pending": "Afventer tildeling...",
+        "services": "Anmodede tjenester", "add_info": "Yderligere info", "btn_cancel": "Annuller denne bestilling",
+        "prof_title": "Administrer din profil", "prof_sub": "Opdater dine firma- og kontaktoplysninger her.",
+        "gen_info": "Generel info", "cont_pers": "Kontaktperson", "email_id": "E-mailadresse (Login-ID)",
+        "bill_t": "Faktureringsoplysninger", "bill_same": "Brug firma og e-mail fra Generel Info", "b_comp": "Fakturamodtager (Firma)", "b_em": "Faktura E-mail", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
+        "def_pickup": "Standard afhentningssted", "def_del": "Standard leveringssted", "speed_up": "Vi bruger dette til at fremskynde din bestilling.",
+        "street": "Gadeadresse", "btn_save": "Gem ændringer", "msg_saving": "Opdaterer profil...", "msg_save_succ": "Profil opdateret!", "msg_save_fail": "Kunne ikke opdatere profil:"
     }
 }
-t = translations.get(lang, translations["en"]) # Fallback to EN if language not mapped fully
+t = translations.get(lang, translations["en"])
 
 # =========================================================
 # 4. DATABASE & AUTH
@@ -384,10 +430,24 @@ else:
             
             st.write("---")
             st.markdown(f"#### {t['bill_t']}")
+            
+            # Bepaal of we het vinkje standaard aan moeten zetten (als het factuuradres leeg is óf precies gelijk is aan bedrijfsnaam)
+            heeft_afwijkende_billing = bool(profile.get("billing_company") and profile.get("billing_company") != company_name)
+            
+            # De checkbox
+            same_billing_prof = st.checkbox(t.get('bill_same'), value=not heeft_afwijkende_billing, key="prof_same_bill")
+            
             c_b1, c_b2 = st.columns(2)
             with c_b1:
-                upd_b_comp = st.text_input(t['b_comp'], value=profile.get("billing_company", ""), key="upd_b_comp")
-                upd_b_email = st.text_input(t['b_em'], value=profile.get("billing_email", ""), key="upd_b_email")
+                # Als het vinkje AAN staat: vul in en disable de velden
+                if same_billing_prof:
+                    upd_b_comp = st.text_input(t['b_comp'], value=upd_company, disabled=True, key="upd_b_comp_dis")
+                    upd_b_email = st.text_input(t['b_em'], value=email_addr, disabled=True, key="upd_b_email_dis")
+                # Als het vinkje UIT staat: laat klant zelf typen
+                else:
+                    upd_b_comp = st.text_input(t['b_comp'], value=profile.get("billing_company", ""), key="upd_b_comp")
+                    upd_b_email = st.text_input(t['b_em'], value=profile.get("billing_email", ""), key="upd_b_email")
+                    
             with c_b2:
                 upd_b_addr = st.text_input(t['street'], value=profile.get("billing_address", ""), key="upd_b_addr")
                 c_bz, c_bc = st.columns(2)
