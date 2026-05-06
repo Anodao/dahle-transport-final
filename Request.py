@@ -1,10 +1,10 @@
 import streamlit as st
 import time
-import resend
+import requests
 import extra_streamlit_components as stx
 
 # --- PAGE CONFIG ---
-st.set_page_config(page_title="Dahle Transport - Quick Request", layout="centered", initial_sidebar_state="collapsed")
+st.set_page_config(page_title="Dahle Transport - Special Request", layout="centered", initial_sidebar_state="collapsed")
 
 # =========================================================
 # 1. DIRECTE CSS INJECTIE 
@@ -82,46 +82,46 @@ lang_displays = { "no": "Norsk", "en": "English", "sv": "Svenska", "da": "Dansk"
 current_lang_display = lang_displays.get(lang, "Norsk")
 
 # =========================================================
-# 3. WOORDENBOEK
+# 3. WOORDENBOEK (Specifiek voor Auto Huren/Speciale Aanvraag)
 # =========================================================
 translations = {
     "no": {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
-        "t_title": "Rask Forespørsel", "t_sub": "Fyll inn detaljene under for et raskt prisoverslag eller spørsmål.",
+        "t_title": "Spesialforespørsel & Utleie", "t_sub": "Vil du leie en bil, varebil, eller har du et spesielt oppdrag? Fyll inn detaljene her uten konto.",
         "lbl_name": "Navn / Firma *", "lbl_email": "E-postadresse *", "lbl_phone": "Telefonnummer",
-        "lbl_from": "Fra (By / Postnr)", "lbl_to": "Til (By / Postnr)", "lbl_specs": "Hva skal sendes? (Spesifikasjoner) *",
+        "lbl_from": "Fra (Dato eller Hentested)", "lbl_to": "Til (Dato eller Leveringssted)", "lbl_specs": "Hva gjelder det? (F.eks. leie av varebil i 3 dager, flytting, etc.) *",
         "btn_send": "Send Forespørsel", "msg_succ": "Takk! Forespørselen din er sendt. Vi tar kontakt snart.", "msg_err": "Vennligst fyll ut alle obligatoriske felt (*)."
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
         "menu_title": "Pages ⌄", "menu_login": "Customer Portal", "menu_order": "New Order", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US",
-        "t_title": "Quick Request", "t_sub": "Fill in the details below for a quick price estimate or inquiry.",
+        "t_title": "Special Request & Rentals", "t_sub": "Want to rent a car, van, or have a special request? Fill in the details here without an account.",
         "lbl_name": "Name / Company *", "lbl_email": "Email Address *", "lbl_phone": "Phone Number",
-        "lbl_from": "From (City / Zip)", "lbl_to": "To (City / Zip)", "lbl_specs": "What are you shipping? (Specifications) *",
+        "lbl_from": "From (Date or Pickup)", "lbl_to": "To (Date or Drop-off)", "lbl_specs": "What do you need? (E.g. rent a van for 3 days, moving, etc.) *",
         "btn_send": "Send Request", "msg_succ": "Thank you! Your request has been sent. We will contact you shortly.", "msg_err": "Please fill in all mandatory fields (*)."
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sidor ⌄", "menu_login": "Kundportal", "menu_order": "Ny beställning", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
-        "t_title": "Snabb Förfrågan", "t_sub": "Fyll i uppgifterna nedan för ett snabbt prisförslag eller fråga.",
+        "t_title": "Specialförfrågan & Uthyrning", "t_sub": "Vill du hyra en bil, skåpbil, eller har du ett speciellt uppdrag? Fyll i detaljerna här utan konto.",
         "lbl_name": "Namn / Företag *", "lbl_email": "E-postadress *", "lbl_phone": "Telefonnummer",
-        "lbl_from": "Från (Stad / Postnr)", "lbl_to": "Till (Stad / Postnr)", "lbl_specs": "Vad ska skickas? (Specifikationer) *",
+        "lbl_from": "Från (Datum eller Upphämtning)", "lbl_to": "Till (Datum eller Leverans)", "lbl_specs": "Vad gäller det? (T.ex. hyra av skåpbil i 3 dagar, flytt, etc.) *",
         "btn_send": "Skicka Förfrågan", "msg_succ": "Tack! Din förfrågan har skickats. Vi återkommer snart.", "msg_err": "Vänligen fyll i alla obligatoriska fält (*)."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
         "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
-        "t_title": "Hurtig Forespørgsel", "t_sub": "Udfyld detaljerne nedenfor for et hurtigt prisoverslag eller spørgsmål.",
+        "t_title": "Specialforespørgsel & Udlejning", "t_sub": "Vil du leje en bil, varevogn, eller har du en særlig opgave? Udfyld detaljerne her uden konto.",
         "lbl_name": "Navn / Firma *", "lbl_email": "E-mailadresse *", "lbl_phone": "Telefonnummer",
-        "lbl_from": "Fra (By / Postnr)", "lbl_to": "Til (By / Postnr)", "lbl_specs": "Hvad skal sendes? (Specifikationer) *",
+        "lbl_from": "Fra (Dato eller Afhentning)", "lbl_to": "Til (Dato eller Levering)", "lbl_specs": "Hvad drejer det sig om? (F.eks. leje af varevogn i 3 dage, flytning, etc.) *",
         "btn_send": "Send Forespørgsel", "msg_succ": "Tak! Din forespørgsel er sendt. Vi vender tilbage snarest.", "msg_err": "Udfyld venligst alle obligatoriske felter (*)."
     }
 }
 t = translations.get(lang, translations["en"])
 
 # =========================================================
-# 4. NAVBAR
+# 4. NAVBAR (Zonder inlogcheck, voor iedereen open)
 # =========================================================
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a>'
 html_navbar = f"""
@@ -156,29 +156,32 @@ with st.container(border=True):
     if st.button(t['btn_send'], type="primary", use_container_width=True):
         if req_name and req_email and req_specs:
             try:
-                resend.api_key = st.secrets["resend"]["api_key"]
+                api_key = st.secrets["resend"]["api_key"]
                 
                 # E-mail naar Dahle Transport (Jullie ontvangen deze)
                 internal_html = f"""
-                <h3>Ny forespørsel fra nettsiden!</h3>
+                <h3>Ny Spesialforespørsel / Leieforespørsel!</h3>
                 <p><b>Navn/Firma:</b> {req_name}</p>
                 <p><b>E-post:</b> {req_email}</p>
                 <p><b>Telefon:</b> {req_phone}</p>
-                <p><b>Rute:</b> Fra {req_from} til {req_to}</p>
-                <p><b>Spesifikasjoner:</b><br>{req_specs}</p>
+                <p><b>Dato / Sted:</b> Fra {req_from} til {req_to}</p>
+                <p><b>Spesifikasjoner / Behov:</b><br>{req_specs}</p>
                 """
                 
-                resend.Emails.send({
+                headers = { "Authorization": f"Bearer {api_key}", "Content-Type": "application/json" }
+                
+                # Stuur mail naar kantoor
+                requests.post("https://api.resend.com/emails", json={
                     "from": "Dahle System <info@dahletransport.nl>", 
-                    "to": ["info@dahletransport.nl"], # Verander dit naar jullie eigen inbox mailadres!
+                    "to": ["info@dahletransport.nl"], # Verander dit naar jullie eigen inbox!
                     "subject": f"Ny forespørsel: {req_name}",
                     "html": internal_html
-                })
+                }, headers=headers)
                 
-                # Bevestiging naar de klant (in de taal van de pagina)
+                # Bevestiging naar de klant
                 subject_t = {
                     "no": "Vi har mottatt din forespørsel",
-                    "en": "We received your request",
+                    "en": "We received your special request",
                     "sv": "Vi har tagit emot din förfrågan",
                     "da": "Vi har modtaget din forespørgsel"
                 }
@@ -189,12 +192,12 @@ with st.container(border=True):
                 <p>Mvh,<br>Dahle Transport</p>
                 """
                 
-                resend.Emails.send({
+                requests.post("https://api.resend.com/emails", json={
                     "from": "Dahle Transport <info@dahletransport.nl>",
                     "to": [req_email],
                     "subject": subject_t.get(lang, subject_t["en"]),
                     "html": customer_html
-                })
+                }, headers=headers)
                 
                 st.success(t['msg_succ'])
                 st.balloons()
