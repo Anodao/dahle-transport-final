@@ -175,7 +175,14 @@ with st.container(border=True):
                     "html": internal_html
                 })
                 
-                # Bevestiging naar de klant
+                # Bevestiging naar de klant (in de taal van de pagina)
+                subject_t = {
+                    "no": "Vi har mottatt din forespørsel",
+                    "en": "We received your request",
+                    "sv": "Vi har tagit emot din förfrågan",
+                    "da": "Vi har modtaget din forespørgsel"
+                }
+                
                 customer_html = f"""
                 <p>Hei {req_name},</p>
                 <p>{t['msg_succ']}</p>
@@ -185,7 +192,7 @@ with st.container(border=True):
                 resend.Emails.send({
                     "from": "Dahle Transport <info@dahletransport.nl>",
                     "to": [req_email],
-                    "subject": "Vi har mottatt din forespørsel" if lang == "no" else "We received your request",
+                    "subject": subject_t.get(lang, subject_t["en"]),
                     "html": customer_html
                 })
                 
