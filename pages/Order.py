@@ -17,10 +17,8 @@ st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_
 # =========================================================
 def stuur_bevestigings_email(naar_email, order_data, order_id):
     try:
-        # Haal de API key uit je secrets
         resend.api_key = st.secrets["resend"]["api_key"]
 
-        # De HTML template
         html_body = f"""
         <html>
         <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6;">
@@ -49,8 +47,6 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
         </html>
         """
 
-        # Verstuur de mail via de API
-        # LET OP: Zolang je in de testfase zit, moet je verzenden vanaf dit 'onboarding' adres:
         params = {
             "from": "Dahle Transport <onboarding@resend.dev>",
             "to": [naar_email],
@@ -62,7 +58,7 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
         return True
         
     except Exception as e:
-        return str(e) # Foutmelding terugsturen voor debugging op het scherm
+        return str(e)
 
 # =========================================================
 # 2. DIRECTE CSS INJECTIE 
@@ -805,16 +801,16 @@ else:
                 c_route_left, c_route_right = st.columns(2, gap="large")
                 with c_route_left:
                     st.markdown(f"**{t['r_pick']}**")
-                    st.text_input(t['r_name'], key="p_name", max_chars=100)
-                    st.text_input(t['r_ph'], key="p_phone", max_chars=50)
+                    st.text_input(t['r_name'], value=prof.get('p_name', ''), key="p_name", max_chars=100)
+                    st.text_input(t['r_ph'], value=prof.get('p_phone', ''), key="p_phone", max_chars=50)
                     st.text_input(req_lbl("p_addr", t['r_str']), value=prof.get('p_addr', ''), key="p_addr", max_chars=150)
                     c_p_zip, c_p_city = st.columns(2)
                     with c_p_zip: st.text_input(req_lbl("p_zip", t['c_zip']), value=prof.get('p_zip', ''), key="p_zip", max_chars=20)
                     with c_p_city: st.text_input(req_lbl("p_city", t['c_city']), value=prof.get('p_city', ''), key="p_city", max_chars=100)
                 with c_route_right:
                     st.markdown(f"**{t['r_del']}**")
-                    st.text_input(t['r_name'], key="d_name", max_chars=100)
-                    st.text_input(t['r_ph'], key="d_phone", max_chars=50)
+                    st.text_input(t['r_name'], value=prof.get('d_name', ''), key="d_name", max_chars=100)
+                    st.text_input(t['r_ph'], value=prof.get('d_phone', ''), key="d_phone", max_chars=50)
                     st.text_input(req_lbl("d_addr", t['r_str']), value=prof.get('d_addr', ''), key="d_addr", max_chars=150)
                     c_d_zip, c_d_city = st.columns(2)
                     with c_d_zip: st.text_input(req_lbl("d_zip", t['c_zip']), value=prof.get('d_zip', ''), key="d_zip", max_chars=20)
@@ -855,7 +851,16 @@ else:
                     layers.append(pdk.Layer("ScatterplotLayer", data=points, get_position="pos", get_fill_color="color", get_line_color=[255, 255, 255, 255], stroked=True, filled=True, line_width_min_pixels=3, get_radius=200, radius_min_pixels=6, radius_max_pixels=14))
 
                 st.markdown("<br>", unsafe_allow_html=True)
-                st.pydeck_chart(pdk.Deck(map_style="dark", layers=layers, initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch)))
+                
+                # Zorgt ervoor dat de map niet de scroll overneemt
+                view = pdk.View(type="MapView", controller={"scrollZoom": False, "dragPan": True, "dragRotate": True, "doubleClickZoom": True, "touchZoom": True})
+                
+                st.pydeck_chart(pdk.Deck(
+                    map_style="dark", 
+                    layers=layers, 
+                    initial_view_state=pdk.ViewState(latitude=center_lat, longitude=center_lon, zoom=zoom, pitch=pitch),
+                    views=[view]
+                ))
             
             with st.container(border=True):
                 st.text_area(t['a_info'], placeholder=t['a_ph'], max_chars=300, key="cont_info")
@@ -1042,20 +1047,13 @@ else:
                         }
                         if st.session_state.get('user'): db_order["user_id"] = st.session_state.user.id
                         try:
-                            # 1. ORDER OPSLAAN
                             res = supabase.table("orders").insert(db_order).execute()
                             nieuw_order_id = res.data[0]['id'] if res.data else "Ukjent"
+                            stuur_bevestigings_email(o['email'], o, nieuw_order_id)
                             
-                            # 2. EMAIL VERSTUREN MET RESEND
-                            mail_status = stuur_bevestigings_email(o['email'], o, nieuw_order_id)
-                            
-                            if mail_status is True:
-                                st.balloons()
-                                st.session_state.is_submitted = True
-                                st.rerun()
-                            else:
-                                st.error(f"Order lagret, men E-POST FEILET! / Order saved, but EMAIL FAILED! Error details: {mail_status}")
-
+                            st.balloons()
+                            st.session_state.is_submitted = True
+                            st.rerun()
                         except Exception as e:
                             st.error(f"{t['db_err']} Mogelijke oorzaak: Uw Supabase database mist kolommen. Details: {e}")
             else:
