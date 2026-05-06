@@ -54,8 +54,9 @@ def stuur_bevestigings_email(naar_email, order_data, order_id):
             "Content-Type": "application/json"
         }
         
+        # HIER GEBRUIKEN WE NU JOUW EIGEN DOMEIN!
         payload = {
-            "from": "Dahle Transport <onboarding@resend.dev>",
+            "from": "Dahle Transport <info@dahletransport.nl>",
             "to": [naar_email],
             "subject": f"Ordre Godkjent / Order Confirmation #{order_id}",
             "html": html_body
