@@ -17,7 +17,9 @@ st.markdown("""
 
 /* VERBERG STREAMLIT BRANDING */
 [data-testid="collapsedControl"], [data-testid="stSidebar"], header[data-testid="stHeader"], footer, [data-testid="stToolbar"] { display: none !important; }
-.block-container { padding-top: 110px; max-width: 800px; }
+
+/* HIER IS DE BOX BREDER GEMAAKT (950px in plaats van 800px) */
+.block-container { padding-top: 110px; max-width: 950px; }
 
 /* NAVBAR CSS */
 .navbar { position: fixed; top: 0; left: 0; width: 100%; height: 90px; background-color: white; z-index: 999; border-bottom: 1px solid #eaeaea; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 0 40px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); }
@@ -97,7 +99,9 @@ translations = {
         "lbl_from": "Fra (Hentested)", "lbl_to": "Til (Leveringssted)", 
         "lbl_start": "Startdato", "lbl_end": "Sluttdato",
         "lbl_specs": "Hva gjelder det? (F.eks. leie av varebil i 3 dager, flytting, etc.) *",
-        "btn_send": "Send Forespørsel", "msg_succ": "Takk! Forespørselen din er sendt. Vi tar kontakt snart.", "msg_err": "Vennligst fyll ut alle obligatoriske felt (*)."
+        "btn_send": "Send Forespørsel", "msg_succ": "Takk! Forespørselen din er sendt. Vi tar kontakt snart.", "msg_err": "Vennligst fyll ut alle obligatoriske felt (*).",
+        "email_greeting": "Hei", "email_req_title": "Din forespørsel:", "email_date": "Dato", "email_details": "Detaljer", 
+        "email_footer": "Med vennlig hilsen,", "email_disclaimer": "Dette er en automatisk e-post. Vennligst ikke svar på denne.", "no_phone": "Ikke angitt"
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -108,7 +112,9 @@ translations = {
         "lbl_from": "From (Pickup)", "lbl_to": "To (Delivery)", 
         "lbl_start": "Start Date", "lbl_end": "End Date",
         "lbl_specs": "What do you need? (E.g. rent a van for 3 days, moving, etc.) *",
-        "btn_send": "Send Request", "msg_succ": "Thank you! Your request has been sent. We will contact you shortly.", "msg_err": "Please fill in all mandatory fields (*)."
+        "btn_send": "Send Request", "msg_succ": "Thank you! Your request has been sent. We will contact you shortly.", "msg_err": "Please fill in all mandatory fields (*).",
+        "email_greeting": "Hi", "email_req_title": "Your request:", "email_date": "Date", "email_details": "Details", 
+        "email_footer": "Kind regards,", "email_disclaimer": "This is an automated email. Please do not reply.", "no_phone": "Not provided"
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -119,7 +125,9 @@ translations = {
         "lbl_from": "Från (Upphämtning)", "lbl_to": "Till (Leverans)", 
         "lbl_start": "Startdatum", "lbl_end": "Slutdatum",
         "lbl_specs": "Vad gäller det? (T.ex. hyra av skåpbil i 3 dagar, flytt, etc.) *",
-        "btn_send": "Skicka Förfrågan", "msg_succ": "Tack! Din förfrågan har skickats. Vi återkommer snart.", "msg_err": "Vänligen fyll i alla obligatoriska fält (*)."
+        "btn_send": "Skicka Förfrågan", "msg_succ": "Tack! Din förfrågan har skickats. Vi återkommer snart.", "msg_err": "Vänligen fyll i alla obligatoriska fält (*).",
+        "email_greeting": "Hej", "email_req_title": "Din förfrågan:", "email_date": "Datum", "email_details": "Detaljer", 
+        "email_footer": "Med vänliga hälsningar,", "email_disclaimer": "Detta är ett automatiskt e-postmeddelande. Vänligen svara inte.", "no_phone": "Ej angivet"
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -130,7 +138,9 @@ translations = {
         "lbl_from": "Fra (Afhentning)", "lbl_to": "Til (Levering)", 
         "lbl_start": "Startdato", "lbl_end": "Slutdato",
         "lbl_specs": "Hvad drejer det sig om? (F.eks. leje af varevogn i 3 dage, flytning, etc.) *",
-        "btn_send": "Send Forespørgsel", "msg_succ": "Tak! Din forespørgsel er sendt. Vi vender tilbage snarest.", "msg_err": "Udfyld venligst alle obligatoriske felter (*)."
+        "btn_send": "Send Forespørgsel", "msg_succ": "Tak! Din forespørgsel er sendt. Vi vender tilbage snarest.", "msg_err": "Udfyld venligst alle obligatoriske felter (*).",
+        "email_greeting": "Hej", "email_req_title": "Din forespørgsel:", "email_date": "Dato", "email_details": "Detaljer", 
+        "email_footer": "Med venlig hilsen,", "email_disclaimer": "Dette er en automatisk e-mail. Besvar venligst ikke denne.", "no_phone": "Ikke angivet"
     }
 }
 t = translations.get(lang, translations["en"])
@@ -155,7 +165,7 @@ st.markdown(f"<h2 style='text-align: center; color: #b070c6;'>{t['t_title']}</h2
 st.markdown(f"<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>{t['t_sub']}</p>", unsafe_allow_html=True)
 
 with st.container(border=True):
-    # RIJ 1: De kolomverhoudingen zijn geüpdatet zodat 'Code' meer ademruimte heeft.
+    # RIJ 1
     c1, c2, c3, c4 = st.columns([3, 3, 1.5, 3])
     with c1: 
         req_name = st.text_input(t['lbl_name'])
@@ -195,8 +205,8 @@ with st.container(border=True):
             try:
                 api_key = st.secrets["resend"]["api_key"]
                 
-                # Combineer telefoonnummer
-                full_phone = f"{req_phone_code} {req_phone_num.strip()}" if req_phone_num.strip() else "Ikke angitt"
+                # Combineer telefoonnummer. Als er geen nummer is ingevuld, pakt hij de vertaling "Ikke angitt" / "Not provided"
+                full_phone = f"{req_phone_code} {req_phone_num.strip()}" if req_phone_num.strip() else t['no_phone']
                 
                 # E-mail naar Dahle Transport (Jullie ontvangen deze)
                 internal_html = f"""
@@ -227,6 +237,7 @@ with st.container(border=True):
                     "da": "Vi har modtaget din forespørgsel"
                 }
                 
+                # Volledig Vertaalde HTML e-mail voor de klant
                 customer_html = f"""
                 <html>
                 <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6;">
@@ -235,22 +246,22 @@ with st.container(border=True):
                             <h2 style="color: white; margin: 0; font-size: 24px;">Dahle Transport</h2>
                         </div>
                         <div style="padding: 30px; background-color: #ffffff;">
-                            <h3 style="color: #111; margin-top: 0;">Hei {req_name}!</h3>
+                            <h3 style="color: #111; margin-top: 0;">{t['email_greeting']} {req_name}!</h3>
                             <p>{t['msg_succ']}</p>
                             
                             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #894b9d; margin: 20px 0;">
-                                <h4 style="margin-top: 0; margin-bottom: 15px; color: #894b9d;">Din forespørsel / Your request:</h4>
+                                <h4 style="margin-top: 0; margin-bottom: 15px; color: #894b9d;">{t['email_req_title']}</h4>
                                 <p style="margin: 0 0 10px 0;"><b>📞 {t['lbl_phone']}:</b> {full_phone}</p>
                                 <p style="margin: 0 0 10px 0;"><b>📍 {t['lbl_from']}:</b> {req_from}</p>
                                 <p style="margin: 0 0 10px 0;"><b>🏁 {t['lbl_to']}:</b> {req_to}</p>
-                                <p style="margin: 0 0 10px 0;"><b>📅 Dato:</b> {req_start} - {req_end}</p>
-                                <p style="margin: 0;"><b>📝 Detaljer:</b><br>{req_specs}</p>
+                                <p style="margin: 0 0 10px 0;"><b>📅 {t['email_date']}:</b> {req_start} - {req_end}</p>
+                                <p style="margin: 0;"><b>📝 {t['email_details']}:</b><br>{req_specs}</p>
                             </div>
                             
-                            <p>Med vennlig hilsen,<br><b>Team Dahle Transport</b></p>
+                            <p>{t['email_footer']}<br><b>Team Dahle Transport</b></p>
                             
                             <hr style="border: none; border-top: 1px solid #eee; margin: 25px 0;">
-                            <p style="font-size: 11px; color: #888; text-align: center;">Dette er en automatisk e-post. Vennligst ikke svar på denne.</p>
+                            <p style="font-size: 11px; color: #888; text-align: center;">{t['email_disclaimer']}</p>
                         </div>
                     </div>
                 </body>
