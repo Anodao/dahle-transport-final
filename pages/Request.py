@@ -2,6 +2,7 @@ import streamlit as st
 import time
 import requests
 import datetime
+from supabase import create_client
 import extra_streamlit_components as stx
 
 # --- PAGE CONFIG ---
@@ -92,52 +93,56 @@ current_lang_display = lang_displays.get(lang, "Norsk")
 translations = {
     "no": {
         "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
-        "t_title": "Spesialforespørsel & Utleie", 
+        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT",
+        "menu_order": "Ny bestilling", "menu_login": "Kundeportal",
+        "t_title": "Spesialforespørsel", 
         "t_sub": "Gjør en forespørsel, så kommer vi tilbake til deg så fort som mulig.",
         "lbl_name": "Navn / Firma *", "lbl_email": "E-postadresse *", "lbl_code": "Kode", "lbl_phone": "Telefonnummer",
         "lbl_from": "Fra (Hentested)", "lbl_to": "Til (Leveringssted)", 
         "lbl_start": "Startdato", "lbl_end": "Sluttdato",
-        "lbl_specs": "Hva gjelder det? (F.eks. leie av varebil i 3 dager, flytting, etc.) *",
+        "lbl_specs": "Hva gjelder det? (Beskriv ditt behov) *",
         "btn_send": "Send Forespørsel", "msg_succ": "Takk! Forespørselen din er sendt. Vi tar kontakt snart.", "msg_err": "Vennligst fyll ut alle obligatoriske felt (*).",
         "email_greeting": "Hei", "email_req_title": "Din forespørsel:", "email_date": "Dato", "email_details": "Detaljer", 
         "email_footer": "Med vennlig hilsen,", "email_disclaimer": "Dette er en automatisk e-post. Vennligst ikke svar på denne.", "no_phone": "Ikke angitt"
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
-        "menu_title": "Pages ⌄", "menu_login": "Customer Portal", "menu_order": "New Order", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US",
-        "t_title": "Special Request & Rentals", 
+        "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Internal Planner", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US",
+        "menu_order": "New Order", "menu_login": "Customer Portal",
+        "t_title": "Special Request", 
         "t_sub": "Make a request and we will get back to you as soon as possible.",
         "lbl_name": "Name / Company *", "lbl_email": "Email Address *", "lbl_code": "Code", "lbl_phone": "Phone Number",
         "lbl_from": "From (Pickup)", "lbl_to": "To (Delivery)", 
         "lbl_start": "Start Date", "lbl_end": "End Date",
-        "lbl_specs": "What do you need? (E.g. rent a van for 3 days, moving, etc.) *",
+        "lbl_specs": "What do you need? (Describe your request) *",
         "btn_send": "Send Request", "msg_succ": "Thank you! Your request has been sent. We will contact you shortly.", "msg_err": "Please fill in all mandatory fields (*).",
         "email_greeting": "Hi", "email_req_title": "Your request:", "email_date": "Date", "email_details": "Details", 
         "email_footer": "Kind regards,", "email_disclaimer": "This is an automated email. Please do not reply.", "no_phone": "Not provided"
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sidor ⌄", "menu_login": "Kundportal", "menu_order": "Ny beställning", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
-        "t_title": "Specialförfrågan & Uthyrning", 
+        "menu_title": "Sidor ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "nav_portal": "KUNDPORTAL", "nav_contact_btn": "KONTAKTA OSS",
+        "menu_order": "Ny beställning", "menu_login": "Kundportal",
+        "t_title": "Specialförfrågan", 
         "t_sub": "Gör en förfrågan, så återkommer vi till dig så snart som möjligt.",
         "lbl_name": "Namn / Företag *", "lbl_email": "E-postadress *", "lbl_code": "Kod", "lbl_phone": "Telefonnummer",
         "lbl_from": "Från (Upphämtning)", "lbl_to": "Till (Leverans)", 
         "lbl_start": "Startdatum", "lbl_end": "Slutdatum",
-        "lbl_specs": "Vad gäller det? (T.ex. hyra av skåpbil i 3 dagar, flytt, etc.) *",
+        "lbl_specs": "Vad gäller det? (Beskriv ditt behov) *",
         "btn_send": "Skicka Förfrågan", "msg_succ": "Tack! Din förfrågan har skickats. Vi återkommer snart.", "msg_err": "Vänligen fyll i alla obligatoriska fält (*).",
         "email_greeting": "Hej", "email_req_title": "Din förfrågan:", "email_date": "Datum", "email_details": "Detaljer", 
         "email_footer": "Med vänliga hälsningar,", "email_disclaimer": "Detta är ett automatiskt e-postmeddelande. Vänligen svara inte.", "no_phone": "Ej angivet"
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
-        "menu_title": "Sider ⌄", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
-        "t_title": "Specialforespørgsel & Udlejning", 
+        "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_plan": "Intern Planner", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "KONTAKT OS",
+        "menu_order": "Ny bestilling", "menu_login": "Kundeportal",
+        "t_title": "Specialforespørgsel", 
         "t_sub": "Lav en forespørgsel, så vender vi tilbage til dig hurtigst muligt.",
         "lbl_name": "Navn / Firma *", "lbl_email": "E-mailadresse *", "lbl_code": "Kode", "lbl_phone": "Telefonnummer",
         "lbl_from": "Fra (Afhentning)", "lbl_to": "Til (Levering)", 
         "lbl_start": "Startdato", "lbl_end": "Slutdato",
-        "lbl_specs": "Hvad drejer det sig om? (F.eks. leje af varevogn i 3 dage, flytning, etc.) *",
+        "lbl_specs": "Hvad drejer det sig om? (Beskriv dit behov) *",
         "btn_send": "Send Forespørgsel", "msg_succ": "Tak! Din forespørgsel er sendt. Vi vender tilbage snarest.", "msg_err": "Udfyld venligst alle obligatoriske felter (*).",
         "email_greeting": "Hej", "email_req_title": "Din forespørgsel:", "email_date": "Dato", "email_details": "Detaljer", 
         "email_footer": "Med venlig hilsen,", "email_disclaimer": "Dette er en automatisk e-mail. Besvar venligst ikke denne.", "no_phone": "Ikke angivet"
@@ -146,20 +151,68 @@ translations = {
 t = translations.get(lang, translations["en"])
 
 # =========================================================
-# 4. NAVBAR
+# 4. DATABASE & AUTH (TO PREVENT LOGGING OUT)
 # =========================================================
+def init_connection():
+    return create_client(st.secrets["supabase"]["url"], st.secrets["supabase"]["key"])
+
+if 'supabase_client' not in st.session_state:
+    try: st.session_state.supabase_client = init_connection()
+    except Exception: pass
+supabase = st.session_state.supabase_client
+
+if 'user' not in st.session_state: st.session_state.user = None
+if 'role' not in st.session_state: st.session_state.role = "guest"
+
+acc_token = cookie_manager.get('dahle_acc')
+ref_token = cookie_manager.get('dahle_ref')
+
+# Check cookies to maintain session
+if st.session_state.get('user') is None and acc_token and ref_token:
+    try:
+        session = supabase.auth.set_session(acc_token, ref_token)
+        st.session_state.user = session.user
+    except Exception: pass
+
+# Get user details for Navbar and Pre-filling
+if st.session_state.get('user'):
+    try:
+        prof_res = supabase.table("profiles").select("*").eq("id", st.session_state.user.id).execute()
+        if prof_res.data:
+            st.session_state.company_name = prof_res.data[0].get("company_name", "")
+            st.session_state.role = str(prof_res.data[0].get("roles", "customer")).strip().lower()
+    except Exception: st.session_state.role = "customer"
+
+is_employee = st.session_state.get('role') in ['admin', 'employee']
+
+# Pre-fill data if logged in
+default_name = st.session_state.get('company_name', '')
+default_email = st.session_state.user.email if st.session_state.get('user') else ''
+
+
+# =========================================================
+# 5. NAVBAR
+# =========================================================
+if st.session_state.get('user') is not None and 'company_name' in st.session_state:
+    icoon = "<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>"
+    knop_tekst = f"{icoon}{st.session_state.company_name}"
+else:
+    knop_tekst = t['nav_portal']
+
 dropdown_links = f'<a href="/Login?lang={lang}" target="_self">{t["menu_login"]}</a><a href="/Order?lang={lang}" target="_self">{t["menu_order"]}</a>'
+if is_employee: dropdown_links += f'<a href="/Dashboard?lang={lang}" target="_self">{t["menu_dash"]}</a><a href="/Planner?lang={lang}" target="_self">{t["menu_plan"]}</a>'
+
 html_navbar = f"""
 <div class="navbar"><div class="nav-logo"><a href="/?lang={lang}" target="_self"><img src="https://cloud-1de12d.becdn.net/media/original/964295c9ae8e693f8bb4d6b70862c2be/logo-website-top-png-1-.webp"></a></div>
 <div class="nav-links"><a href="/?lang={lang}" target="_self"><span>{t['nav_home']}</span></a><span>{t['nav_about']}</span><span>{t['nav_services']}</span><span>{t['nav_gallery']}</span><span>{t['nav_contact']}</span>
 <div class="nav-text-dropdown"><button class="nav-text-dropbtn">{t['menu_title']}</button><div class="nav-text-dropdown-content">{dropdown_links}</div></div></div>
 <div class="nav-cta"><div class="lang-dropdown"><button class="lang-dropbtn">{current_lang_display} ⌄</button><div class="lang-dropdown-content"><a href="?lang=en" target="_self">English</a><a href="?lang=no" target="_self">Norsk</a><a href="?lang=sv" target="_self">Svenska</a><a href="?lang=da" target="_self">Dansk</a></div></div>
-<a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{t['nav_portal']}</a><a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a></div></div>
+<a href="/Login?lang={lang}" target="_self" class="cta-btn-outline">{knop_tekst}</a><a href="/?lang={lang}" target="_self" class="cta-btn-purple">{t['nav_contact_btn']}</a></div></div>
 """
 st.markdown(html_navbar, unsafe_allow_html=True)
 
 # =========================================================
-# 5. PAGINA INHOUD
+# 6. PAGINA INHOUD
 # =========================================================
 st.markdown(f"<h2 style='text-align: center; color: #b070c6;'>{t['t_title']}</h2>", unsafe_allow_html=True)
 st.markdown(f"<p style='text-align: center; color: #aaaaaa; margin-bottom: 30px;'>{t['t_sub']}</p>", unsafe_allow_html=True)
@@ -168,9 +221,9 @@ with st.container(border=True):
     # RIJ 1
     c1, c2, c3, c4 = st.columns([3, 3, 1.5, 3])
     with c1: 
-        req_name = st.text_input(t['lbl_name'])
+        req_name = st.text_input(t['lbl_name'], value=default_name)
     with c2: 
-        req_email = st.text_input(t['lbl_email'])
+        req_email = st.text_input(t['lbl_email'], value=default_email)
     with c3: 
         req_phone_code = st.selectbox(t['lbl_code'], ["+47", "+46", "+45", "+31", "+44"])
     with c4: 
