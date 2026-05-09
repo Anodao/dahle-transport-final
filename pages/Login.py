@@ -135,7 +135,10 @@ translations = {
         "gen_info": "Generell info", "cont_pers": "Kontaktperson", "email_id": "E-postadresse (Innloggings-ID)",
         "bill_t": "Faktureringsdetaljer", "bill_same": "Bruk firma og adresse fra Generell Info", "b_comp": "Fakturamottaker (Firma)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "def_pickup": "Standard hentested", "def_del": "Standard leveringssted", "speed_up": "Vi bruker dette for å gjøre bestillingen raskere.",
-        "street": "Gateadresse", "btn_save": "Lagre endringer", "msg_saving": "Oppdaterer profil...", "msg_save_succ": "Profil oppdatert!", "msg_save_fail": "Klarte ikke å oppdatere profil:"
+        "street": "Gateadresse", "btn_save": "Lagre endringer", "msg_saving": "Oppdaterer profil...", "msg_save_succ": "Profil oppdatert!", "msg_save_fail": "Klarte ikke å oppdatere profil:",
+        # VERBETERING: Ontbrekende vertalingen toegevoegd voor het annuleren
+        "msg_cancel_succ": "Bestillingen ble kansellert.",
+        "msg_cancel_fail": "Kunne ikke kansellere bestillingen."
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -158,7 +161,10 @@ translations = {
         "gen_info": "General Info", "cont_pers": "Contact Person", "email_id": "Email Address (Login ID)",
         "bill_t": "Billing Details", "bill_same": "Use Company and Address from General Info", "b_comp": "Billing Company", "b_em": "Billing Email", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
         "def_pickup": "Default Pickup Location", "def_del": "Default Delivery Destination", "speed_up": "We use this to speed up your orders.",
-        "street": "Street Address", "btn_save": "Save Changes", "msg_saving": "Updating profile...", "msg_save_succ": "Profile updated successfully!", "msg_save_fail": "Could not update profile:"
+        "street": "Street Address", "btn_save": "Save Changes", "msg_saving": "Updating profile...", "msg_save_succ": "Profile updated successfully!", "msg_save_fail": "Could not update profile:",
+        # VERBETERING: Ontbrekende vertalingen toegevoegd voor het annuleren
+        "msg_cancel_succ": "Order successfully cancelled.",
+        "msg_cancel_fail": "Could not cancel the order."
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -181,7 +187,10 @@ translations = {
         "gen_info": "Allmän info", "cont_pers": "Kontaktperson", "email_id": "E-postadress (Inloggnings-ID)",
         "bill_t": "Faktureringsuppgifter", "bill_same": "Använd företag och adress från Allmän Info", "b_comp": "Fakturamottagare (Företag)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Namn/Företag)", "r_ph": "Telefon",
         "def_pickup": "Standard upphämtningsplats", "def_del": "Standard leveransplats", "speed_up": "Vi använder detta för att påskynda din beställning.",
-        "street": "Gatuadress", "btn_save": "Spara ändringar", "msg_saving": "Uppdaterar profil...", "msg_save_succ": "Profil uppdaterad!", "msg_save_fail": "Kunde inte uppdatera profil:"
+        "street": "Gatuadress", "btn_save": "Spara ändringar", "msg_saving": "Uppdaterar profil...", "msg_save_succ": "Profil uppdaterad!", "msg_save_fail": "Kunde inte uppdatera profil:",
+        # VERBETERING: Ontbrekende vertalingen toegevoegd för att avbryta
+        "msg_cancel_succ": "Beställningen har avbrutits.",
+        "msg_cancel_fail": "Kunde inte avbryta beställningen."
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -204,7 +213,10 @@ translations = {
         "gen_info": "Generel info", "cont_pers": "Kontaktperson", "email_id": "E-mailadresse (Login-ID)",
         "bill_t": "Faktureringsoplysninger", "bill_same": "Brug firma og adresse fra Generel Info", "b_comp": "Fakturamodtager (Firma)", "b_em": "Faktura E-mail", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "def_pickup": "Standard afhentningssted", "def_del": "Standard leveringssted", "speed_up": "Vi bruger dette til at fremskynde din bestilling.",
-        "street": "Gadeadresse", "btn_save": "Gem ændringer", "msg_saving": "Opdaterer profil...", "msg_save_succ": "Profil opdateret!", "msg_save_fail": "Kunne ikke opdatere profil:"
+        "street": "Gadeadresse", "btn_save": "Gem ændringer", "msg_saving": "Opdaterer profil...", "msg_save_succ": "Profil opdateret!", "msg_save_fail": "Kunne ikke opdatere profil:",
+        # VERBETERING: Ontbrekende vertalingen toegevoegd voor het annuleren
+        "msg_cancel_succ": "Bestillingen blev annulleret.",
+        "msg_cancel_fail": "Kunne ikke annullere bestillingen."
     }
 }
 t = translations.get(lang, translations["en"])
@@ -412,8 +424,14 @@ else:
                         c_space1, c_cancel, c_space2 = st.columns([1, 2, 1])
                         with c_cancel:
                             if st.button(t['btn_cancel'], key=f"cancel_{o['id']}", type="secondary", use_container_width=True):
-                                try: supabase.table("orders").update({"status": "Cancelled"}).eq("id", o['id']).execute(); st.success(t['msg_cancel_succ']); time.sleep(1); st.rerun()
-                                except: st.error(t['msg_cancel_fail'])
+                                # VERBETERING: Foutafhandeling gewijzigd zodat de echte database-fout zichtbaar wordt op het scherm!
+                                try: 
+                                    supabase.table("orders").update({"status": "Cancelled"}).eq("id", o['id']).execute()
+                                    st.success(t['msg_cancel_succ'])
+                                    time.sleep(1)
+                                    st.rerun()
+                                except Exception as e: 
+                                    st.error(f"{t['msg_cancel_fail']} Details: {str(e)}")
                         
                     st.markdown("<br>", unsafe_allow_html=True)
 
@@ -428,7 +446,6 @@ else:
             upd_phone = st.text_input(t['lbl_phone'], value=phone_nr, key="upd_phone")
             st.text_input(t['email_id'], value=email_addr, disabled=True, key="upd_email")
             
-            # NIEUW: Hoofdadres van het bedrijf
             upd_main_addr = st.text_input(t['street'], value=profile.get("address", ""), key="upd_main_addr")
             c_mz, c_mc = st.columns(2)
             with c_mz: upd_main_zip = st.text_input(t['zip'], value=profile.get("zip_code", ""), key="upd_main_zip")
@@ -437,7 +454,6 @@ else:
             st.write("---")
             st.markdown(f"#### {t['bill_t']}")
             
-            # Bepaal of we het vinkje standaard aan moeten zetten
             heeft_afwijkende_billing = bool(profile.get("billing_company") and profile.get("billing_company") != company_name)
             same_billing_prof = st.checkbox(t.get('bill_same'), value=not heeft_afwijkende_billing, key="prof_same_bill")
             
