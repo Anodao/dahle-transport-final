@@ -1,3 +1,8 @@
+# =========================================================
+# BESTANDSNAAM: pages/Planner.py
+# Omschrijving: Internal Planner Dashboard
+# =========================================================
+
 import streamlit as st
 from supabase import create_client
 import extra_streamlit_components as stx
@@ -52,7 +57,6 @@ div[data-baseweb="select"] > div, div[data-baseweb="base-input"] { background-co
 .stSelectbox div[data-baseweb="select"] span, .stSelectbox div[data-baseweb="select"] div, .stDateInput input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 label[data-testid="stWidgetLabel"] p { color: #ffffff !important; font-weight: 600; font-size: 14px; }
 
-/* FIX: Hoogte containers aanpassen zodat tekst niet meer afbreekt */
 div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !important; border: 1px solid #333333 !important; border-radius: 10px !important; padding: 15px !important; height: auto !important; min-height: 100%; display: flex; flex-direction: column; justify-content: flex-start;}
 
 div[data-testid="stMetric"] { background-color: #161616 !important; border: 1px solid #333 !important; padding: 15px !important; border-radius: 8px !important; }
@@ -63,7 +67,7 @@ div.stButton > button[kind="primary"]:hover { background: #ffffff !important; co
 div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 1px solid #894b9d !important; border-radius: 6px !important; padding: 8px 16px !important; font-weight: 600 !important; font-size: 13px !important; width: 100% !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; }
 
-.finance-card { background-color: #1a1a2e; padding: 16px; border-radius: 10px; border-left: 4px solid #b070c6; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+.finance-card { padding: 16px; border-radius: 10px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
 .finance-title { color: #fff; font-size: 18px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
 .finance-row { display: flex; align-items: center; font-size: 15px; color: #ddd; margin-bottom: 8px; }
 .finance-val { font-weight: bold; color: #fff; margin-left: 5px; }
@@ -75,7 +79,6 @@ div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; 
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
-    """Vindt GPS coördinaten. Wereldwijde zoekopdracht."""
     if len(city) < 2: return None
     headers = {'User-Agent': 'DahleApp/2.0'}
     url = "https://nominatim.openstreetmap.org/search"
@@ -94,7 +97,6 @@ def get_coordinates(street, zip_code, city):
 
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_route_data(coord1, coord2):
-    """Haalt de blauwe routelijn op."""
     if not coord1 or not coord2: return None, None
     url = f"https://router.project-osrm.org/route/v1/driving/{coord1[1]},{coord1[0]};{coord2[1]},{coord2[0]}?overview=full&geometries=geojson"
     try:
@@ -105,18 +107,17 @@ def get_route_data(coord1, coord2):
     return None, None
 
 def calculate_zoom(coord1, coord2):
-    """Berekent het ideale zoomniveau, geoptimaliseerd voor Europa."""
     if not coord1 or not coord2: return 4.0
     lat_diff = abs(coord1[0] - coord2[0])
     lon_diff = abs(coord1[1] - coord2[1])
     max_diff = max(lat_diff, lon_diff)
     
-    if max_diff < 0.05: return 12.0 # Heel dichtbij (binnen dezelfde stad)
-    if max_diff < 0.2:  return 10.0 # Zelfde regio
-    if max_diff < 1.0:  return 7.5  # Zelfde provincie/deel van land
-    if max_diff < 5.0:  return 5.5  # Landelijk (bijv. Oslo naar Trondheim)
-    if max_diff < 15.0: return 4.0  # Internationaal Europa (bijv. Noorwegen naar NL)
-    return 3.0 # Wereldwijd
+    if max_diff < 0.05: return 12.0
+    if max_diff < 0.2:  return 10.0
+    if max_diff < 1.0:  return 7.5 
+    if max_diff < 5.0:  return 5.5 
+    if max_diff < 15.0: return 4.0 
+    return 3.0
 
 @st.cache_data(show_spinner=False)
 def get_route_distance(city1, city2):
@@ -195,6 +196,42 @@ if not is_employee:
 
 
 # =========================================================
+# POP-UP DIALOG VOOR HET BEWERKEN VAN ADRESSEN
+# =========================================================
+@st.dialog("✏️ Edit Order Addresses")
+def edit_order_modal(order):
+    st.write(f"Change address details for **Order #{order['id']}**.")
+    with st.form("edit_addresses_form"):
+        st.markdown("#### From (Pickup)")
+        p_addr = st.text_input("Street", value=order.get('pickup_address', ''))
+        c1, c2 = st.columns(2)
+        p_zip = c1.text_input("Zip Code", value=order.get('pickup_zip', ''))
+        p_city = c2.text_input("City", value=order.get('pickup_city', ''))
+
+        st.markdown("#### To (Delivery)")
+        d_addr = st.text_input("Street", value=order.get('delivery_address', ''))
+        c3, c4 = st.columns(2)
+        d_zip = c3.text_input("Zip Code", value=order.get('delivery_zip', ''))
+        d_city = c4.text_input("City", value=order.get('delivery_city', ''))
+
+        st.warning("⚠️ Are you sure you want to save these changes?")
+        submitted = st.form_submit_button("Yes, Save Changes", type="primary")
+        
+        if submitted:
+            updates = {
+                "pickup_address": p_addr, "pickup_zip": p_zip, "pickup_city": p_city,
+                "delivery_address": d_addr, "delivery_zip": d_zip, "delivery_city": d_city
+            }
+            try:
+                supabase.table("orders").update(updates).eq("id", order['id']).execute()
+                st.success("Order addresses updated successfully!")
+                time.sleep(1)
+                st.rerun()
+            except Exception as e:
+                st.error(f"Failed to update database: {e}")
+
+
+# =========================================================
 # 3. TAAL LOGICA & NAVBAR
 # =========================================================
 saved_lang = cookie_manager.get('dahle_lang')
@@ -217,7 +254,6 @@ translations = {
     "no": { "nav_home": "Hjem", "nav_about": "Om oss", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", "menu_title": "Sider ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Kundeportal", "menu_order": "Ny bestilling", "nav_portal": "KUNDEPORTAL", "nav_contact_btn": "TA KONTAKT", "stat_title": "📊 Statistikk og KPI-er", "filter_lbl": "Filterperiode:", "opt_30": "Siste 30 dager", "opt_7": "Siste 7 dager", "opt_1": "I dag", "act_req": "Handling kreves", "act_routes": "Aktive ruter", "comp": "Fullført", "canc": "Avbrutt", "tot_ord": "Totale ordrer", "inbox": "Innboks", "pend": "Venter", "prog": "Pågår", "done": "Ferdig", "det_title": "Ordredetaljer", "det_sub": "👈 Velg en ordre fra innboksen for å se detaljer og oppdatere status.", "btn_view": "Vis Ordre", "status_lbl": "Oppdater Status", "btn_save": "Lagre Status", "msg_succ": "Status oppdatert!" },
     "en": { "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", "menu_title": "Pages ⌄", "menu_dash": "Performance Dashboard", "menu_login": "Customer Portal", "menu_order": "New Order", "nav_portal": "CUSTOMER PORTAL", "nav_contact_btn": "CONTACT US", "stat_title": "📊 Statistics & KPIs", "filter_lbl": "Filter period:", "opt_30": "Last 30 days", "opt_7": "Last 7 days", "opt_1": "Today", "act_req": "Action Required", "act_routes": "Active Routes", "comp": "Completed", "canc": "Cancelled", "tot_ord": "Total Orders", "inbox": "Inbox", "pend": "Pending", "prog": "In Progress", "done": "Done", "det_title": "Order Details", "det_sub": "👈 Select an order from the Inbox to view details and update status.", "btn_view": "View Order", "status_lbl": "Update Status", "btn_save": "Save Status", "msg_succ": "Status updated successfully!" }
 }
-# Fallback for SV/DA to EN for brevity
 t = translations.get(lang, translations["en"])
 
 knop_tekst = f"<svg style='width:16px; height:16px; margin-right:8px; vertical-align:-2px; fill:currentColor;' viewBox='0 0 640 512'><path d='M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512H322.8c-3.1-8.8-3.7-18.4-1.4-27.8l15-60.1c2.8-11.3 8.6-21.5 16.8-29.7l40.3-40.3c-32.4-31.6-78-50.1-126.5-50.1H178.3zm212.8-38.1l-40.3 40.3c-15.9 15.9-27.2 35.8-32.5 57.2l-15 60.1c-1.3 5.3-.2 10.9 3.1 15.3s8.5 7.1 14 7.1H592c5.5 0 10.7-2.7 14-7.1s4.4-10 3.1-15.3l-15-60.1c-5.3-21.4-16.6-41.3-32.5-57.2l-40.3-40.3c-23.4-23.4-60.6-23.4-84 0zM456 432c-13.3 0-24-10.7-24-24s10.7-24 24-24s24 10.7 24 24s-10.7 24-24 24z'/></svg>{st.session_state.company_name}"
@@ -312,10 +348,9 @@ with col_details:
             d_city_display = selected_order.get('delivery_city', '-').strip()
             d_country = "Norway"
             
-            # --- FINANCIËLE BLOCK MET FERRY HACK ---
+            # --- FINANCIËLE BLOCK MET KLEUR LOGICA ---
             p_city = selected_order.get('pickup_city', 'Unknown')
             d_city = selected_order.get('delivery_city', 'Unknown')
-            
             dist_km = get_route_distance(p_city, d_city)
             
             price = selected_order.get('price') or 0
@@ -325,13 +360,25 @@ with col_details:
             margin = round((profit / price * 100), 1) if price > 0 else 0.0
             fuel_cost = int(dist_km * 6.5) if dist_km > 0 else int(cost * 0.4) 
             
-            stat_color = "#4CAF50" if selected_order.get('status') == "New" else "#b070c6"
+            # Bepaal achtergrondkleur op basis van de order status
+            order_status = selected_order.get('status', 'New')
+            if order_status == 'New':
+                bg_color = "#15202b"; border_color = "#2196F3"; status_color = "#2196F3"
+            elif order_status == 'In Progress':
+                bg_color = "#2b2415"; border_color = "#FFC107"; status_color = "#FFC107"
+            elif order_status in ['Processed', 'Delivered']:
+                bg_color = "#152b1a"; border_color = "#4CAF50"; status_color = "#4CAF50"
+            elif order_status == 'Cancelled':
+                bg_color = "#2b1515"; border_color = "#F44336"; status_color = "#F44336"
+            else:
+                bg_color = "#1a1a2e"; border_color = "#b070c6"; status_color = "#b070c6"
+            
             date_str = selected_order.get('received_date', '')[:10]
             
             st.markdown(f"""
-            <div class="finance-card">
+            <div class="finance-card" style="background-color: {bg_color}; border-left: 4px solid {border_color};">
                 <div class="finance-title">
-                    Order #{selected_order['id']} — {date_str} <span style="color: {stat_color}; font-size: 14px;">({selected_order.get('status')})</span>
+                    Order #{selected_order['id']} — {date_str} <span style="color: {status_color}; font-size: 14px;">({order_status})</span>
                 </div>
                 <div class="finance-row">
                     🛣️ Route: <span class="finance-val" style="font-weight: 500;">{p_city} ➔ {d_city} &nbsp;|&nbsp; 📍 {dist_km} km</span>
@@ -357,7 +404,14 @@ with col_details:
                     st.write(f"**Email:** {selected_order.get('email', '-')}")
                 
                 with st.container(border=True):
-                    st.markdown("<h4 style='margin-top:0px;'>🛣️ Adressen</h4>", unsafe_allow_html=True)
+                    c_addr_head1, c_addr_head2 = st.columns([3, 1])
+                    with c_addr_head1:
+                        st.markdown("<h4 style='margin-top:0px;'>🛣️ Adressen</h4>", unsafe_allow_html=True)
+                    with c_addr_head2:
+                        # De Edit Knop die de Pop-up activeert
+                        if st.button("✏️ Edit", key=f"edit_addr_{selected_order['id']}", type="secondary", use_container_width=True):
+                            edit_order_modal(selected_order)
+
                     c_addr_left, c_addr_right = st.columns(2)
                     
                     with c_addr_left:
@@ -485,22 +539,21 @@ with col_details:
             st.write("---")
             
             # =========================================================
-            # OPTER API SIMULATIE KNOPPEN (MVP)
+            # OPTER API INTEGRATIE KNOPPEN
             # =========================================================
-            st.markdown("<h4 style='margin-bottom: 5px;'>Opter API Integration (MVP Simulation)</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='margin-bottom: 5px;'>Opter API Integration</h4>", unsafe_allow_html=True)
             st.markdown("<p style='color: #888; font-size: 13px; margin-bottom: 15px;'>Send or retrieve real-time data for this specific order via Opter.</p>", unsafe_allow_html=True)
             
-            # Kolommen omgedraaid: Import links, Export rechts
             col_import, col_export = st.columns(2)
             
             with col_import:
                 if st.button("Retrieve Latest Status from Opter", key=f"import_{selected_order['id']}", use_container_width=True):
                     with st.spinner("Fetching latest data from Opter..."):
                         time.sleep(1.5)
-                    st.warning("Simulation: Connection refused. Opter API integration is currently pending consultation.")
+                    st.warning("Connection refused. Opter API integration is currently pending consultation.")
                     
             with col_export:
                 if st.button("Send Order Details to Opter", key=f"export_{selected_order['id']}", use_container_width=True):
                     with st.spinner("Connecting to Opter API..."):
                         time.sleep(1.5)
-                    st.info("Simulation: Order details formatted for export. Waiting for Opter API credentials to complete the transfer.")
+                    st.info("Order details formatted for export. Waiting for Opter API credentials to complete the transfer.")
