@@ -3,6 +3,7 @@ import time
 from datetime import datetime, timedelta
 from supabase import create_client
 import extra_streamlit_components as stx
+import streamlit.components.v1 as components
 
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Dahle Transport - Customer Portal", layout="centered", initial_sidebar_state="collapsed")
@@ -33,12 +34,10 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
 
-/* DE LINK TEKSTEN IN HET MIDDEN */
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
 
-/* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
 .nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
@@ -49,14 +48,12 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
 
-/* DE KNOPPEN RECHTS */
 .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
 .cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .cta-btn-outline:hover { background-color: #f4e9f7 !important; }
 
-/* TAAL DROPDOWN */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -72,29 +69,13 @@ div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !imp
 div[data-baseweb="input"] > div, div[data-baseweb="textarea"] { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 label[data-testid="stWidgetLabel"] p { color: #cccccc !important; font-weight: 600; font-size: 14px !important;}
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; font-size: 14px !important; width: 100% !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; }
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
-div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; font-size: 14px !important; width: 100% !important; transition: all 0.3s ease !important; }
-div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}
+div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 1px solid #894b9d !important; border-radius: 6px !important; padding: 8px 16px !important; font-weight: 600 !important; font-size: 14px !important; transition: all 0.3s ease !important; }
+div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important;}
 div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
 div[data-testid="stExpander"] p { color: #ffffff !important; }
 div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
-
-/* =======================================================
-   DYNAMISCHE HIGHLIGHT VOOR UPDATES IN INGEKLAPTE STATUS
-   ======================================================= */
-div[data-testid="stExpander"]:has(p:contains("✨")) {
-    border: 2px solid #b070c6 !important;
-    box-shadow: 0 0 15px rgba(176, 112, 198, 0.3) !important;
-}
-div[data-testid="stExpander"]:has(p:contains("✨")) summary {
-    background: linear-gradient(90deg, #2d1845 0%, #1e1e1e 100%) !important;
-    border-radius: 6px !important;
-}
-div[data-testid="stExpander"]:has(p:contains("✨")) summary p {
-    color: #f4e9f7 !important;
-    font-weight: 700 !important;
-}
 </style>
 """, unsafe_allow_html=True)
 
@@ -420,7 +401,6 @@ else:
             for o in user_orders:
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 
-                # Check of er een ongelezen update is!
                 unread = o.get('has_unread_update', False)
                 update_badge = f" &nbsp;&nbsp; ✨ {t['new_upd']} ✨" if unread else ""
                 
@@ -428,29 +408,27 @@ else:
                     st.markdown("<br>", unsafe_allow_html=True)
                     
                     # ---------------------------------------------------------
-                    # NIEUWE COMPACTE LAYOUT VOOR DE NOTIFICATIE
+                    # STRAKKERE EN COMPACTE MELDINGBOX (WITTE TEKST)
                     # ---------------------------------------------------------
                     if unread:
                         msg_title = f"⚠️ {t['msg_planner']}" if (o.get('show_note_to_customer') and o.get('edit_reason')) else f"🔄 Status Update"
                         msg_body = o['edit_reason'] if (o.get('show_note_to_customer') and o.get('edit_reason')) else f"{t['stat_upd']} {o['status']}."
                         
                         st.markdown(f"""
-                        <div style="background-color: #2d1845; border-left: 4px solid #b070c6; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                        <div style="background-color: #2a1533; border-left: 4px solid #b070c6; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
                             <div style="color: #e0c2ed; font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">{msg_title}</div>
                             <div style="color: #ffffff; font-size: 16px;">{msg_body}</div>
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Kleinere knop, strakker design aan de zijkant
-                        col_space, col_btn = st.columns([3, 1.2])
-                        with col_btn:
-                            if st.button(t['btn_seen'], key=f"read_{o['id']}", type="primary", use_container_width=True):
-                                try:
-                                    supabase.table("orders").update({"has_unread_update": False}).eq("id", o['id']).execute()
-                                    st.rerun()
-                                except Exception as e:
-                                    pass
-                        st.markdown("<br>", unsafe_allow_html=True)
+                        # Kleinere, subtiele knop direct onder het bericht
+                        if st.button(t['btn_seen'], key=f"read_{o['id']}", type="secondary"):
+                            try:
+                                supabase.table("orders").update({"has_unread_update": False}).eq("id", o['id']).execute()
+                                st.rerun()
+                            except Exception as e:
+                                pass
+                        st.write("---")
                     # ---------------------------------------------------------
 
                     c_det1, c_det2 = st.columns(2)
@@ -493,6 +471,28 @@ else:
                                     st.error(f"{t['msg_cancel_fail']} Details: {str(e)}")
                         
                     st.markdown("<br>", unsafe_allow_html=True)
+
+            # JAVASCRIPT HACK OM DE INGEKLAPTE BALK TE KLEUREN
+            components.html("""
+            <script>
+            const highlightExpanders = () => {
+                const expanders = window.parent.document.querySelectorAll('div[data-testid="stExpander"]');
+                expanders.forEach(exp => {
+                    const summary = exp.querySelector('summary');
+                    if(summary && summary.textContent.includes('✨')) {
+                        // Geef de samenvatting (ingeklapte balk) een paarse gloed
+                        summary.style.background = 'linear-gradient(90deg, #3d1b46 0%, #1e1e1e 100%)';
+                        summary.style.border = '1px solid #b070c6';
+                        summary.style.borderRadius = '8px';
+                    }
+                });
+            };
+            // Voer een paar keer uit om te zorgen dat Streamlit alles heeft geladen
+            setTimeout(highlightExpanders, 100);
+            setTimeout(highlightExpanders, 500);
+            setTimeout(highlightExpanders, 1000);
+            </script>
+            """, height=0, width=0)
 
     elif st.session_state.active_tab == "Profile Settings":
         st.markdown(f"### {t['prof_title']}")
