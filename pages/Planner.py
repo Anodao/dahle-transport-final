@@ -234,6 +234,11 @@ st.markdown(f"""
 
 
 # =========================================================================
+# HOOFDTITEL VAN DE PAGINA
+# =========================================================================
+st.markdown("<h1 style='text-align: center; color: #b070c6; padding-bottom: 20px;'>Internal Planner Dashboard</h1>", unsafe_allow_html=True)
+
+# =========================================================================
 # DATA OPHALEN UIT SUPABASE
 # =========================================================================
 try:
@@ -482,19 +487,20 @@ with col_details:
             # =========================================================
             # OPTER API SIMULATIE KNOPPEN (MVP)
             # =========================================================
-            st.markdown("<h4 style='margin-bottom: 5px;'>🔄 Opter API Integration (MVP Simulation)</h4>", unsafe_allow_html=True)
+            st.markdown("<h4 style='margin-bottom: 5px;'>Opter API Integration (MVP Simulation)</h4>", unsafe_allow_html=True)
             st.markdown("<p style='color: #888; font-size: 13px; margin-bottom: 15px;'>Send or retrieve real-time data for this specific order via Opter.</p>", unsafe_allow_html=True)
             
-            col_export, col_import = st.columns(2)
+            # Kolommen omgedraaid: Import links, Export rechts
+            col_import, col_export = st.columns(2)
             
-            with col_export:
-                if st.button("📤 Export Order to Opter", key=f"export_{selected_order['id']}", use_container_width=True):
-                    with st.spinner("Connecting to Opter API..."):
-                        time.sleep(1.5)
-                    st.info("Simulation: Order details formatted for export. Waiting for Opter API credentials to complete the transfer.")
-                    
             with col_import:
-                if st.button("📥 Import Status from Opter", key=f"import_{selected_order['id']}", use_container_width=True):
+                if st.button("Retrieve Latest Status from Opter", key=f"import_{selected_order['id']}", use_container_width=True):
                     with st.spinner("Fetching latest data from Opter..."):
                         time.sleep(1.5)
                     st.warning("Simulation: Connection refused. Opter API integration is currently pending consultation.")
+                    
+            with col_export:
+                if st.button("Send Order Details to Opter", key=f"export_{selected_order['id']}", use_container_width=True):
+                    with st.spinner("Connecting to Opter API..."):
+                        time.sleep(1.5)
+                    st.info("Simulation: Order details formatted for export. Waiting for Opter API credentials to complete the transfer.")
