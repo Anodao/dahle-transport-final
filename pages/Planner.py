@@ -62,7 +62,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !imp
 div[data-testid="stMetric"] { background-color: #161616 !important; border: 1px solid #333 !important; padding: 15px !important; border-radius: 8px !important; }
 div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 !important; }
 
-/* KNOPPEN STYLING */
 div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; font-size: 14px !important; width: 100% !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="primary"]:hover { background: #ffffff !important; color: #894b9d !important; border: 2px solid #894b9d !important; }
 div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 1px solid #894b9d !important; border-radius: 6px !important; padding: 8px 16px !important; font-weight: 600 !important; font-size: 13px !important; width: 100% !important; transition: all 0.3s ease !important; }
@@ -215,11 +214,8 @@ def edit_order_modal(order):
         d_zip = c3.text_input("Zip Code", value=order.get('delivery_zip', ''))
         d_city = c4.text_input("City", value=order.get('delivery_city', ''))
 
-        # Verplicht Notitie Veld en Zichtbaarheids toggle
         st.markdown("#### Reason for Change")
         edit_reason = st.text_area("Admin Note (Required) *", placeholder="E.g. Customer called to change delivery street...", height=80)
-        
-        # Zorg dat deze kolom in Supabase bestaat (boolean, default=false)
         show_to_customer = st.checkbox("Show this note to the customer on their portal", value=False)
 
         st.warning("⚠️ Are you sure you want to save these changes?")
@@ -237,7 +233,8 @@ def edit_order_modal(order):
                     "delivery_zip": d_zip, 
                     "delivery_city": d_city,
                     "edit_reason": edit_reason.strip(),
-                    "show_note_to_customer": show_to_customer # De toggle waarde
+                    "show_note_to_customer": show_to_customer,
+                    "has_unread_update": True  # <--- HIER STUREN WE HET SEINTJE NAAR DE KLANT!
                 }
                 try:
                     supabase.table("orders").update(updates).eq("id", order['id']).execute()
@@ -454,7 +451,6 @@ with col_details:
                     if info_notes:
                         st.markdown(f"<div style='background-color:#262626; padding:10px; border-radius:6px; font-size:13px; color:#ddd;'>{info_notes}</div>", unsafe_allow_html=True)
                     
-                    # NIEUW: WEERGAVE VAN DE ADMIN NOTITIE
                     admin_notes = selected_order.get('edit_reason', '')
                     if admin_notes:
                         customer_visible = selected_order.get('show_note_to_customer', False)
@@ -556,7 +552,8 @@ with col_details:
                     try:
                         update_data = {
                             "status": new_status,
-                            "tracking_code": new_tracking.strip()
+                            "tracking_code": new_tracking.strip(),
+                            "has_unread_update": True # <--- HIER STUREN WE HET SEINTJE NAAR DE KLANT!
                         }
                         supabase.table("orders").update(update_data).eq("id", selected_order['id']).execute()
                         st.success(t['msg_succ'])
