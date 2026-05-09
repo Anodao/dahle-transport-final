@@ -79,6 +79,19 @@ div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; 
 div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
 div[data-testid="stExpander"] p { color: #ffffff !important; }
 div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
+
+/* NIEUW: DYNAMISCHE HIGHLIGHT VOOR UPDATES */
+div[data-testid="stExpander"]:has(p:contains("✨")) {
+    border: 1px solid #b070c6 !important;
+    box-shadow: 0 4px 15px rgba(176, 112, 198, 0.3) !important;
+}
+div[data-testid="stExpander"]:has(p:contains("✨")) summary {
+    background-color: #2a1b38 !important;
+    border-radius: 8px !important;
+}
+div[data-testid="stExpander"]:has(p:contains("✨")) div[data-testid="stExpanderDetails"] {
+    border-top: 1px solid #b070c6 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -139,8 +152,9 @@ translations = {
         "msg_cancel_succ": "Bestillingen ble kansellert.",
         "msg_cancel_fail": "Kunne ikke kansellere bestillingen.",
         "msg_planner": "Melding fra Dahle Transport:",
-        "btn_seen": "Marker som lest (Fjern varsel)",
-        "new_upd": "NY OPPDATERING"
+        "btn_seen": "✔ Marker som lest",
+        "new_upd": "NY OPPDATERING",
+        "stat_upd": "Status er oppdatert til"
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -167,8 +181,9 @@ translations = {
         "msg_cancel_succ": "Order successfully cancelled.",
         "msg_cancel_fail": "Could not cancel the order.",
         "msg_planner": "Message from Dahle Transport:",
-        "btn_seen": "Mark as seen (Clear alert)",
-        "new_upd": "NEW UPDATE"
+        "btn_seen": "✔ Mark as seen",
+        "new_upd": "NEW UPDATE",
+        "stat_upd": "Order status changed to"
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -195,8 +210,9 @@ translations = {
         "msg_cancel_succ": "Beställningen har avbrutits.",
         "msg_cancel_fail": "Kunde inte avbryta beställningen.",
         "msg_planner": "Meddelande från Dahle Transport:",
-        "btn_seen": "Markera som läst (Ta bort avisering)",
-        "new_upd": "NY UPPDATERING"
+        "btn_seen": "✔ Markera som läst",
+        "new_upd": "NY UPPDATERING",
+        "stat_upd": "Status har uppdaterats till"
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -223,8 +239,9 @@ translations = {
         "msg_cancel_succ": "Bestillingen blev annulleret.",
         "msg_cancel_fail": "Kunne ikke annullere bestillingen.",
         "msg_planner": "Besked fra Dahle Transport:",
-        "btn_seen": "Marker som læst (Fjern advarsel)",
-        "new_upd": "NY OPDATERING"
+        "btn_seen": "✔ Marker som læst",
+        "new_upd": "NY OPDATERING",
+        "stat_upd": "Status ændret til"
     }
 }
 t = translations.get(lang, translations["en"])
@@ -400,32 +417,32 @@ else:
             for o in user_orders:
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 
-                # Check of er een ongelezen update is!
+                # Check of er een ongelezen update is
                 unread = o.get('has_unread_update', False)
-                update_badge = f" &nbsp; ❗ {t['new_upd']} ❗" if unread else ""
+                update_badge = f" &nbsp;&nbsp;&nbsp;&nbsp; ✨ {t['new_upd']}" if unread else ""
                 
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']}){update_badge}"):
                     st.markdown("<br>", unsafe_allow_html=True)
                     
-                    # Toon bericht van de planner als dit is aangevinkt
-                    if o.get('show_note_to_customer') and o.get('edit_reason'):
-                        st.markdown(f"""
-                        <div style='background-color: #2b1515; border-left: 4px solid #ff4b4b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;'>
-                            <span style='color: #ffcccc; font-size: 14px;'><b>⚠️ {t['msg_planner']}</b><br>{o['edit_reason']}</span>
-                        </div>
-                        """, unsafe_allow_html=True)
-                    
-                    # Knop om de highlight/melding weg te klikken
+                    # NIEUWE COMPACTE LAYOUT VOOR DE NOTIFICATIE
                     if unread:
-                        c_read_btn, _ = st.columns([1, 2])
-                        with c_read_btn:
-                            if st.button(t['btn_seen'], key=f"read_{o['id']}", type="primary", use_container_width=True):
+                        st.markdown("<div style='background-color: #2a1b38; border: 1px solid #894b9d; padding: 15px; border-radius: 8px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+                        
+                        c_msg, c_btn = st.columns([4, 1.2], vertical_alignment="center")
+                        with c_msg:
+                            if o.get('show_note_to_customer') and o.get('edit_reason'):
+                                st.markdown(f"<span style='color: #e0c2ed; font-size: 14px;'><b>⚠️ {t['msg_planner']}</b><br>{o['edit_reason']}</span>", unsafe_allow_html=True)
+                            else:
+                                st.markdown(f"<span style='color: #e0c2ed; font-size: 14px;'><b>🔄 Status Update:</b><br>{t['stat_upd']} <b>{o['status']}</b>.</span>", unsafe_allow_html=True)
+                        
+                        with c_btn:
+                            if st.button(t['btn_seen'], key=f"read_{o['id']}", type="secondary", use_container_width=True):
                                 try:
                                     supabase.table("orders").update({"has_unread_update": False}).eq("id", o['id']).execute()
                                     st.rerun()
                                 except Exception as e:
                                     pass
-                        st.write("---")
+                        st.markdown("</div>", unsafe_allow_html=True)
 
                     c_det1, c_det2 = st.columns(2)
                     with c_det1:
