@@ -136,9 +136,11 @@ translations = {
         "bill_t": "Faktureringsdetaljer", "bill_same": "Bruk firma og adresse fra Generell Info", "b_comp": "Fakturamottaker (Firma)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "def_pickup": "Standard hentested", "def_del": "Standard leveringssted", "speed_up": "Vi bruker dette for å gjøre bestillingen raskere.",
         "street": "Gateadresse", "btn_save": "Lagre endringer", "msg_saving": "Oppdaterer profil...", "msg_save_succ": "Profil oppdatert!", "msg_save_fail": "Klarte ikke å oppdatere profil:",
-        # VERBETERING: Ontbrekende vertalingen toegevoegd voor het annuleren
         "msg_cancel_succ": "Bestillingen ble kansellert.",
-        "msg_cancel_fail": "Kunne ikke kansellere bestillingen."
+        "msg_cancel_fail": "Kunne ikke kansellere bestillingen.",
+        "msg_planner": "Melding fra Dahle Transport:",
+        "btn_seen": "Marker som lest (Fjern varsel)",
+        "new_upd": "✨ NY OPPDATERING"
     },
     "en": {
         "nav_home": "Home", "nav_about": "About us", "nav_services": "Services", "nav_gallery": "Gallery", "nav_contact": "Contact", 
@@ -162,9 +164,11 @@ translations = {
         "bill_t": "Billing Details", "bill_same": "Use Company and Address from General Info", "b_comp": "Billing Company", "b_em": "Billing Email", "r_name": "Contact Name/Company", "r_ph": "Phone Number",
         "def_pickup": "Default Pickup Location", "def_del": "Default Delivery Destination", "speed_up": "We use this to speed up your orders.",
         "street": "Street Address", "btn_save": "Save Changes", "msg_saving": "Updating profile...", "msg_save_succ": "Profile updated successfully!", "msg_save_fail": "Could not update profile:",
-        # VERBETERING: Ontbrekende vertalingen toegevoegd voor het annuleren
         "msg_cancel_succ": "Order successfully cancelled.",
-        "msg_cancel_fail": "Could not cancel the order."
+        "msg_cancel_fail": "Could not cancel the order.",
+        "msg_planner": "Message from Dahle Transport:",
+        "btn_seen": "Mark as seen (Clear alert)",
+        "new_upd": "✨ NEW UPDATE"
     },
     "sv": {
         "nav_home": "Hem", "nav_about": "Om oss", "nav_services": "Tjänster", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -188,9 +192,11 @@ translations = {
         "bill_t": "Faktureringsuppgifter", "bill_same": "Använd företag och adress från Allmän Info", "b_comp": "Fakturamottagare (Företag)", "b_em": "Faktura E-post", "r_name": "Kontaktperson (Namn/Företag)", "r_ph": "Telefon",
         "def_pickup": "Standard upphämtningsplats", "def_del": "Standard leveransplats", "speed_up": "Vi använder detta för att påskynda din beställning.",
         "street": "Gatuadress", "btn_save": "Spara ändringar", "msg_saving": "Uppdaterar profil...", "msg_save_succ": "Profil uppdaterad!", "msg_save_fail": "Kunde inte uppdatera profil:",
-        # VERBETERING: Ontbrekende vertalingen toegevoegd för att avbryta
         "msg_cancel_succ": "Beställningen har avbrutits.",
-        "msg_cancel_fail": "Kunde inte avbryta beställningen."
+        "msg_cancel_fail": "Kunde inte avbryta beställningen.",
+        "msg_planner": "Meddelande från Dahle Transport:",
+        "btn_seen": "Markera som läst (Ta bort avisering)",
+        "new_upd": "✨ NY UPPDATERING"
     },
     "da": {
         "nav_home": "Hjem", "nav_about": "Om os", "nav_services": "Tjenester", "nav_gallery": "Galleri", "nav_contact": "Kontakt", 
@@ -214,9 +220,11 @@ translations = {
         "bill_t": "Faktureringsoplysninger", "bill_same": "Brug firma og adresse fra Generel Info", "b_comp": "Fakturamodtager (Firma)", "b_em": "Faktura E-mail", "r_name": "Kontaktperson (Navn/Firma)", "r_ph": "Telefon",
         "def_pickup": "Standard afhentningssted", "def_del": "Standard leveringssted", "speed_up": "Vi bruger dette til at fremskynde din bestilling.",
         "street": "Gadeadresse", "btn_save": "Gem ændringer", "msg_saving": "Opdaterer profil...", "msg_save_succ": "Profil opdateret!", "msg_save_fail": "Kunne ikke opdatere profil:",
-        # VERBETERING: Ontbrekende vertalingen toegevoegd voor het annuleren
         "msg_cancel_succ": "Bestillingen blev annulleret.",
-        "msg_cancel_fail": "Kunne ikke annullere bestillingen."
+        "msg_cancel_fail": "Kunne ikke annullere bestillingen.",
+        "msg_planner": "Besked fra Dahle Transport:",
+        "btn_seen": "Marker som læst (Fjern advarsel)",
+        "new_upd": "✨ NY OPDATERING"
     }
 }
 t = translations.get(lang, translations["en"])
@@ -391,8 +399,34 @@ else:
         else:
             for o in user_orders:
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
-                with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']})"):
+                
+                # NIEUW: Check of er een ongelezen update is
+                unread = o.get('has_unread_update', False)
+                update_badge = f" &nbsp; {t['new_upd']}" if unread else ""
+                
+                with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']}){update_badge}"):
                     st.markdown("<br>", unsafe_allow_html=True)
+                    
+                    # NIEUW: Toon bericht van de planner als dit is aangevinkt
+                    if o.get('show_note_to_customer') and o.get('edit_reason'):
+                        st.markdown(f"""
+                        <div style='background-color: #2b1515; border-left: 4px solid #ff4b4b; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;'>
+                            <span style='color: #ffcccc; font-size: 14px;'><b>⚠️ {t['msg_planner']}</b><br>{o['edit_reason']}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    
+                    # NIEUW: Knop om de highlight/melding weg te klikken
+                    if unread:
+                        c_read_btn, _ = st.columns([1, 2])
+                        with c_read_btn:
+                            if st.button(t['btn_seen'], key=f"read_{o['id']}", type="secondary", use_container_width=True):
+                                try:
+                                    supabase.table("orders").update({"has_unread_update": False}).eq("id", o['id']).execute()
+                                    st.rerun()
+                                except Exception as e:
+                                    pass
+                        st.write("---")
+
                     c_det1, c_det2 = st.columns(2)
                     with c_det1:
                         st.markdown(f"#### {t['pickup']}")
@@ -424,7 +458,6 @@ else:
                         c_space1, c_cancel, c_space2 = st.columns([1, 2, 1])
                         with c_cancel:
                             if st.button(t['btn_cancel'], key=f"cancel_{o['id']}", type="secondary", use_container_width=True):
-                                # VERBETERING: Foutafhandeling gewijzigd zodat de echte database-fout zichtbaar wordt op het scherm!
                                 try: 
                                     supabase.table("orders").update({"status": "Cancelled"}).eq("id", o['id']).execute()
                                     st.success(t['msg_cancel_succ'])
