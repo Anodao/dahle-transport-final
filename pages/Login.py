@@ -34,10 +34,12 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-logo img { height: 100%; width: auto; display: block; transition: transform 0.2s ease-in-out; }
 .nav-logo a:hover img { transform: scale(1.05); } 
 
+/* DE LINK TEKSTEN IN HET MIDDEN */
 .nav-links { display: flex; gap: 28px; font-size: 15px; font-weight: 600; justify-content: center; align-items: center;}
 .nav-links a, .nav-links span { text-decoration: none; color: #111111 !important; cursor: pointer; transition: color 0.2s;}
 .nav-links span:hover { color: #894b9d !important; }
 
+/* HET TEKST-DROPDOWN MENU NAAST 'CONTACT' */
 .nav-text-dropdown { position: relative; display: inline-block; cursor: pointer; padding-bottom: 20px; margin-bottom: -20px; }
 .nav-text-dropbtn { background: transparent; border: none; font-size: 15px; font-weight: 600; color: #111111 !important; cursor: pointer; padding: 0; font-family: inherit; transition: color 0.2s; display: flex; align-items: center; gap: 4px; }
 .nav-text-dropdown:hover .nav-text-dropbtn { color: #894b9d !important; }
@@ -48,12 +50,14 @@ div[class^="viewerBadge"] { display: none !important; }
 .nav-text-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .nav-text-dropdown:hover .nav-text-dropdown-content { display: block; }
 
+/* DE KNOPPEN RECHTS */
 .nav-cta { display: flex; justify-content: flex-end; gap: 15px; align-items: center; }
 .cta-btn-purple { background-color: #894b9d !important; color: white !important; padding: 10px 24px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; transition: background-color 0.2s; white-space: nowrap;}
 .cta-btn-purple:hover { background-color: #723e83 !important; }
 .cta-btn-outline { background-color: transparent !important; color: #894b9d !important; padding: 10px 20px; border-radius: 50px; text-decoration: none !important; font-weight: 600; font-size: 13px; border: 2px solid #894b9d; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;}
 .cta-btn-outline:hover { background-color: #f4e9f7 !important; }
 
+/* TAAL DROPDOWN */
 .lang-dropdown { position: relative; display: inline-block; margin-right: 10px; }
 .lang-dropbtn { background-color: #f8f9fa; color: #111; font-weight: 600; font-size: 13px; border: 1px solid #eaeaea; border-radius: 20px; padding: 8px 16px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: all 0.2s ease; }
 .lang-dropbtn:hover { background-color: #eaeaea; }
@@ -76,6 +80,22 @@ div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; 
 div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
 div[data-testid="stExpander"] p { color: #ffffff !important; }
 div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
+
+/* =======================================================
+   DYNAMISCHE HIGHLIGHT VOOR UPDATES IN INGEKLAPTE STATUS
+   ======================================================= */
+div[data-testid="stExpander"]:has(p:contains("✨")) {
+    border: 2px solid #b070c6 !important;
+    box-shadow: 0 0 15px rgba(176, 112, 198, 0.3) !important;
+}
+div[data-testid="stExpander"]:has(p:contains("✨")) summary {
+    background: linear-gradient(90deg, #2d1845 0%, #1e1e1e 100%) !important;
+    border-radius: 6px !important;
+}
+div[data-testid="stExpander"]:has(p:contains("✨")) summary p {
+    color: #f4e9f7 !important;
+    font-weight: 700 !important;
+}
 </style>
 """, unsafe_allow_html=True)
 
@@ -137,7 +157,6 @@ translations = {
         "msg_cancel_fail": "Kunne ikke kansellere bestillingen.",
         "msg_planner": "Melding fra Dahle Transport:",
         "btn_seen": "✔ Marker som lest",
-        "new_upd": "NY OPPDATERING",
         "stat_upd": "Status er oppdatert til"
     },
     "en": {
@@ -166,7 +185,6 @@ translations = {
         "msg_cancel_fail": "Could not cancel the order.",
         "msg_planner": "Message from Dahle Transport:",
         "btn_seen": "✔ Mark as read",
-        "new_upd": "NEW UPDATE",
         "stat_upd": "Order status changed to"
     },
     "sv": {
@@ -195,7 +213,6 @@ translations = {
         "msg_cancel_fail": "Kunde inte avbryta beställningen.",
         "msg_planner": "Meddelande från Dahle Transport:",
         "btn_seen": "✔ Markera som läst",
-        "new_upd": "NY UPPDATERING",
         "stat_upd": "Status har uppdaterats till"
     },
     "da": {
@@ -224,7 +241,6 @@ translations = {
         "msg_cancel_fail": "Kunne ikke annullere bestillingen.",
         "msg_planner": "Besked fra Dahle Transport:",
         "btn_seen": "✔ Marker som læst",
-        "new_upd": "NY OPDATERING",
         "stat_upd": "Status ændret til"
     }
 }
@@ -401,8 +417,9 @@ else:
             for o in user_orders:
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 
+                # Check of er een ongelezen update is!
                 unread = o.get('has_unread_update', False)
-                update_badge = f" &nbsp;&nbsp; ✨ {t['new_upd']} ✨" if unread else ""
+                update_badge = " &nbsp;&nbsp; ✨" if unread else ""
                 
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']}){update_badge}"):
                     st.markdown("<br>", unsafe_allow_html=True)
@@ -480,14 +497,12 @@ else:
                 expanders.forEach(exp => {
                     const summary = exp.querySelector('summary');
                     if(summary && summary.textContent.includes('✨')) {
-                        // Geef de samenvatting (ingeklapte balk) een paarse gloed
                         summary.style.background = 'linear-gradient(90deg, #3d1b46 0%, #1e1e1e 100%)';
                         summary.style.border = '1px solid #b070c6';
                         summary.style.borderRadius = '8px';
                     }
                 });
             };
-            // Voer een paar keer uit om te zorgen dat Streamlit alles heeft geladen
             setTimeout(highlightExpanders, 100);
             setTimeout(highlightExpanders, 500);
             setTimeout(highlightExpanders, 1000);
