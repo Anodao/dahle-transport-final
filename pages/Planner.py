@@ -53,14 +53,15 @@ html, body, [class*="css"] { font-family: 'Montserrat', sans-serif; margin: 0; p
 .lang-dropdown-content a { color: #111 !important; padding: 12px 16px; text-decoration: none; display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 500; transition: background-color 0.2s; }
 .lang-dropdown-content a:hover { background-color: #f4e9f7; color: #894b9d !important; }
 .lang-dropdown:hover .lang-dropdown-content { display: block; }
-div[data-baseweb="select"] > div, div[data-baseweb="base-input"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 6px !important; }
-.stSelectbox div[data-baseweb="select"] span, .stSelectbox div[data-baseweb="select"] div, .stDateInput input { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
+div[data-baseweb="select"] > div, div[data-baseweb="base-input"], div[data-baseweb="textarea"] { background-color: #1e1e1e !important; border: 1px solid #333333 !important; border-radius: 6px !important; }
+.stSelectbox div[data-baseweb="select"] span, .stSelectbox div[data-baseweb="select"] div, .stDateInput input, div[data-baseweb="textarea"] textarea { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 label[data-testid="stWidgetLabel"] p { color: #ffffff !important; font-weight: 600; font-size: 14px; }
 
 div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1a1a1a !important; border: 1px solid #333333 !important; border-radius: 10px !important; padding: 15px !important; height: auto !important; min-height: 100%; display: flex; flex-direction: column; justify-content: flex-start;}
 
 div[data-testid="stMetric"] { background-color: #161616 !important; border: 1px solid #333 !important; padding: 15px !important; border-radius: 8px !important; }
 div[data-testid="stMetricValue"] { font-size: 36px !important; font-weight: 700 !important; }
+
 /* KNOPPEN STYLING */
 div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: 2px solid transparent !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; font-size: 14px !important; width: 100% !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="primary"]:hover { background: #ffffff !important; color: #894b9d !important; border: 2px solid #894b9d !important; }
@@ -75,7 +76,7 @@ div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; 
 """, unsafe_allow_html=True)
 
 # =========================================================
-# MAP, DISTANCE & FERRY HACK LOGIC
+# MAP, DISTANCE LOGIC
 # =========================================================
 @st.cache_data(ttl=3600, show_spinner=False)
 def get_coordinates(street, zip_code, city):
@@ -196,7 +197,7 @@ if not is_employee:
 
 
 # =========================================================
-# POP-UP DIALOG VOOR HET BEWERKEN VAN ADRESSEN
+# POP-UP DIALOG VOOR HET BEWERKEN VAN ADRESSEN EN NOTITIES
 # =========================================================
 @st.dialog("✏️ Edit Order Addresses")
 def edit_order_modal(order):
@@ -214,22 +215,37 @@ def edit_order_modal(order):
         d_zip = c3.text_input("Zip Code", value=order.get('delivery_zip', ''))
         d_city = c4.text_input("City", value=order.get('delivery_city', ''))
 
+        # Verplicht Notitie Veld en Zichtbaarheids toggle
+        st.markdown("#### Reason for Change")
+        edit_reason = st.text_area("Admin Note (Required) *", placeholder="E.g. Customer called to change delivery street...", height=80)
+        
+        # Zorg dat deze kolom in Supabase bestaat (boolean, default=false)
+        show_to_customer = st.checkbox("Show this note to the customer on their portal", value=False)
+
         st.warning("⚠️ Are you sure you want to save these changes?")
         submitted = st.form_submit_button("Yes, Save Changes", type="primary")
         
         if submitted:
-            updates = {
-                "pickup_address": p_addr, "pickup_zip": p_zip, "pickup_city": p_city,
-                "delivery_address": d_addr, "delivery_zip": d_zip, "delivery_city": d_city
-            }
-            try:
-                supabase.table("orders").update(updates).eq("id", order['id']).execute()
-                st.success("Order addresses updated successfully!")
-                time.sleep(1)
-                st.rerun()
-            except Exception as e:
-                st.error(f"Failed to update database: {e}")
-
+            if not edit_reason.strip():
+                st.error("Please provide a reason for this change before saving.")
+            else:
+                updates = {
+                    "pickup_address": p_addr, 
+                    "pickup_zip": p_zip, 
+                    "pickup_city": p_city,
+                    "delivery_address": d_addr, 
+                    "delivery_zip": d_zip, 
+                    "delivery_city": d_city,
+                    "edit_reason": edit_reason.strip(),
+                    "show_note_to_customer": show_to_customer # De toggle waarde
+                }
+                try:
+                    supabase.table("orders").update(updates).eq("id", order['id']).execute()
+                    st.success("Order addresses and notes updated successfully!")
+                    time.sleep(1)
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to update database: {e}")
 
 # =========================================================
 # 3. TAAL LOGICA & NAVBAR
@@ -360,7 +376,6 @@ with col_details:
             margin = round((profit / price * 100), 1) if price > 0 else 0.0
             fuel_cost = int(dist_km * 6.5) if dist_km > 0 else int(cost * 0.4) 
             
-            # Bepaal achtergrondkleur op basis van de order status
             order_status = selected_order.get('status', 'New')
             if order_status == 'New':
                 bg_color = "#15202b"; border_color = "#2196F3"; status_color = "#2196F3"
@@ -408,7 +423,6 @@ with col_details:
                     with c_addr_head1:
                         st.markdown("<h4 style='margin-top:0px;'>🛣️ Adressen</h4>", unsafe_allow_html=True)
                     with c_addr_head2:
-                        # De Edit Knop die de Pop-up activeert
                         if st.button("✏️ Edit", key=f"edit_addr_{selected_order['id']}", type="secondary", use_container_width=True):
                             edit_order_modal(selected_order)
 
@@ -439,6 +453,21 @@ with col_details:
                     info_notes = selected_order.get('info', '')
                     if info_notes:
                         st.markdown(f"<div style='background-color:#262626; padding:10px; border-radius:6px; font-size:13px; color:#ddd;'>{info_notes}</div>", unsafe_allow_html=True)
+                    
+                    # NIEUW: WEERGAVE VAN DE ADMIN NOTITIE
+                    admin_notes = selected_order.get('edit_reason', '')
+                    if admin_notes:
+                        customer_visible = selected_order.get('show_note_to_customer', False)
+                        visibility_icon = "👁️ Visible to Customer" if customer_visible else "🔒 Internal Only"
+                        st.markdown(f"""
+                        <div style='margin-top: 10px; border-left: 3px solid #ff4b4b; background-color:#2b1515; padding:10px; border-radius:4px; font-size:13px; color:#ffcccc;'>
+                            <div style='display: flex; justify-content: space-between; margin-bottom: 5px;'>
+                                <b>⚠️ Admin Note:</b>
+                                <span style='font-size: 11px; opacity: 0.8;'>{visibility_icon}</span>
+                            </div>
+                            {admin_notes}
+                        </div>
+                        """, unsafe_allow_html=True)
 
                 with st.container(border=True):
                     st.markdown("<h4 style='margin-top:0px;'>🗺️ Route Map</h4>", unsafe_allow_html=True)
