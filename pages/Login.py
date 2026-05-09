@@ -72,25 +72,28 @@ div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1e1e1e !imp
 div[data-baseweb="input"] > div, div[data-baseweb="textarea"] { background-color: #333333 !important; border: 1px solid #444444 !important; border-radius: 6px !important; }
 div[data-baseweb="input"] input, div[data-baseweb="textarea"] textarea { color: #ffffff !important; -webkit-text-fill-color: #ffffff !important; }
 label[data-testid="stWidgetLabel"] p { color: #cccccc !important; font-weight: 600; font-size: 14px !important;}
-div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; }
+div.stButton > button[kind="primary"] { background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%) !important; color: #ffffff !important; border: none !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; font-size: 14px !important; width: 100% !important; box-shadow: 0 4px 14px 0 rgba(137, 75, 157, 0.4) !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="primary"]:hover { transform: translateY(-2px) !important; box-shadow: 0 8px 24px rgba(137, 75, 157, 0.6) !important; }
-div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; padding: 14px 28px !important; font-weight: 600 !important; font-size: 15px !important; width: 100% !important; transition: all 0.3s ease !important; }
+div.stButton > button[kind="secondary"] { background: transparent !important; color: #e0c2ed !important; border: 2px solid #894b9d !important; border-radius: 6px !important; padding: 10px 24px !important; font-weight: 600 !important; font-size: 14px !important; width: 100% !important; transition: all 0.3s ease !important; }
 div.stButton > button[kind="secondary"]:hover { background: #894b9d !important; color: white !important; transform: translateY(-2px) !important;}
 div[data-testid="stExpander"] { background-color: #262626 !important; border: 1px solid #444 !important; border-radius: 8px !important; }
 div[data-testid="stExpander"] p { color: #ffffff !important; }
 div[data-testid="stExpanderDetails"] { background-color: #1e1e1e !important; border-top: 1px solid #444 !important; }
 
-/* NIEUW: DYNAMISCHE HIGHLIGHT VOOR UPDATES */
+/* =======================================================
+   DYNAMISCHE HIGHLIGHT VOOR UPDATES IN INGEKLAPTE STATUS
+   ======================================================= */
 div[data-testid="stExpander"]:has(p:contains("✨")) {
-    border: 1px solid #b070c6 !important;
-    box-shadow: 0 4px 15px rgba(176, 112, 198, 0.3) !important;
+    border: 2px solid #b070c6 !important;
+    box-shadow: 0 0 15px rgba(176, 112, 198, 0.3) !important;
 }
 div[data-testid="stExpander"]:has(p:contains("✨")) summary {
-    background-color: #2a1b38 !important;
-    border-radius: 8px !important;
+    background: linear-gradient(90deg, #2d1845 0%, #1e1e1e 100%) !important;
+    border-radius: 6px !important;
 }
-div[data-testid="stExpander"]:has(p:contains("✨")) div[data-testid="stExpanderDetails"] {
-    border-top: 1px solid #b070c6 !important;
+div[data-testid="stExpander"]:has(p:contains("✨")) summary p {
+    color: #f4e9f7 !important;
+    font-weight: 700 !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -181,7 +184,7 @@ translations = {
         "msg_cancel_succ": "Order successfully cancelled.",
         "msg_cancel_fail": "Could not cancel the order.",
         "msg_planner": "Message from Dahle Transport:",
-        "btn_seen": "✔ Mark as seen",
+        "btn_seen": "✔ Mark as read",
         "new_upd": "NEW UPDATE",
         "stat_upd": "Order status changed to"
     },
@@ -417,32 +420,38 @@ else:
             for o in user_orders:
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 
-                # Check of er een ongelezen update is
+                # Check of er een ongelezen update is!
                 unread = o.get('has_unread_update', False)
-                update_badge = f" &nbsp;&nbsp;&nbsp;&nbsp; ✨ {t['new_upd']}" if unread else ""
+                update_badge = f" &nbsp;&nbsp; ✨ {t['new_upd']} ✨" if unread else ""
                 
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']}){update_badge}"):
                     st.markdown("<br>", unsafe_allow_html=True)
                     
+                    # ---------------------------------------------------------
                     # NIEUWE COMPACTE LAYOUT VOOR DE NOTIFICATIE
+                    # ---------------------------------------------------------
                     if unread:
-                        st.markdown("<div style='background-color: #2a1b38; border: 1px solid #894b9d; padding: 15px; border-radius: 8px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+                        msg_title = f"⚠️ {t['msg_planner']}" if (o.get('show_note_to_customer') and o.get('edit_reason')) else f"🔄 Status Update"
+                        msg_body = o['edit_reason'] if (o.get('show_note_to_customer') and o.get('edit_reason')) else f"{t['stat_upd']} {o['status']}."
                         
-                        c_msg, c_btn = st.columns([4, 1.2], vertical_alignment="center")
-                        with c_msg:
-                            if o.get('show_note_to_customer') and o.get('edit_reason'):
-                                st.markdown(f"<span style='color: #e0c2ed; font-size: 14px;'><b>⚠️ {t['msg_planner']}</b><br>{o['edit_reason']}</span>", unsafe_allow_html=True)
-                            else:
-                                st.markdown(f"<span style='color: #e0c2ed; font-size: 14px;'><b>🔄 Status Update:</b><br>{t['stat_upd']} <b>{o['status']}</b>.</span>", unsafe_allow_html=True)
+                        st.markdown(f"""
+                        <div style="background-color: #2d1845; border-left: 4px solid #b070c6; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="color: #e0c2ed; font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">{msg_title}</div>
+                            <div style="color: #ffffff; font-size: 16px;">{msg_body}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
                         
-                        with c_btn:
-                            if st.button(t['btn_seen'], key=f"read_{o['id']}", type="secondary", use_container_width=True):
+                        # Kleinere knop, strakker design aan de zijkant
+                        col_space, col_btn = st.columns([3, 1.2])
+                        with col_btn:
+                            if st.button(t['btn_seen'], key=f"read_{o['id']}", type="primary", use_container_width=True):
                                 try:
                                     supabase.table("orders").update({"has_unread_update": False}).eq("id", o['id']).execute()
                                     st.rerun()
                                 except Exception as e:
                                     pass
-                        st.markdown("</div>", unsafe_allow_html=True)
+                        st.markdown("<br>", unsafe_allow_html=True)
+                    # ---------------------------------------------------------
 
                     c_det1, c_det2 = st.columns(2)
                     with c_det1:
