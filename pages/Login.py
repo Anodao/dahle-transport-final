@@ -417,35 +417,52 @@ else:
             for o in user_orders:
                 status_icon = "🔵" if o['status'] == 'New' else "🟡" if o['status'] == 'In Progress' else "🟢" if o['status'] in ['Processed', 'Delivered'] else "🔴"
                 
-                # Check of er een ongelezen update is!
                 unread = o.get('has_unread_update', False)
-                update_badge = " &nbsp;&nbsp; ✨" if unread else ""
+                
+                # Het sterretje moet erin blijven staan, want hier zoekt ons CSS script naar!
+                update_badge = " ✨" if unread else ""
                 
                 with st.expander(f"{status_icon} Order #{o['id']} — {o.get('received_date', '')[:10]} ({t['status']}: {o['status']}){update_badge}"):
                     st.markdown("<br>", unsafe_allow_html=True)
                     
                     # ---------------------------------------------------------
-                    # STRAKKERE EN COMPACTE MELDINGBOX (WITTE TEKST)
+                    # SLIMME BERICHT & NOTIFICATIE LOGICA
                     # ---------------------------------------------------------
-                    if unread:
-                        msg_title = f"⚠️ {t['msg_planner']}" if (o.get('show_note_to_customer') and o.get('edit_reason')) else f"🔄 Status Update"
-                        msg_body = o['edit_reason'] if (o.get('show_note_to_customer') and o.get('edit_reason')) else f"{t['stat_upd']} {o['status']}."
-                        
+                    has_note = bool(o.get('show_note_to_customer') and o.get('edit_reason'))
+                    
+                    if has_note or unread:
+                        if has_note:
+                            msg_title = f"📝 {t['msg_planner']}"
+                            msg_body = o['edit_reason']
+                            title_color = "#e0c2ed" if unread else "#aaaaaa"
+                            # Als het gelezen is, wordt de box netjes grijs
+                            box_style = "background-color: #2a1533; border-left: 4px solid #b070c6;" if unread else "background-color: #262626; border-left: 4px solid #888888;"
+                        else:
+                            msg_title = f"🔄 Status Update"
+                            msg_body = f"{t['stat_upd']} {o['status']}."
+                            title_color = "#e0c2ed"
+                            box_style = "background-color: #2a1533; border-left: 4px solid #b070c6;"
+
                         st.markdown(f"""
-                        <div style="background-color: #2a1533; border-left: 4px solid #b070c6; padding: 16px; border-radius: 6px; margin-bottom: 12px;">
-                            <div style="color: #e0c2ed; font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">{msg_title}</div>
-                            <div style="color: #ffffff; font-size: 16px;">{msg_body}</div>
+                        <div style="{box_style} padding: 16px; border-radius: 6px; margin-bottom: 12px;">
+                            <div style="color: {title_color}; font-size: 13px; font-weight: bold; text-transform: uppercase; margin-bottom: 6px;">{msg_title}</div>
+                            <div style="color: #ffffff; font-size: 15px;">{msg_body}</div>
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # Kleinere, subtiele knop direct onder het bericht
-                        if st.button(t['btn_seen'], key=f"read_{o['id']}", type="secondary"):
-                            try:
-                                supabase.table("orders").update({"has_unread_update": False}).eq("id", o['id']).execute()
-                                st.rerun()
-                            except Exception as e:
-                                pass
-                        st.write("---")
+                        # Alleen de 'Mark as read' knop tonen als het bericht ongelezen is!
+                        if unread:
+                            col_space, col_btn = st.columns([3, 1.2])
+                            with col_btn:
+                                if st.button(t['btn_seen'], key=f"read_{o['id']}", type="secondary", use_container_width=True):
+                                    try:
+                                        supabase.table("orders").update({"has_unread_update": False}).eq("id", o['id']).execute()
+                                        st.rerun()
+                                    except Exception as e:
+                                        pass
+                            st.markdown("<br>", unsafe_allow_html=True)
+                        else:
+                            st.markdown("<br>", unsafe_allow_html=True)
                     # ---------------------------------------------------------
 
                     c_det1, c_det2 = st.columns(2)
