@@ -464,16 +464,14 @@ with col_details:
                         customer_visible = selected_order.get('show_note_to_customer', False)
                         visibility_icon = "👁️ Visible to Customer" if customer_visible else "🔒 Internal Only"
                         
-                        # VERNIEUWDE EN VEEL STRAKKERE CSS VOOR ADMIN NOTE BOX
+                        # GEFIXTE CSS VOOR DE ADMIN NOTE BOX ZONDER OVERFLOW
                         st.markdown(f"""
-                        <div style='box-sizing: border-box; width: 100%; margin-top: 15px; border-left: 4px solid #ff4b4b; background-color: #2b1515; padding: 16px; border-radius: 6px;'>
-                            <div style='display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid rgba(255,75,75,0.2); padding-bottom: 8px;'>
+                        <div style='background-color: #2b1515; border-left: 4px solid #ff4b4b; padding: 14px 18px; border-radius: 6px; margin-top: 15px;'>
+                            <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 75, 75, 0.2); padding-bottom: 8px; margin-bottom: 10px;'>
                                 <span style='color: #ffcccc; font-size: 13px; font-weight: bold;'>⚠️ Admin Note</span>
                                 <span style='font-size: 11px; color: #ffcccc; opacity: 0.8;'>{visibility_icon}</span>
                             </div>
-                            <div style='color: #ffcccc; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;'>
-                                {admin_notes}
-                            </div>
+                            <div style='color: #ffcccc; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;'>{admin_notes}</div>
                         </div>
                         """, unsafe_allow_html=True)
 
@@ -581,7 +579,7 @@ with col_details:
             with c_stat2:
                 new_tracking = st.text_input("Tracking / Reference No:", value=current_tracking, placeholder="E.g. DT-849201")
             
-            st.write("")
+            st.write("---")
             
             # --- ORDER ACTIONS (EIGEN PLEKJE ONDERAAN) ---
             st.markdown(f"<h4 style='margin-bottom: 15px;'>Order Actions</h4>", unsafe_allow_html=True)
