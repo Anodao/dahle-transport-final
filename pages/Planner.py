@@ -201,11 +201,29 @@ if not is_employee:
 # =========================================================
 @st.dialog("✏️ Edit Order")
 def edit_order_modal(order):
-    confirm_key = f"confirm_edit_{order['id']}"
+    order_id = order['id']
+    confirm_key = f"confirm_edit_{order_id}"
+    error_key = f"error_edit_{order_id}"
+    
     if confirm_key not in st.session_state:
         st.session_state[confirm_key] = False
+    if error_key not in st.session_state:
+        st.session_state[error_key] = ""
 
-    st.write(f"Change details for **Order #{order['id']}**.")
+    # CALLBACK FUNCTIES
+    def trigger_confirm():
+        reason = st.session_state.get(f"e_reason_{order_id}", "")
+        if not reason.strip():
+            st.session_state[error_key] = "Please provide a reason for this change before saving."
+        else:
+            st.session_state[error_key] = ""
+            st.session_state[confirm_key] = True
+
+    def cancel_confirm():
+        st.session_state[confirm_key] = False
+        st.session_state[error_key] = ""
+
+    st.write(f"Change details for **Order #{order_id}**.")
     
     # --- Status & Tracking ---
     st.markdown("#### Status & Tracking")
@@ -215,79 +233,76 @@ def edit_order_modal(order):
     idx = status_options.index(curr_status) if curr_status in status_options else 0
     
     with c_stat1:
-        e_status = st.selectbox("Status", status_options, index=idx, key="e_status")
+        st.selectbox("Status", status_options, index=idx, key=f"e_status_{order_id}")
     with c_stat2:
-        e_tracking = st.text_input("Tracking Code", value=order.get('tracking_code', '') or "", key="e_track")
+        st.text_input("Tracking Code", value=order.get('tracking_code', '') or "", key=f"e_track_{order_id}")
 
     st.write("---")
     
     # --- Adressen ---
     st.markdown("#### From (Pickup)")
-    p_addr = st.text_input("Street", value=order.get('pickup_address', ''), key="e_p_addr")
+    st.text_input("Street", value=order.get('pickup_address', ''), key=f"e_p_addr_{order_id}")
     c1, c2 = st.columns(2)
-    p_zip = c1.text_input("Zip Code", value=order.get('pickup_zip', ''), key="e_p_zip")
-    p_city = c2.text_input("City", value=order.get('pickup_city', ''), key="e_p_city")
+    with c1: st.text_input("Zip Code", value=order.get('pickup_zip', ''), key=f"e_p_zip_{order_id}")
+    with c2: st.text_input("City", value=order.get('pickup_city', ''), key=f"e_p_city_{order_id}")
 
     st.markdown("#### To (Delivery)")
-    d_addr = st.text_input("Street", value=order.get('delivery_address', ''), key="e_d_addr")
+    st.text_input("Street", value=order.get('delivery_address', ''), key=f"e_d_addr_{order_id}")
     c3, c4 = st.columns(2)
-    d_zip = c3.text_input("Zip Code", value=order.get('delivery_zip', ''), key="e_d_zip")
-    d_city = c4.text_input("City", value=order.get('delivery_city', ''), key="e_d_city")
+    with c3: st.text_input("Zip Code", value=order.get('delivery_zip', ''), key=f"e_d_zip_{order_id}")
+    with c4: st.text_input("City", value=order.get('delivery_city', ''), key=f"e_d_city_{order_id}")
 
     st.write("---")
     
-    # --- Freight Details (Nieuw!) ---
+    # --- Freight Details ---
     st.markdown("#### Freight Details")
-    e_types = st.text_input("Types (e.g. Cargo & Freight: 1x Pallet)", value=order.get('types', ''), key="e_types")
-    e_info = st.text_area("Additional Info / Notes", value=order.get('info', ''), height=80, key="e_info")
+    st.text_input("Types (e.g. Cargo & Freight: 1x Pallet)", value=order.get('types', ''), key=f"e_types_{order_id}")
+    st.text_area("Additional Info / Notes", value=order.get('info', ''), height=80, key=f"e_info_{order_id}")
 
     st.write("---")
     
     # --- Admin Note ---
     st.markdown("#### Reason for Change")
-    edit_reason = st.text_area("Admin Note (Required) *", value=order.get('edit_reason', ''), placeholder="E.g. Customer called to change delivery street...", height=80, key="e_reason")
-    show_to_customer = st.checkbox("Show this note to the customer on their portal", value=order.get('show_note_to_customer', False), key="e_show")
+    st.text_area("Admin Note (Required) *", value=order.get('edit_reason', ''), placeholder="E.g. Customer called to change delivery street...", height=80, key=f"e_reason_{order_id}")
+    st.checkbox("Show this note to the customer on their portal", value=order.get('show_note_to_customer', False), key=f"e_show_{order_id}")
 
     st.write("")
 
-    if not st.session_state[confirm_key]:
-        if st.button("Save Changes", type="primary", use_container_width=True):
-            if not edit_reason.strip():
-                st.error("Please provide a reason for this change before saving.")
-            else:
-                st.session_state[confirm_key] = True
-                st.rerun()
+    if st.session_state[error_key]:
+        st.error(st.session_state[error_key])
 
-    if st.session_state[confirm_key]:
+    if not st.session_state[confirm_key]:
+        st.button("Save Changes", type="primary", use_container_width=True, on_click=trigger_confirm, key=f"btn_save_{order_id}")
+    else:
         st.warning("⚠️ Are you sure you want to save these changes and notify the customer?")
         col_y, col_n = st.columns(2)
-        if col_y.button("✅ Yes, Confirm", type="primary", use_container_width=True):
+        
+        if col_y.button("✅ Yes, Confirm", type="primary", use_container_width=True, key=f"btn_yes_{order_id}"):
             updates = {
-                "status": e_status,
-                "tracking_code": e_tracking.strip(),
-                "pickup_address": p_addr, 
-                "pickup_zip": p_zip, 
-                "pickup_city": p_city,
-                "delivery_address": d_addr, 
-                "delivery_zip": d_zip, 
-                "delivery_city": d_city,
-                "types": e_types,
-                "info": e_info,
-                "edit_reason": edit_reason.strip(),
-                "show_note_to_customer": show_to_customer,
+                "status": st.session_state[f"e_status_{order_id}"],
+                "tracking_code": st.session_state[f"e_track_{order_id}"].strip(),
+                "pickup_address": st.session_state[f"e_p_addr_{order_id}"], 
+                "pickup_zip": st.session_state[f"e_p_zip_{order_id}"], 
+                "pickup_city": st.session_state[f"e_p_city_{order_id}"],
+                "delivery_address": st.session_state[f"e_d_addr_{order_id}"], 
+                "delivery_zip": st.session_state[f"e_d_zip_{order_id}"], 
+                "delivery_city": st.session_state[f"e_d_city_{order_id}"],
+                "types": st.session_state[f"e_types_{order_id}"],
+                "info": st.session_state[f"e_info_{order_id}"],
+                "edit_reason": st.session_state[f"e_reason_{order_id}"].strip(),
+                "show_note_to_customer": st.session_state[f"e_show_{order_id}"],
                 "has_unread_update": True
             }
             try:
-                supabase.table("orders").update(updates).eq("id", order['id']).execute()
-                st.success("Order updated successfully!")
+                supabase.table("orders").update(updates).eq("id", order_id).execute()
                 st.session_state[confirm_key] = False
-                time.sleep(1)
-                st.rerun()
+                st.session_state[error_key] = ""
+                st.rerun() 
             except Exception as e:
                 st.error(f"Failed to update database: {e}")
-        if col_n.button("❌ Cancel", type="secondary", use_container_width=True):
-            st.session_state[confirm_key] = False
-            st.rerun()
+                
+        if col_n.button("❌ Cancel", type="secondary", use_container_width=True, on_click=cancel_confirm, key=f"btn_no_{order_id}"):
+            pass
 
 
 # =========================================================
@@ -448,7 +463,6 @@ with col_details:
                 </div>
             </div>
             """, unsafe_allow_html=True)
-            # ----------------------------------------------------
 
             c_info1, c_info2 = st.columns(2, gap="medium")
             
@@ -482,7 +496,8 @@ with col_details:
                         st.markdown(f"<span style='color:#888; font-size:12px;'>Country:</span><br><b>{d_country}</b>", unsafe_allow_html=True)
 
                 st.write("")
-                if st.button("✏️ Edit Order", key=f"edit_addr_{selected_order['id']}", type="primary", use_container_width=True):
+                # EDIT KNOP DIRECT ONDER DE ADRESSEN
+                if st.button("✏️ Edit Order & Status", key=f"edit_addr_{selected_order['id']}", type="primary", use_container_width=True):
                     edit_order_modal(selected_order)
 
             with c_info2:
@@ -500,7 +515,6 @@ with col_details:
                         customer_visible = selected_order.get('show_note_to_customer', False)
                         visibility_icon = "👁️ Visible to Customer" if customer_visible else "🔒 Internal Only"
                         
-                        # GEFIXTE CSS VOOR DE ADMIN NOTE BOX ZONDER OVERFLOW
                         st.markdown(f"""
                         <div style='background-color: #2b1515; border-left: 4px solid #ff4b4b; padding: 14px 18px; border-radius: 6px; margin-top: 15px;'>
                             <div style='display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 75, 75, 0.2); padding-bottom: 8px; margin-bottom: 10px;'>
