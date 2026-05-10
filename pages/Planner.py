@@ -1,3 +1,8 @@
+# =========================================================
+# BESTANDSNAAM: pages/Planner.py
+# Omschrijving: Internal Planner Dashboard
+# =========================================================
+
 import streamlit as st
 from supabase import create_client
 import extra_streamlit_components as stx
@@ -192,7 +197,7 @@ if not is_employee:
     st.stop()
 
 # =========================================================
-# POP-UP DIALOG VOOR HET BEWERKEN VAN ADRESSEN EN NOTITIES
+# POP-UP DIALOG VOOR HET BEWERKEN VAN DE VOLLEDIGE ORDER
 # =========================================================
 @st.dialog("✏️ Edit Order")
 def edit_order_modal(order):
@@ -202,13 +207,27 @@ def edit_order_modal(order):
 
     st.write(f"Change details for **Order #{order['id']}**.")
     
+    # --- Status & Tracking ---
+    st.markdown("#### Status & Tracking")
+    c_stat1, c_stat2 = st.columns(2)
+    status_options = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
+    curr_status = order.get('status', 'New')
+    idx = status_options.index(curr_status) if curr_status in status_options else 0
+    
+    with c_stat1:
+        e_status = st.selectbox("Status", status_options, index=idx, key="e_status")
+    with c_stat2:
+        e_tracking = st.text_input("Tracking Code", value=order.get('tracking_code', '') or "", key="e_track")
+
+    st.write("---")
+    
+    # --- Adressen ---
     st.markdown("#### From (Pickup)")
     p_addr = st.text_input("Street", value=order.get('pickup_address', ''), key="e_p_addr")
     c1, c2 = st.columns(2)
     p_zip = c1.text_input("Zip Code", value=order.get('pickup_zip', ''), key="e_p_zip")
     p_city = c2.text_input("City", value=order.get('pickup_city', ''), key="e_p_city")
 
-    st.write("---")
     st.markdown("#### To (Delivery)")
     d_addr = st.text_input("Street", value=order.get('delivery_address', ''), key="e_d_addr")
     c3, c4 = st.columns(2)
@@ -216,6 +235,15 @@ def edit_order_modal(order):
     d_city = c4.text_input("City", value=order.get('delivery_city', ''), key="e_d_city")
 
     st.write("---")
+    
+    # --- Freight Details (Nieuw!) ---
+    st.markdown("#### Freight Details")
+    e_types = st.text_input("Types (e.g. Cargo & Freight: 1x Pallet)", value=order.get('types', ''), key="e_types")
+    e_info = st.text_area("Additional Info / Notes", value=order.get('info', ''), height=80, key="e_info")
+
+    st.write("---")
+    
+    # --- Admin Note ---
     st.markdown("#### Reason for Change")
     edit_reason = st.text_area("Admin Note (Required) *", value=order.get('edit_reason', ''), placeholder="E.g. Customer called to change delivery street...", height=80, key="e_reason")
     show_to_customer = st.checkbox("Show this note to the customer on their portal", value=order.get('show_note_to_customer', False), key="e_show")
@@ -235,12 +263,16 @@ def edit_order_modal(order):
         col_y, col_n = st.columns(2)
         if col_y.button("✅ Yes, Confirm", type="primary", use_container_width=True):
             updates = {
+                "status": e_status,
+                "tracking_code": e_tracking.strip(),
                 "pickup_address": p_addr, 
                 "pickup_zip": p_zip, 
                 "pickup_city": p_city,
                 "delivery_address": d_addr, 
                 "delivery_zip": d_zip, 
                 "delivery_city": d_city,
+                "types": e_types,
+                "info": e_info,
                 "edit_reason": edit_reason.strip(),
                 "show_note_to_customer": show_to_customer,
                 "has_unread_update": True
@@ -299,7 +331,7 @@ st.markdown(f"""
 # =========================================================================
 # HOOFDTITEL VAN DE PAGINA
 # =========================================================================
-st.markdown("<h1 style='text-align: center; color: #b070c6; padding-bottom: 20px;'>Plannerdashboard</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #b070c6; padding-bottom: 20px;'>Planner dashboard</h1>", unsafe_allow_html=True)
 
 # =========================================================================
 # DATA OPHALEN UIT SUPABASE
@@ -449,6 +481,10 @@ with col_details:
                         st.write("")
                         st.markdown(f"<span style='color:#888; font-size:12px;'>Country:</span><br><b>{d_country}</b>", unsafe_allow_html=True)
 
+                st.write("")
+                if st.button("✏️ Edit Order", key=f"edit_addr_{selected_order['id']}", type="primary", use_container_width=True):
+                    edit_order_modal(selected_order)
+
             with c_info2:
                 with st.container(border=True):
                     st.markdown("<h4 style='margin-top:0px;'>📦 Freight Details</h4>", unsafe_allow_html=True)
@@ -562,44 +598,3 @@ with col_details:
                     with st.spinner("Connecting to Opter API..."):
                         time.sleep(1.5)
                     st.info("Order details formatted for export. Waiting for Opter API credentials to complete the transfer.")
-            
-            st.write("---")
-            
-            # --- STATUS & TRACKING UPDATE MODULE ---
-            st.markdown(f"<h4 style='margin-bottom: 15px;'>Update Status & Tracking</h4>", unsafe_allow_html=True)
-            current_status = selected_order.get('status', 'New')
-            current_tracking = selected_order.get('tracking_code') or ""
-            status_options = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
-            
-            idx = status_options.index(current_status) if current_status in status_options else 0
-            
-            c_stat1, c_stat2 = st.columns(2)
-            with c_stat1:
-                new_status = st.selectbox("Select New Status:", status_options, index=idx)
-            with c_stat2:
-                new_tracking = st.text_input("Tracking / Reference No:", value=current_tracking, placeholder="E.g. DT-849201")
-            
-            st.write("---")
-            
-            # --- ORDER ACTIONS (EIGEN PLEKJE ONDERAAN) ---
-            st.markdown(f"<h4 style='margin-bottom: 15px;'>Order Actions</h4>", unsafe_allow_html=True)
-            
-            c_act1, c_act2 = st.columns(2)
-            with c_act1:
-                if st.button("✏️ Edit Order", key=f"edit_addr_{selected_order['id']}", type="secondary", use_container_width=True):
-                    edit_order_modal(selected_order)
-                    
-            with c_act2:
-                if st.button(t['btn_save'], type="primary", use_container_width=True):
-                    try:
-                        update_data = {
-                            "status": new_status,
-                            "tracking_code": new_tracking.strip(),
-                            "has_unread_update": True
-                        }
-                        supabase.table("orders").update(update_data).eq("id", selected_order['id']).execute()
-                        st.success(t['msg_succ'])
-                        time.sleep(1)
-                        st.rerun() 
-                    except Exception as e:
-                        st.error(f"Failed to update order: {e}")
