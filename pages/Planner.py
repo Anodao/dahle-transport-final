@@ -1,8 +1,3 @@
-# =========================================================
-# BESTANDSNAAM: pages/Planner.py
-# Omschrijving: Internal Planner Dashboard
-# =========================================================
-
 import streamlit as st
 from supabase import create_client
 import extra_streamlit_components as stx
@@ -304,7 +299,7 @@ st.markdown(f"""
 # =========================================================================
 # HOOFDTITEL VAN DE PAGINA
 # =========================================================================
-st.markdown("<h1 style='text-align: center; color: #b070c6; padding-bottom: 20px;'>Internal Planner Dashboard</h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: #b070c6; padding-bottom: 20px;'>Plannerdashboard</h1>", unsafe_allow_html=True)
 
 # =========================================================================
 # DATA OPHALEN UIT SUPABASE
@@ -369,6 +364,7 @@ with col_details:
         selected_order = next((o for o in all_orders if o['id'] == st.session_state.selected_order_id), None)
         
         if selected_order:
+            # --- ADRES VARIABELEN ---
             p_addr = selected_order.get('pickup_address', '-').strip()
             p_zip = selected_order.get('pickup_zip', '-').strip()
             p_city_display = selected_order.get('pickup_city', '-').strip()
@@ -379,6 +375,7 @@ with col_details:
             d_city_display = selected_order.get('delivery_city', '-').strip()
             d_country = "Norway"
             
+            # --- FINANCIËLE BLOCK MET KLEUR LOGICA ---
             p_city = selected_order.get('pickup_city', 'Unknown')
             d_city = selected_order.get('delivery_city', 'Unknown')
             dist_km = get_route_distance(p_city, d_city)
@@ -467,14 +464,16 @@ with col_details:
                         customer_visible = selected_order.get('show_note_to_customer', False)
                         visibility_icon = "👁️ Visible to Customer" if customer_visible else "🔒 Internal Only"
                         
-                        # CSS Class 'admin-note-box' zorgt er nu voor dat lange zinnen netjes afbreken
+                        # VERNIEUWDE EN VEEL STRAKKERE CSS VOOR ADMIN NOTE BOX
                         st.markdown(f"""
-                        <div class="admin-note-box" style='margin-top: 10px; border-left: 3px solid #ff4b4b; background-color:#2b1515; padding:10px; border-radius:4px; font-size:13px; color:#ffcccc;'>
-                            <div style='display: flex; justify-content: space-between; margin-bottom: 5px;'>
-                                <b>⚠️ Admin Note:</b>
-                                <span style='font-size: 11px; opacity: 0.8;'>{visibility_icon}</span>
+                        <div style='box-sizing: border-box; width: 100%; margin-top: 15px; border-left: 4px solid #ff4b4b; background-color: #2b1515; padding: 16px; border-radius: 6px;'>
+                            <div style='display: flex; justify-content: space-between; margin-bottom: 8px; border-bottom: 1px solid rgba(255,75,75,0.2); padding-bottom: 8px;'>
+                                <span style='color: #ffcccc; font-size: 13px; font-weight: bold;'>⚠️ Admin Note</span>
+                                <span style='font-size: 11px; color: #ffcccc; opacity: 0.8;'>{visibility_icon}</span>
                             </div>
-                            {admin_notes}
+                            <div style='color: #ffcccc; font-size: 14px; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word;'>
+                                {admin_notes}
+                            </div>
                         </div>
                         """, unsafe_allow_html=True)
 
@@ -546,46 +545,8 @@ with col_details:
 
             st.write("---")
             
-            # --- STATUS & TRACKING UPDATE MODULE ---
-            st.markdown(f"<h4 style='margin-bottom: 15px;'>{t['status_lbl']} & Tracking</h4>", unsafe_allow_html=True)
-            current_status = selected_order.get('status', 'New')
-            current_tracking = selected_order.get('tracking_code') or ""
-            status_options = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
-            
-            idx = status_options.index(current_status) if current_status in status_options else 0
-            
-            c_stat1, c_stat2, c_stat3, c_stat4 = st.columns([2.5, 2.5, 1.5, 1.5])
-            with c_stat1:
-                new_status = st.selectbox("Select New Status:", status_options, index=idx)
-            with c_stat2:
-                new_tracking = st.text_input("Tracking / Reference No:", value=current_tracking, placeholder="E.g. DT-849201")
-            
-            # KNOP VERPLAATST NAAR ONDEREN
-            with c_stat3:
-                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-                if st.button("✏️ Edit Order", key=f"edit_addr_{selected_order['id']}", type="secondary", use_container_width=True):
-                    edit_order_modal(selected_order)
-            
-            with c_stat4:
-                st.markdown("<div style='margin-top: 28px;'></div>", unsafe_allow_html=True)
-                if st.button(t['btn_save'], type="primary", use_container_width=True):
-                    try:
-                        update_data = {
-                            "status": new_status,
-                            "tracking_code": new_tracking.strip(),
-                            "has_unread_update": True
-                        }
-                        supabase.table("orders").update(update_data).eq("id", selected_order['id']).execute()
-                        st.success(t['msg_succ'])
-                        time.sleep(1)
-                        st.rerun() 
-                    except Exception as e:
-                        st.error(f"Failed to update order: {e}")
-            
-            st.write("---")
-            
             # =========================================================
-            # OPTER API INTEGRATIE KNOPPEN
+            # OPTER API INTEGRATIE KNOPPEN (BOVENAAN)
             # =========================================================
             st.markdown("<h4 style='margin-bottom: 5px;'>Opter API Integration</h4>", unsafe_allow_html=True)
             st.markdown("<p style='color: #888; font-size: 13px; margin-bottom: 15px;'>Send or retrieve real-time data for this specific order via Opter.</p>", unsafe_allow_html=True)
@@ -603,3 +564,44 @@ with col_details:
                     with st.spinner("Connecting to Opter API..."):
                         time.sleep(1.5)
                     st.info("Order details formatted for export. Waiting for Opter API credentials to complete the transfer.")
+            
+            st.write("---")
+            
+            # --- STATUS & TRACKING UPDATE MODULE ---
+            st.markdown(f"<h4 style='margin-bottom: 15px;'>Update Status & Tracking</h4>", unsafe_allow_html=True)
+            current_status = selected_order.get('status', 'New')
+            current_tracking = selected_order.get('tracking_code') or ""
+            status_options = ["New", "In Progress", "Processed", "Delivered", "Cancelled"]
+            
+            idx = status_options.index(current_status) if current_status in status_options else 0
+            
+            c_stat1, c_stat2 = st.columns(2)
+            with c_stat1:
+                new_status = st.selectbox("Select New Status:", status_options, index=idx)
+            with c_stat2:
+                new_tracking = st.text_input("Tracking / Reference No:", value=current_tracking, placeholder="E.g. DT-849201")
+            
+            st.write("")
+            
+            # --- ORDER ACTIONS (EIGEN PLEKJE ONDERAAN) ---
+            st.markdown(f"<h4 style='margin-bottom: 15px;'>Order Actions</h4>", unsafe_allow_html=True)
+            
+            c_act1, c_act2 = st.columns(2)
+            with c_act1:
+                if st.button("✏️ Edit Order", key=f"edit_addr_{selected_order['id']}", type="secondary", use_container_width=True):
+                    edit_order_modal(selected_order)
+                    
+            with c_act2:
+                if st.button(t['btn_save'], type="primary", use_container_width=True):
+                    try:
+                        update_data = {
+                            "status": new_status,
+                            "tracking_code": new_tracking.strip(),
+                            "has_unread_update": True
+                        }
+                        supabase.table("orders").update(update_data).eq("id", selected_order['id']).execute()
+                        st.success(t['msg_succ'])
+                        time.sleep(1)
+                        st.rerun() 
+                    except Exception as e:
+                        st.error(f"Failed to update order: {e}")
