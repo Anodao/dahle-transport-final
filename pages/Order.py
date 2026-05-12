@@ -12,56 +12,83 @@ import math
 st.set_page_config(page_title="Dahle Transport - Order", layout="wide", initial_sidebar_state="collapsed")
 
 # =========================================================
-# 1. EMAIL FUNCTIE (NU MET MEERTALIGHEID!)
+# 1. EMAIL FUNCTIE (NU MET BON / RECEIPT!)
 # =========================================================
 def stuur_bevestigings_email(naar_email, order_data, order_id, order_lang="no"):
     try:
         # Haal de API key uit je secrets
         api_key = st.secrets["resend"]["api_key"]
 
-        # Vertalingen specifiek voor de e-mail
+        # Vertalingen specifiek voor de e-mail (Nu inclusief bon vertalingen)
         email_t = {
             "no": {
                 "sub": "Ordrebekreftelse", "hi": "Hei", 
                 "thanks": "Takk for din bestilling. Vi har mottatt din transportforespørsel og vil behandle den så snart som mulig.",
                 "from": "Fra", "to": "Til", "not_set": "Ikke angitt",
                 "track": "Du kan følge statusen på forsendelsen din i Kundeportalen.",
-                "regards": "Med vennlig hilsen,", "footer": "Dette er en automatisk e-post. Vennligst ikke svar på denne."
+                "regards": "Med vennlig hilsen,", "footer": "Dette er en automatisk e-post. Vennligst ikke svar på denne.",
+                "est_cost": "Estimert Kostnad", "total": "Total", "vat": "Ekskl. MVA"
             },
             "en": {
                 "sub": "Order Confirmation", "hi": "Hi", 
                 "thanks": "Thank you for your order. We have received your transport request and will process it as soon as possible.",
                 "from": "From", "to": "To", "not_set": "Not specified",
                 "track": "You can track the status of your shipment in the Customer Portal.",
-                "regards": "Best regards,", "footer": "This is an automated email. Please do not reply to it."
+                "regards": "Best regards,", "footer": "This is an automated email. Please do not reply to it.",
+                "est_cost": "Estimated Cost", "total": "Total", "vat": "Excl. VAT"
             },
             "sv": {
                 "sub": "Orderbekräftelse", "hi": "Hej", 
                 "thanks": "Tack för din beställning. Vi har mottagit din transportförfrågan och kommer att behandla den så snart som möjligt.",
                 "from": "Från", "to": "Till", "not_set": "Ej angivet",
                 "track": "Du kan följa statusen på din försändelse i Kundportalen.",
-                "regards": "Med vänliga hälsningar,", "footer": "Detta är ett automatiskt e-postmeddelande. Vänligen svara inte på detta."
+                "regards": "Med vänliga hälsningar,", "footer": "Detta är ett automatiskt e-postmeddelande. Vänligen svara inte på detta.",
+                "est_cost": "Uppskattad Kostnad", "total": "Totalt", "vat": "Exkl. Moms"
             },
             "da": {
                 "sub": "Ordrebekræftelse", "hi": "Hej", 
                 "thanks": "Tak for din bestilling. Vi har modtaget din transportanmodning og vil behandle den hurtigst muligt.",
                 "from": "Fra", "to": "Til", "not_set": "Ikke angivet",
                 "track": "Du kan følge status på din forsendelse i Kundeportalen.",
-                "regards": "Med venlig hilsen,", "footer": "Dette er en automatisk e-mail. Svar venligst ikke på denne."
+                "regards": "Med venlig hilsen,", "footer": "Dette er en automatisk e-mail. Svar venligst ikke på denne.",
+                "est_cost": "Estimeret Pris", "total": "Total", "vat": "Ekskl. Moms"
             }
         }
         # Kies de juiste taal, val terug op Engels als backup
         et = email_t.get(order_lang, email_t["en"])
 
+        # --- NIEUW: BON / RECEIPT HTML GENEREREN ---
+        breakdown_html = ""
+        for label, amount in order_data.get('price_breakdown', []):
+            if amount == "": # Voor de subtitels (zoals gewicht/aantal stuks)
+                breakdown_html += f'<tr><td style="padding: 2px 0; color: #888; font-size: 13px;">{label}</td><td style="padding: 2px 0;"></td></tr>'
+            else: # Voor de daadwerkelijke kostenregels
+                breakdown_html += f'<tr><td style="padding: 4px 0; color: #555; font-size: 14px;">{label}</td><td style="padding: 4px 0; text-align: right; color: #333; font-size: 14px; font-weight: 500;">{amount:,.0f} NOK</td></tr>'
+                
+        receipt_section = f"""
+        <div style="margin: 25px 0; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px; background-color: #ffffff;">
+            <h4 style="margin: 0 0 15px 0; color: #111; font-size: 16px; border-bottom: 1px solid #eaeaea; padding-bottom: 10px;">{et['est_cost']}</h4>
+            <table style="width: 100%; border-collapse: collapse;">
+                {breakdown_html}
+                <tr>
+                    <td style="padding-top: 15px; margin-top: 15px; border-top: 1px dashed #ccc; color: #111; font-weight: 600; font-size: 15px;">{et['total']} <span style="font-size: 11px; color: #888; font-weight: normal;">({et['vat']})</span></td>
+                    <td style="padding-top: 15px; margin-top: 15px; border-top: 1px dashed #ccc; text-align: right; color: #894b9d; font-weight: bold; font-size: 18px;">{order_data.get('price', 0):,.0f} NOK</td>
+                </tr>
+            </table>
+            <p style="margin: 15px 0 0 0; font-size: 11px; color: #888; font-style: italic;">{order_data.get('calc_note', '')}</p>
+        </div>
+        """
+        # ---------------------------------------------
+
         # De HTML template
         html_body = f"""
         <html>
-        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6;">
-            <div style="max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05);">
+        <body style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333; line-height: 1.6; background-color: #f4f4f4; padding: 20px;">
+            <div style="max-width: 600px; margin: 0 auto; border: 1px solid #eaeaea; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background-color: #ffffff;">
                 <div style="background: linear-gradient(135deg, #b070c6 0%, #894b9d 100%); padding: 25px; text-align: center;">
                     <h2 style="color: white; margin: 0; font-size: 24px;">Dahle Transport</h2>
                 </div>
-                <div style="padding: 30px; background-color: #ffffff;">
+                <div style="padding: 30px;">
                     <h3 style="color: #111; margin-top: 0;">{et['hi']} {order_data.get('contact_name', 'Kunde')}!</h3>
                     <p>{et['thanks']}</p>
                     
@@ -70,6 +97,8 @@ def stuur_bevestigings_email(naar_email, order_data, order_id, order_lang="no"):
                         <p style="margin: 0 0 10px 0;"><b>📍 {et['from']}:</b> {order_data.get('pickup_city', et['not_set'])} ({order_data.get('pickup_zip', '')})</p>
                         <p style="margin: 0;"><b>🏁 {et['to']}:</b> {order_data.get('delivery_city', et['not_set'])} ({order_data.get('delivery_zip', '')})</p>
                     </div>
+                    
+                    {receipt_section}
                     
                     <p>{et['track']}</p>
                     <p>{et['regards']}<br><b>Team Dahle Transport</b></p>
@@ -358,7 +387,7 @@ translations = {
         "b2_t": "Gods & Fragt", "b2_s": "Typisk over 31.5kg+", "b2_l1": "Tungere forsendelser (pallar/containere)", "b2_l2": "B2B",
         "b3_t": "Post & Markedsføring", "b3_s": "Typisk op til 2kg", "b3_l1": "Lette varer", "b3_l2": "International erhvervspost",
         "err_sel": "❌ Vælg venligst mindst én mulighed.", "time_est": "Tager typisk under 5 minutter.", "btn_next": "Næste trin",
-        "w_item": "Vægt pr. stk. (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Vælg mindst én)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvægt (kg)", "lbl_pcs": "stk", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Stykgods", 
+        "w_item": "Vægt pr. stk. (kg)", "w_over": "Overdimensioneret (Længde > 3.5m)", "l_type": "Lasttype", "l_err": " 🚨 :red[(Vælg mindst én)]", "lbl_qty": "Antal", "lbl_wgt": "Totalvægt (kg)", "lbl_pcs": "stk", "l_pal": "Palle", "l_full": "Fuld container/lastbil", "l_lc": "Styckgods", 
         "c_det": "Firma- & Kontaktdetaljer", "c_name": "Firmanavn *", "c_reg": "CVR-nummer (valgfrit)", "c_addr": "Firmaadresse *", "c_zip": "Postnummer *", "c_city": "By *", "c_ctry": "Land *",
         "c_fn": "Fornavn *", "c_ln": "Efternavn *", "c_em": "Arbejds-e-mail *", "c_ph": "Telefon *",
         "bill_t": "Faktureringsoplysninger", "bill_who": "Hvem betaler fragten?", "b_opt1": "Afsender", "b_opt2": "Modtager", "b_opt3": "Tredjepart (Anden adresse)", "b_comp": "Fakturamodtager (Firma) *", "b_em": "Faktura E-mail *",
