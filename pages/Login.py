@@ -196,7 +196,7 @@ translations = {
         "lbl_email": "E-postadress", "lbl_pass": "Lösenord", "btn_login": "Logga in",
         "msg_logging_in": "Loggar in...", "msg_login_succ": "Inloggad! Omdirigerar...", "msg_login_fail": "Fel e-post eller lösenord.", "msg_fill_both": "Vänligen fyll i båda fälten.",
         "lbl_comp": "Företagsnamn *", "lbl_fn": "Förnamn *", "lbl_ln": "Efternavn *", "lbl_phone": "Telefonnummer", "lbl_email_reg": "E-post (Detta blir din inloggning) *", "lbl_pass_reg": "Välj lösenord *", "btn_reg": "Skapa konto",
-        "msg_creating": "Skapar konto...", "msg_reg_succ": "Konto skapat! Du kan nu logge in via 'Logga in'-fliken.", "msg_reg_fail": "Ett fel uppstod.", "msg_fill_req": "Vänligen fyll i alla obligatoriska fält (*).",
+        "msg_creating": "Skapar konto...", "msg_reg_succ": "Konto skapat! Du kan nu logge in via 'Logga in'-fliken.", "msg_reg_fail": "Ett fel uppstod.", "msg_fill_req": "Vänligen fyll i alla obligatoriske fält (*).",
         "welcome": "Välkommen tillbaka", "logged_in_as": "Inloggad som", "btn_logout": "Logga ut",
         "hist_title": "Din sändningshistorik", "tot_ship": "Totala försändelser", "pend_appr": "Väntar på godkännande", "processed": "Behandlad",
         "tab_myship": "Mina försändelser", "tab_neworder": "Ny beställning", "tab_prof": "Profilinställningar",
@@ -319,6 +319,9 @@ if st.session_state.get('user') is None:
                 st.write("")
                 submitted = st.form_submit_button(t['btn_login'], type="primary", use_container_width=True)
             
+            # --- NIEUWE DUMMY WACHTWOORD VERGETEN KNOP ---
+            st.button("Forgot Password?", type="secondary", use_container_width=True)
+
             status_bericht = st.empty()
             if submitted:
                 if login_email and login_pass:
